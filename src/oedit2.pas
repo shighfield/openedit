@@ -1966,6 +1966,7 @@ End;
 Var
   OKHeadFoot: Boolean;
   Subval: BYte;
+  GotConfig: Boolean;
 Begin
   OKHeadFoot:=True;
   Danger:=0;
@@ -1987,7 +1988,7 @@ Begin
   CfgPath:=GetEnv('OEDIT');
   If CfgPath[Length(CfgPath)]<>'\' Then CfgPath:=CfgPath+'\';
   CfgPath:=RemoveWildCard(ParamStr(0));
-  Assign(ConfigFile,CfgPath+'OEDIT.CFG');
+  Assign(ConfigFile,CfgPath+'oedit.cfg');
   FileMode:=66;
   {$I-}Reset(ConfigFile);{$I+}
   FileMode:=2;
@@ -1995,7 +1996,7 @@ Begin
   If IOResult<>0 Then
   Begin
     CfgPath:='';
-    Assign(ConfigFile,CfgPath+'OEDIT.CFG');
+    Assign(ConfigFile,CfgPath+'oedit.cfg');
     FileMode:=66;
     {$I-}Reset(ConfigFile);{$I+}
     FileMode:=2;
@@ -2004,53 +2005,78 @@ Begin
   If IOResult<>0 Then
   Begin
     CfgPath:=RemoveWildCard(ParamStr(0));
-    Assign(ConfigFile,CfgPath+'OEDIT.CFG');
+    Assign(ConfigFile,CfgPath+'oedit.cfg');
     FileMode:=66;
     {$I-}Reset(ConfigFile);{$I+}
     FileMode:=2;
   End;
-  { * Can't find the damned thing                     }
-  If IOResult<>0 Then
+  { * Read it if we found it, but don't trust it blindly - oedit.cfg is a
+    Turbo Pascal binary record (written by the original DOS OESetup.EXE),
+    and FPC's in-memory layout for ConfigRec doesn't reliably match TP's
+    (Real is 8 bytes here vs TP's 6, plus other alignment differences that
+    didn't resolve with the obvious fixes - not chased further since this
+    shipped file is just OESetup's stock installer defaults, not anything
+    user-customized). A size/layout mismatch makes Read fail rather than
+    silently misread, so check it instead of trusting an unguarded Read. }
+  GotConfig:=False;
+  If IOResult=0 Then
   Begin
-   {$IFDEF CompileExtra}
-   TextAttr:=$01;
-   WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-   WriteLn('³'+Pad('',72)+'³');
-   Write('³  ');
-   TextAttr:=$0B;
-   Write(Pad('Open!EDIT v'+Ver,70));
-   TextAttr:=$01; WriteLn('³');
-   Write('³  ');
-   TextAttr:=$0B;
-   Write(Pad('Config file error',70));
-   TextAttr:=$01;
-   WriteLn('³');
-   WriteLn('³'+Pad('',72)+'³');
-   TextAttr:=$01;
-   Write('³   ');
-   TextAttr:=$09;
-   Write('ş ');
-   TextAttr:=$0F; Write('Open!EDIT cannot locate ' + Pad('OEDIT.CFG',43));
-   TextAttr:=$01;
-   WriteLn('³');
-   Write('³   ');
-   TextAttr:=$09;
-   Write('ş ');
-   TextAttr:=$0F;
-   Write('Please run OESetup.EXE to create this configuration file');
-   TextAttr:=$01;
-   WriteLn('           ³');
-   WriteLn('³'+Pad('',72)+'³');
-   WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
-   Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-   WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-   WriteLn('ÀÄÄÄÄÄÄÄÙ');
-   {$ENDIF}
-   Halt(2);
-   End;
-  Read(ConfigFile,Config^);
+    {$I-}Read(ConfigFile,Config^);{$I+}
+    GotConfig:=(IOResult=0);
+    Close(ConfigFile);
+  End;
+  If Not GotConfig Then
+  Begin
+    { Same factory defaults legacy/sesetup4.pas writes for a brand-new
+      install, minus the BBS-door/registration fields this port dropped. }
+    FillChar(Config^,SizeOf(Config^),0);
+    With Config^ Do
+    Begin
+      CfgHeader:='Open!EDIT v'+Ver+' Configuration File';
+      NC:=$0F; HC:=$0B; BC:=$01; PC:=$09; FZ:=9;
+      FC:=$0F; FL:=$07; FS:=$09; FD:=$0B;
+      IC:=$0B; ID:=$0B; IL:=$0F; IS:=$09;
+      FieldColor:=$01;
+      TagFileName:='TAGLINES.TAG';
+      TabStop:=8;
+      CensorChar:='*';
+      BBSPath:='';
+      BBSProg:=bbs_XX;
+      DataUEC:=0;
+      TearLine:=1;
+      RegName:='';
+      MaxQuotePct:=75.0;
+      ForceLessQuote:=False;
+      VowelCensorOnly:=False;
+      RandomSymbolCensor:=False;
+      AbsMaxMsgLines:=4000;
+      DOSSwap:=0;
+      SpellCheck:=2;
+      DictionaryPath:='';
+      QuoteWinSize:=5;
+      ImportSecurity:=999999;
+      ExportSecurity:=999999;
+      ScrollSiz:=8;
+      UseTaglines:=True;
+      UseExpand:=True;
+      UseKeywords:=True;
+      Censor:=False;
+      FillChar(OKTagArea,SizeOf(OKTagArea),True);
+      FillChar(OKExpandArea,SizeOf(OKExpandArea),True);
+      FillChar(OKKeywordArea,SizeOf(OKKeywordArea),True);
+      FillChar(OKCensorArea,SizeOf(OKCensorArea),False);
+      DateFormat:=0;
+      TimeFormat:=0;
+      RepStr:=' * In a message';
+      AutoSave:=True;
+      LanguageFile:='ENGLISH';
+      OKSigHiBit:=False;
+      WrapMargin:=78;
+      StartDate:=Julian(Copy(UnpackedDT(CurrentDT),1,8));
+      CfgVer:=Ver;
+    End;
+  End;
   (*ConfigDecrypt;*)
-  Close(ConfigFile);
 
   If Config^.LanguageFile='' Then Config^.LanguageFile:='ENGLISH';
   If Not FileExists(CfgPath+Config^.LanguageFile+'.LNG') Then
