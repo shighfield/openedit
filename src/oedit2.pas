@@ -2099,10 +2099,9 @@ Begin
  Window(1,1,80,25);
  ClrScr;
 
-  DecryptKey:=SysOpName;
-  DecryptKey:=Capitalize(DecryptKey);
   SysOpName:=RTrim(LTrim(Capitalize(Config^.RegName)));
   If SysOpName='' Then SysOpName:='[unknown]';
+  DecryptKey:=SysOpName;
   If SysPath='' Then GetDir(0,SysPath);
   If SysPath[Length(SysPath)]<>'\' Then SysPath:=SysPath+'\';
 {$IFDEF CompileExtra}
