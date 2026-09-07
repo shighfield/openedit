@@ -2104,6 +2104,13 @@ Begin
   DecryptKey:=SysOpName;
   If SysPath='' Then GetDir(0,SysPath);
   If SysPath[Length(SysPath)]<>'\' Then SysPath:=SysPath+'\';
+
+  UserName:=GetEnv('USER');
+  If UserName='' Then UserName:=GetEnv('LOGNAME');
+  If UserName='' Then UserName:='[unknown]';
+  UserName:=Capitalize(UserName);
+  UserLast:=UserName;
+  UserFirst:='';
 {$IFDEF CompileExtra}
   NC:=ANSICode[Config^.NC];
   HC:=ANSICode[Config^.HC];
