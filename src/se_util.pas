@@ -126,7 +126,6 @@ Const
  PageUpDnSiz    : Word = 15;   { Number of lines to scroll by during PgUp/Dn }
  Max_Msg_Lines  : Word = InternalLineLim;
  Insert_Mode    : Boolean = True;
- MailReader     : Boolean = False;
  Only2MinMsg    : Boolean = False;
  Only1MinMsg    : Boolean = False;
  Force          : Boolean = False;
@@ -209,7 +208,6 @@ Var
  CurrTimeY,
  UserTimeX,
  UserTimeY      : Byte;
- MSGINF         : String[12];
  XtraTxt        : Text;
  XtraS          : String[127];
 Implementation

@@ -2062,17 +2062,16 @@ Begin
   For PCnt:=1 To ParamCount Do
   Begin
     If (UCase(Copy(ParamStr(PCnt),1,2))='-T') Or (UCase(Copy(ParamStr(PCnt),1,2))='/T') Then
-    MsgTxtFile:=Copy(ParamStr(PCnt),3,255);
-    If (UCase(Copy(ParamStr(PCnt),1,2))='-M') Or (UCase(Copy(ParamStr(PCnt),1,2))='/M') Then
+     MsgTxtFile:=Copy(ParamStr(PCnt),3,255)
+    Else
+    If (UCase(Copy(ParamStr(PCnt),1,2))='-F') Or (UCase(Copy(ParamStr(PCnt),1,2))='/F') Then
     Begin
-      MailReader:=True;
-      MsgTxtFile:=Copy(ParamStr(PCnt),3,255);
-    End;
-   If (UCase(Copy(ParamStr(PCnt),1,2))='-F') Or (UCase(Copy(ParamStr(PCnt),1,2))='/F') Then
-   Begin
-     Force:=True;
-     ForceLines:=IntVal(Copy(ParamStr(PCnt),3,255));
-    End;
+      Force:=True;
+      ForceLines:=IntVal(Copy(ParamStr(PCnt),3,255));
+    End
+    Else
+    If (Copy(ParamStr(PCnt),1,1)<>'-') And (Copy(ParamStr(PCnt),1,1)<>'/') Then
+     MsgTxtFile:=ParamStr(PCnt);
   End;
 
   If Config^.QuoteWinSize<2 Then Config^.QuoteWinSize:=5;
@@ -2080,42 +2079,6 @@ Begin
   Detailed:=True;
   HelpScrPrgName:='Open!EDIT';
   LastAutoSave:=Timer;
-  If MailReader Then
-  Begin
-    Assign(MsgTmp,CfgPath+'LOCAL.DEF');
-    FileMode:=66; {$I-} Reset(MsgTmp); {$I+} FileMode:=2;
-  If IOResult<>0 THen
-  Begin
-     WriteLn('Please run OESetup and configure local mode defaults.');
-     Halt(2);
-  End;
-  ReadLn(MsgTmp,BBSName);
-  ReadLn(MsgTmp,SysOpName);
-  SysOpFirst:=Copy(SysOpName,1,Pos(' ',SysOpName)-1);
-  SysOpLast:=Copy(SysOpName,Pos(' ',SysOpName)+1,255);
-  ReadLn(MsgTmp,UserName);
-  UserFirst:=Copy(UserName,1,Pos(' ',UserName)-1);
-  UserLast:=Copy(UserName,Pos(' ',UserName)+1,255);
-  ReadLn(MsgTmp,UserLocation);
-  ReadLn(MsgTmp,TurboCOM.Security);
-  ReadLn(MsgTmp,Tmp);
-  If Tmp[1] In ['1','3'] Then ANSI:=True Else ANSI:=False; ReadLn(MsgTmp,Tmp); Close(MsgTmp);
-  Assign(MsgTmp,'DORINFO1.DEF');
-  ReWrite(MsgTmp);
-  WriteLn(MsgTmp,BBSName);
-  WriteLn(MsgTmp,SysOpFirst);
-  WriteLn(MsgTmp,SysOpLast);
-  WriteLn(MsgTmp,'COM0');
-  WriteLn(MsgTmp,'0 BAUD,N,8,1');
-  WriteLn(MsgTmp,'1');
-  WriteLn(MsgTmp,UserFirst);
-  WriteLn(MsgTmp,UserLast);
-  WriteLn(MsgTmp,UserLocation);
-  If ANSI Then WriteLn(MsgTmp,'1') Else WriteLn(MsgTmp,'2');
-  WriteLn(MsgTmp,TurboCOM.Security);
-  WriteLn(MsgTmp,Tmp);
-  Close(MsgTmp);
-  End;
 
   ExitCode:=2;
   InitTurboCOMM;
@@ -2136,79 +2099,12 @@ Begin
  Window(1,1,80,25);
  ClrScr;
 
-{$IFDEF CompileExtra}
- If FileExists(CfgPath+'OEDIT.REG') Then
-   DecryptKey:=Decode(UCase(Config^.RegName),Config^.DataUEC,CfgPath+'OEDIT.REG')
-  Else
-  Begin
-    DecryptKey:=StrUnreg;
-  End;
-{$ELSE}
-   DecryptKey:=SysOpName;
-{$ENDIF}
+  DecryptKey:=SysOpName;
   DecryptKey:=Capitalize(DecryptKey);
   SysOpName:=RTrim(LTrim(Capitalize(Config^.RegName)));
   If SysOpName='' Then SysOpName:='[unknown]';
   If SysPath='' Then GetDir(0,SysPath);
   If SysPath[Length(SysPath)]<>'\' Then SysPath:=SysPath+'\';
-  Case Config^.BBSProg Of
-    bbs_CC: MSGINF:='MSGINF.';
-    bbs_RA: MSGINF:='MSGINF.';
-    bbs_EZ: MSGINF:='MSGINF.';
-    bbs_QK: MSGINF:='MSG.INF';
-  else    MSGINF:='MSGINF.';
-  End;
-  If (Not FileExists(SysPath+MSGINF)) And (Not MailReader) Then
-  Begin
-    If LocalTest THen
-    Begin
-      Assign(F,SysPath+MSGINF);
-      ReWrite(F);
-    Case Config^.BBSprog Of
-       bbs_QK: Begin
-                 WriteLn(F,UserName);
-                 WriteLn(F,UserName);
-                 WriteLn(F,'Open!EDIT local test mode');
-                 WriteLn(F,'Open!EDIT Test Area');
-                 WriteLn(F,'Private');
-               End;
-       Else    Begin
-                 WriteLn(F,UserName);
-                 WriteLn(F,UserName);
-                 WriteLn(F,'Open!EDIT local test mode');
-                 WriteLn(F,'1');
-                 WriteLn(F,'Open!EDIT Test Area');
-                 WriteLn(F,'Y');
-               End;
-      End;
-     Close(F);
-    End
-    Else
-    Begin
-     {$IFDEF CompileExtra}
-      TextAttr:=$01;
-      WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-      WriteLn('³'+Pad('',72)+'³');
-      Write('³  '); TextAttr:=$0B; Write(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; WriteLn('³');
-      Write('³  '); TextAttr:=$0B; Write(Pad('Datafile error',70)); TextAttr:=$01; WriteLn('³');
-      WriteLn('³'+Pad('',72)+'³');
-      TextAttr:=$01;
-      Write('³   '); TextAttr:=$09; Write('ş '); TextAttr:=$0F; Write('Open!EDIT cannot locate the datafile '+
-      Pad(SysPath+MSGINF,30));
-      TextAttr:=$01; WriteLn('³');
-      Write('³   '); TextAttr:=$09; Write('ş '); TextAttr:=$0F;
-      Write('Please use the -P<path_to_bbs> parameter to fix this problem');
-      TextAttr:=$01; WriteLn('       ³');
-      Write('³     '); TextAttr:=$0F; Write(Pad('i.e. OEDIT -PC:\BBS',67)); TextAttr:=$01; WriteLn('³');
-      WriteLn('³'+Pad('',72)+'³');
-      WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
-      Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-      WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-      WriteLn('ÀÄÄÄÄÄÄÄÙ');
-     {$ENDIF}
-      Halt(2);
-    End;
-  End;
 {$IFDEF CompileExtra}
   NC:=ANSICode[Config^.NC];
   HC:=ANSICode[Config^.HC];
@@ -2247,56 +2143,13 @@ Begin
 {$IFDEF CompileExtra}
   SelectLanguage;
 {$ENDIF}
-  If MailReader Then
-  Begin
-    AreaName:='Offline Mail Reader';
-    FromName:=Capitalize(UserFirst+' '+UserLast);
-    ToName:='Recipient';
-    MNum:=0;
-    Subject:='Open!EDIT Offline Mail';
-    Replying:=True;
-   End
-   Else
-   Begin
-    AreaName:='';
-    FromName:=Capitalize(UserFirst+' '+UserLast); ToName:='';
-    MNum:=0; Subject:=''; Replying:=False;
-    Assign(F,SysPath+MSGINF);
-    FileMode:=66; Reset(F); FileMode:=2;
-    Case Config^.BBSProg Of
-    bbs_QK: Begin
-              MNum:=0;
-              ReadLn(F,FromName); FromName:=Capitalize(FromName);
-              ReadLn(F,ToName);   ToInitials:=Initials(ToName); ToName:=Capitalize(ToName);
-              ReadLn(F,Subject);
-              ReadLn(F,AreaName);
-              MsgAreaPos:=-1;
-              ReadLn(F,Tmp);
-              PrivMsg:=(UCase(Tmp[2])='R');
-            End;
-     Else    Begin
-               ReadLn(F,FromName); FromName:=Capitalize(FromName);
-               ReadLn(F,ToName);   ToInitials:=Initials(ToName); ToName:=Capitalize(ToName);
-               ReadLn(F,Subject);
-               ReadLn(F,MNum);
-               ReadLn(F,AreaName);
-               MsgAreaPos:=-1;
-               ReadLn(F,Tmp);
-               PrivMsg:=(Tmp[1]='Y');
-             End;
-    End;
-   Close(f);
-  End;
+  AreaName:='';
+  FromName:='';
+  ToName:='';
+  MNum:=0;
+  Subject:='';
+  Replying:=False;
   Str(MNum,MsgNum);
-   If (MsgAreaPOS<>-1) then
-   begin
-     Config^.UseTaglines:=Config^.OKTagArea[MsgAreaPos];
-     Config^.UseExpand:=Config^.OKExpandArea[MsgAreaPos];
-     Config^.UseKeywords:=Config^.OKKeywordArea[MsgAreaPos];
-     Config^.Censor:=Config^.OKCensorArea[MsgAreaPos];
-     Config^.UseSigs:=Config^.OKSigArea[MsgAreaPos];
-     Config^.UseFilter:=Config^.FilterArea[MsgAreaPos];
-   End;
 {$IFDEF CompileExtra}
   For MNum:=1 To 8 Do
   Begin
@@ -2389,9 +2242,15 @@ Begin
   QuoteHil:=0;
   If FileExists(MsgTxtFile) Then
   Begin
-    FixChainsaw;
-    Replying:=True;
-    LoadQuoteData;
+    Assign(MsgTmp,MsgTxtFile);
+    Reset(MsgTmp);
+    LineCnt:=0;
+    While (Not Eof(MsgTmp)) And (LineCnt<Max_Msg_Lines-1) Do
+     Begin
+      Inc(LineCnt);
+      ReadLn(MsgTmp,MText[LineCnt]^);
+     End;
+    Close(MsgTmp);
   End;
   Config^.TabStop:=8;
   CheckHeaderSize;
@@ -2437,18 +2296,8 @@ End
   If Config^.UseFilter Then FilterText;
   ReEditing:=False;
   Inc(LineCnt); MText[LineCnt]^:='';
-  {$IFDEF CompileExtra}
-  WasTag:=TagLine;
-  {$ELSE}
-  WasTag:=True;
-  {$ENDIF}
+  WasTag:=False;
   If ReEditing Then Goto ReMsgEdit;
-  If (Config^.TearLine=2) Then
-  Begin
-    Inc(LineCnt);
-    MText[LineCnt]^:='-*- Open!EDIT v' +Ver;
-    MText[LineCnt]^:=MText[LineCnt]^+'+';
-  End;
  If LineCnt<>0 Then
  Begin
    Count_Lines;
