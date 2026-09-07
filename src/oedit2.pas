@@ -79,10 +79,7 @@ Uses
   TurboCOM,
   SE_Util,
   Utilpack,
-  Dos
-{$IFDEF CompileExtra}
-  ,ExecSwap;
-{$ENDIF}
+  Dos;
 
 Label ReMsgEdit;
 
@@ -1375,28 +1372,30 @@ Begin
 End;
 
 Procedure Drop2DOS;
+{ Was ExecSwap: swap the resident program out of DOS conventional memory
+  (EMS/XMS/disk), exec COMSPEC, swap back in on return. That whole problem
+  is DOS-specific - Linux processes each get their own address space, so
+  no swap step is needed. Uses.Dos.Exec is fork+exec under the hood on
+  this target; SwapVectors (DOS interrupt-vector handoff for TSRs) is a
+  no-op here and was dropped rather than kept as misleading cruft. }
+Var
+  ShellCmd: String;
 begin
-  UseEmsIfAvailable := True;
-  if not InitExecSwap(HeapPtr, '~SESWAP.$$$') then
-    WriteLn('Unable to allocate swap space')
-  else
-  begin
-    Plain_Footer(1);
-    SGotoXY(74-Length(LS(76)),22);
-    FunkyWrite(LS(76));
-    SaveScreen(1);
-    Window(1,1,80,25);
-    TextAttr:=$07;
-    ClrScr;
-    sWriteLn(LS(77));
-    SwapVectors;
-    ExecWithSwap(GetEnv('COMSPEC'), '');
-    ShutdownExecSwap;
-    SwapVectors;
-    RestoreScreen(1);
-    Display_Footer(1);
-    Reposition;
-  end;
+  ShellCmd:=GetEnv('SHELL');
+  If ShellCmd='' Then ShellCmd:='/bin/sh';
+  Plain_Footer(1);
+  SGotoXY(74-Length(LS(76)),22);
+  FunkyWrite(LS(76));
+  SaveScreen(1);
+  Window(1,1,80,25);
+  TextAttr:=$07;
+  ClrScr;
+  sWriteLn(LS(77));
+  Exec(ShellCmd, '');
+  If DosError<>0 Then WriteLn('Unable to run shell (DosError ',DosError,')');
+  RestoreScreen(1);
+  Display_Footer(1);
+  Reposition;
 End;
 
 Procedure ProcessStars(Var P: String);
