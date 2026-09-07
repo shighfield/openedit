@@ -96,6 +96,16 @@ Var
  PCnt           : Byte;
  LFs            : Byte;
 
+Function MaxAvail: LongInt;
+{ Turbo Pascal's heap intrinsic (largest free block) has no FPC equivalent -
+  FPC's heap grows from the OS on demand rather than living in a fixed DOS
+  segment. CurrHeapFree is the closest stand-in; the DOS-era "insufficient
+  heap" checks that read this are effectively unreachable on a modern
+  system, but are left in place rather than removed. }
+Begin
+ MaxAvail:=System.GetFPCHeapStatus.CurrHeapFree;
+End;
+
 Function Line_Boundry: Boolean;
 Begin
   Line_Boundry:=(CCol=1) Or (CCol>CurLength);
@@ -1722,13 +1732,6 @@ Begin
       'A': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft+(5*60); Continue; End;
       'B': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft-(5*60); Continue; End;
 {$IFDEF CompileExtra}
-      'C': If (LocalKeypress) And (Not Expired) Then
-           Begin
-             SGotoXY(8,22); FunkyWrite(' '+LS(103)+' ');
-             EditUser;
-             Display_Footer(1);
-             Continue;
-           End;
       'D': If (LocalKeypress) And (Not Expired) Then
            Begin
              Drop2DOS;
@@ -1832,7 +1835,7 @@ Begin
                LastWasCR:=False;
               End;
           End;
-   #32.. #255: Begin
+   #32..#126,#128..#255: Begin
                  Insert_Char(Key); { All other characters are self-inserting }
                  LastWasCR:=False;
                  {$IFDEF CompileExtra}

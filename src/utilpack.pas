@@ -6,8 +6,8 @@
 {                                                                            }
 {컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
 
-{$DEFINE SysInfo}
-{$DEFINE Useless}
+{.$DEFINE SysInfo}
+{.$DEFINE Useless}
 
 Unit UtilPack;
 
@@ -17,213 +17,38 @@ Unit UtilPack;
 
 {컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
   Interface
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
 
 Uses DOS;
 
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ File Information                                                           }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
+Function RemoveWildcard(St: String): String;
+Function FileExists(FN: String): Boolean;
 
-Function FileExists(FN: String): Boolean;       {             Does FN exist? }
-Function FileOpen(Var F): Boolean;              {                 Is F open? }
+Function Capitalize(S: String): String;
+Function LoCase(C: Char): Char;
+Function UCase(UpString: String): String;
+Function FPad(St: String; I: Integer): String;
+Function Pad(St: String; I: Integer): String;
+Function LTrim(WhatStr: String): String;
+Function RTrim(WhatStr: String): String;
+Function Zero(I: LongInt; Z: Byte): String;
+Function LeadingZero(W: Word): String;
+Function MakeStr(Len: Byte; MCh: Char): String;
 
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ String Manipulation                                                        }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
+Function FormatTime(Rl: Real): String;
+Function Timer: Real;
+Procedure CDelay(D: Word);
+Function Julian(DT: String): Longint;
+Function UnpackedDT(L: LongInt): String;
+Function CurrentDT: LongInt;
 
-Function Capitalize(S: String): String;         {   StRiNg bBs => String BBS }
-Function LCase(UpString: String): String;       {           sTRINg => string }
-Function UCase(UpString: String): String;       {           StrinG => STRING }
-Function LoCase(C: Char): Char;                 {       Opposite of UpCase() }
-                                                { -------------------------- }
-Function FPad(St: String; I: Integer): String;  { Make St I spcs, add 2 head }
-Function Pad(St: String; I: Integer): String;   { Make St I spcs, add 2 tail }
-Function LTrim(WhatStr: String): String;        {     Removes spaces to LEFT }
-Function RTrim(WhatStr: String): String;        {    Removes spaces to RIGHT }
-Function Copy1(S: String; Len: Byte): String;   {        FAST Copy(S,1,Len); }
-                                                { -------------------------- }
-Function Zero(I: LongInt; Z: Byte): String;     { Preceed I w/Z-Len(I) "0"'s }
-Function ZeroS(S: String; Z: Byte): String;     { Preceed S w/Z-Len(S) "0"'s }
-Function LeadingZero(W: Word): String;          {   Pad W to 2 digits ("01") }
-                                                { -------------------------- }
-Function Backwards(Forwards: String): String;   {          Reverses a string }
-Function CommaFmt(Value: LongInt): String;      {  Insert "," every 3 digits }
-Function MakeStr(Len: Byte; MCh: Char): String; {     Makes str of Len chars }
-                                                { -------------------------- }
-Function RemoveWildcard(St: String): String;    {        D:\XX\*.* => D:\XX\ }
-Function Strip(WhatName: String): String;       {     D:\XX\XX.XXX => XX.XXX }
-Function Extension(Filename: String): String;   {        FILENAME.EXT => EXT }
-                                                { -------------------------- }
-Procedure Read_Str(VAR Return: String;          {    Read string into Return }
-                   Max: Integer; Default: String);
+Procedure SaveScreen(Idx: Byte);
+Procedure RestoreScreen(Idx: Byte);
+Function GetChar: Char;
+Function VSeg: Word;
 
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ Date/Time Routines                                                         }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
-Function FormatTime(Rl: Real): String;          {   Format to ##:##:## style }
-Function Timer: Real;                           {   Returns secs since 00:00 }
-Procedure CDelay(D: Word);                      {        Uses clock to delay }
-Procedure RTC_Delay(Microsecs: Longint);        {  1000000 microsecs = 1 sec }
-Function Gregorian(Julian: LongInt): String;
-Function Julian(DT: String): Longint;           {    MM/DD/YY -> Julian Date }
-Function FormatDate(L: LongInt; UseCInfo: Boolean): String; {    Format date }
-Function UnpackedDT(L: LongInt): String;        { UnpackTime, convenient :-) }
-Function PackedDT(MMDDYYHHMMSS: String;         {   PackTime, convenient :-) }
-         DT: DateTime; UseDT: Boolean): LongInt;
-Function CurrentDT: LongInt;                    { PackTime'd  time/date  NOW }
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ Screen Routines                                                            }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
-Procedure CursorOff;                            {           Turns cursor off }
-Procedure CursorOn;                             {            Turns cursor on }
-Procedure SmallCursor;                          {    Makes underscore cursor }
-Procedure BigCursor;                            {         Makes block cursor }
-                                                { -------------------------- }
-Procedure Save_Screen;                          {       Saves copy of screen }
-Procedure Save_Screen2;                         {     Saves copy of screen 2 }
-Procedure Restore_Screen;                       {     Restore copy of screen }
-Procedure Restore_Screen2;                      {   Restore copy of screen 2 }
-Procedure SaveScreen(Idx: Byte);                {   Up to 10 saves available }
-Procedure RestoreScreen(Idx: Byte);             { Restore SaveScreen screens }
-                                                { -------------------------- }
-Function GetAttr: Byte;                         { Return attr @WhereX,WhereY }
-Function GetChar: Char;                         { Return char @WhereX,WhereY }
-Procedure FillScr(C: Char; A: Byte);            {  Fill screen w/C, w/attr A }
-Procedure ZWrite(C: Char);                      {   Direct write, ^G=no beep }
-                                                { -------------------------- }
-Procedure HighIntensity(SetHi: Boolean);        {  Toggle hi-intensity/blink }
-Procedure Set25Lines;                           {    Set 25 line screen mode }
-                                                { -------------------------- }
-Function SetOutput(FileName: String): Boolean;  {     Redirect EXEC() output }
-Procedure CancelOutput;                         {         Cancel redirection }
-Function VSeg: Word;                            {  Return Video Segment Addr }
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ Hardware/Low Level Routines                                                }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
-Procedure ColdBoot;                             {       Cold boot the system }
-Procedure WarmBoot;                             {       Warm boot the system }
-                                                { -------------------------- }
-Procedure Drive_Light_Off(Drive: Char);         {   Turn drive A/B light OFF }
-Procedure Drive_Light_On(Drive: Char);          {    Turn drive A/B light ON }
-Procedure SetCLk(Assert: Boolean);              {      Turn on/off Caps Lock }
-Procedure SetSLk(Assert: Boolean);              {    Turn on/off Scroll Lock }
-Procedure SetNLk(Assert: Boolean);              {    Turn on/off Number Lock }
-Procedure SetPrtScr(Assert: Boolean);           {   Turn on/off Print Screen }
-                                                { -------------------------- }
-Procedure StuffKey(W: Word);                    {  Inserts W into kbd buffer }
-Function PeekKey: Char;                         {   Check next key in buffer }
-Procedure SetIns(Assert: Boolean);              {          Set Insert status }
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ Numeric Routines                                                           }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
-Function IntVal(ChrStr: String): Integer;       {   Cvt ChrStr to an Integer }
-Function LIntVal(ChrStr: String): LongInt;      {    Cvt ChrStr to a LongInt }
-Function StrVal(IntNum: LongInt): String;       {       Cvt IntNum to String }
-                                                { -------------------------- }
-Function Hex(L: LongInt): String;               { Return L in Hex (8 digits) }
-Function HexW(I: Word): String;                 { Return I in Hex (4 digits) }
-Function HexZ(L: LongInt): String;              {     Hex() w/o zero padding }
-Function HexPtr(P: Pointer): String;            {  Return P in ssss:oooo fmt }
-                                                { -------------------------- }
-Procedure Read_Int(VAR WhatInt: LongInt;        {  Read integer into WhatInt }
-                   Maximum,Default: LongInt);
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ Miscellaneous Routines                                                     }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
-Procedure CallProc(UserProc: Pointer);          {              Call UserProc }
-Function InsStat: Boolean;                      {         Is Insert Mode on? }
-
-{$IFDEF Useless}
-Function CvtToByte(IntToRound: Integer): Byte;  {             Max out at 255 }
-Function CvtToInt(RealToRound: Real): Integer;  {           Max out at 32767 }
-Function CvtToLInt(RealToRound: Real): LongInt; {      Max out at 2147483647 }
-Function CvtToReal(LngInt: LongInt): Real;      {               -- No use -- }
-Function CvtToWord(RealToRound: Real): Word;    {           Max out at 65535 }
-Function WordToInt(WordToRound: Word): Integer; {           Max out at 32767 }
-Function WordVal(ChrStr: String): Word;         {       Cvt ChrStr to a Word }
-Function RoundOff(RealToRound: Real): Real;     {               -- No use -- }
-
-Procedure MoveLong(FromP,ToP: Pointer;          {   Fast, large block Move() }
-                   Len: longint);
-Procedure RAMShot(FN: String);                  {      Copy 640K RAM to disk }
-Function ReadChar(Pattern: Integer): Char;      { ReadKey/ Flash NLk/Cap/SLk }
-Procedure Init_Box(Text1,Text2,Text3: String);  {      Center TextX in a box }
-Procedure Copy_File(Source, Dest: String;       {        Copy source to dest }
-                    Display: Boolean; VAR Success: Boolean);
-Function ExecWin(ProgName,Params: String;       {           Exec in a window }
-                 LeftCol,TopLine,RightCol,BottomLine: Word): Word;
-Function ExecWin2(ProgName,Params: String;
-                 LeftCol,TopLine,RightCol,BottomLine: Word): Word;
-{$ENDIF}
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ System Information                                                         }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
-{$IFDEF SysInfo}
-Function AnsiSysLoaded : Boolean;               {        Is ANSI.SYS loaded? }
-Function DblLoaded: Boolean;                    {     Is DoubleSpace loaded? }
-Function DVLoaded: Boolean;                     {        Is DESQview loaded? }
-Function WinLoaded: Boolean;                    {         Is Windows loaded? }
-Function OS2Loaded: Boolean;                    {            Is OS/2 loaded? }
-Function x4DOSLoaded: Boolean;                  {            Is 4DOS loaded? }
-Function ShareLoaded: Boolean;                  {           Is Share loaded? }
-                                                { -------------------------- }
-Function CapsLock: Boolean;                     {           Is Caps Lock on? }
-Function NumLock: Boolean;                      {         Is Number Lock on? }
-Function ScrollLock: Boolean;                   {         Is Scroll Lock on? }
-Function EnhKbd: Boolean;                       {         Enhanced keyboard? }
-                                                { -------------------------- }
-Function InitialVideoMode: Integer;             {  Return initial video mode }
-Function OpModeCheck: Integer;                  { 0=DOS,1=WStd,2=WEnh,3=DESQ }
-                                                { -------------------------- }
-Function CoProcessorExist: Boolean;             { Is there a numeric co-pro? }
-Function CPUType: LongInt;                      {  Return 8088 or 80?86 or 0 }
-Function PrinterOnline: Boolean;                {     Is the printer online? }
-Function SBDetected: Word;                      {  Return SBlaster port or 0 }
-Function AdlibCard: Boolean;                    { Is an Adlib/cmptble there? }
-Function GameIOAttached: Boolean;               {  Is game IO card attached? }
-Function NumDisketteDrives: Integer;            {    Return # of disk drives }
-Function NumPrinters: Word;                     {  Return number of printers }
-                                                { -------------------------- }
-Function LPTAddr(LPTX: Byte): Word;             {   Return base addr of LPTX }
-Function BaseAddr(ComX: Byte): Word;            {   Return base addr of ComX }
-Function NumSerialPorts: Integer;               {   Return # of serial ports }
-Function PortInfo(ComX: Byte;                   {   Get info about port ComX }
-                  Var DataBits,StopBits,Parity: Byte): Boolean;
-Function PortRate(ComPort: Word;                {       Get baudrate of ComX }
-                  Var Baud: LongInt): Boolean;
-Function UART(ComX: Byte): String;              {   Return UART type on ComX }
-                                                { -------------------------- }
-Function DriveInfo(Var FAT,SerNo: LongInt): Boolean; { Drive Ser# & FAT Type }
-Procedure CD_ROMData(Var DrvCount: Word;        {   Get info on CDROM/MSCDEX }
-                     Var FirstDrv: Char;
-                     Var IsMSCDEX, IsCDROM: Boolean);
-Function NetworkDrive(Drive: Char;              {  Is Drive a network drive? }
-                      Var DOSErrorCode: Word): Boolean;
-                                                { -------------------------- }
-Function TrueDosVer: Word;                      {           TRUE DOS version }
-Function ResolvePath(Var S: String): Boolean;   {   Subst drive => Full path }
-Function CountryData(Var Currency,              {           Get country info }
-                         DateFormat: String;
-                     Var Thousands,Decimal,DateSep,TimeSep,DataSep: Char;
-                     Var CurrencyPlaces,TimeFormat: Byte): Boolean;
-
-{$ENDIF}
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ Save Screen Records                                                        }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
+Function IntVal(ChrStr: String): Integer;
+Function LIntVal(ChrStr: String): LongInt;
+Function StrVal(IntNum: LongInt): String;
 
 Type
  SaveScrRec = Record
@@ -234,226 +59,20 @@ Type
 Var
  Saved: Array[1..12] Of ^SaveScrRec;
 
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-{ BIOS & CMOS Routines/Data                                                  }
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
-
 Const
- FT12Hour   : Boolean = False;          { Make FormatTime return 12hour time }
- Read_StrLF : Boolean = True;           { Move down one line after Read_Str? }
- Read_StrMask: Boolean = False;         { Mask Read_Str input with *'s?      }
- RSMaskChar : Char = '*';               { Char to mask Read_Str input with   }
- Read_StrBG : Char = #32;               { Background char for Read_Str field }
+ FT12Hour: Boolean = False;          { Make FormatTime return 12hour time }
 
- ThinCursor = $0707; { Thin cursor }
- OvrCursor  = $0307; { Overwrite cursor }
- InsCursor  = $0607; { Insert cursor (default) }
- BarCursor  = $000D; { Bar cursor }
-
-Var
- CursorShape: Word;
- BiosDate : Array[0..7] of Char Absolute $F000:$FFF5; {     Date of the BIOS }
- EquipFlag: Word Absolute $0000:$0410;          { Equipment flag, used below }
- CompID   : Byte Absolute $F000:$FFFE;          {    Computer ID, used below }
- BiosSeg: Record                                                 { Absolute }
-   ComBase               : Array[1..4] of Word;
-   LptBase               : Array[1..4] of Word;
-   InstalledHardware     : Array[1..2] of Byte;
-   POST_Status           : Byte;                         { Convertible only }
-   MemorySize            : Word;
-   _RESERVED1            : Word;
-   KeyboardControl       : Array[1..2] of Byte;
-   AlternateKeypadEntry  : Byte;
-   KeyboardBufferHeadPtr : Word;
-   KeyboardBufferTailPtr : Word;
-   KeyboardBuffer        : Array[1..16] of Word;
-   FloppyRecalStatus     : Byte;
-   FloppyMotorStatus     : Byte;
-   FloppyMotorOffCounter : Byte;
-   FloppyPrevOpStatus    : Byte;
-   FloppyControllerStatus: Array[1..7] of Byte;
-   DisplayMode           : Byte;
-   NumberOfColumns       : Word;
-   RegenBufferLength     : Word;
-   RegenBufferAddress    : Word;
-   CursorPosition        : Array[1..8] of Word;
-   CursorType            : Word;
-   CurrentDisplayPage    : Byte;
-   VidControllerBaseAddr : Word;
-   Current3x8Register    : Byte;
-   Current3x9Register    : Byte;
-   PointerToResetCode    : Pointer;           { PS/2 only - except model 30 }
-   _RESERVED2            : Byte;
-   TimerCounter          : Longint;
-   TimerOverflowFlag     : Byte;     { non-zero means timer passed 24 hours }
-   BreakKeyState         : Byte;
-   ResetFlag             : Word;               { $1234: Bypass mem test     }
-                                               { $4321: Preserve mem (PS/2) }
-                                               { $5678: System supended*    }
-                                               { $9ABC: Manufacturing test *}
-                                               { $ABCD: System POST loop  **}
-                                               { *=(Convertible), **=(only) }
-   FixedDiskPrevOpStatus : Byte;
-   NumberOfFixedDrives   : Byte;
-   FixedDiskDriveControl : Byte;                                  { XT only }
-   FixedDiskCntrllerPort : Byte;                                  { XT only }
-   LptTimeOut            : Array[1..4] of Byte;  { [4] = PC, XT and AT only }
-   ComTimeOut            : Array[1..4] of Byte;
-   KbdBufferStartPtr     : Word;
-   KbdBufferEndPtr       : Word;
-   VideoRows             : Byte;
-   CharacterHeight       : Word;                      { Bytes per character }
-   VideoControlStates    : Array[1..2] of Byte;
-   _RESERVED3            : Word;
-   MediaControl          : Byte;
-   FixedDiskCntrllerStat : Byte;          { AT, XT after 1/10/85, PS/2 only }
-   FixedDiskCntrlrErrStat: Byte;          { AT, XT after 1/10/85, PS/2 only }
-   FixedDiskInterruptCtrl: Byte;          { AT, XT after 1/10/85, PS/2 only }
-   _RESERVED4            : Byte;
-   DriveMediaState       : Array[0..1] of Byte;
-   _RESERVED5            : Word;
-   DriveCurrentCylinder  : Array[0..1] of Byte;
-   KeyboardModeState     : Byte;
-   KeyboardLEDflags      : Byte;
-   UsrWaitCmpleteFlagAddr: Pointer;
-   UserWaitCount         : Longint;                         { micro-seconds }
-   WaitActiveFlag        : Byte;
-   _RESERVED6            : Array[1..7] of Byte;
-   VideoParameterTable   : Pointer;                     { EGA and PS/2 only }
-   DynamicSaveArea       : Pointer;                     { EGA and PS/2 only }
-   AlphaModeAuxCharGnrtor: Pointer;                     { EGA and PS/2 only }
-   GfxModeAuxCharGnrator : Pointer;                     { EGA and PS/2 only }
-   SecondarySaveArea     : Pointer;              { PS/2 only (not Model 30) }
-   _RESERVED7            : Array[1..4] of Byte;
-   _RESERVED8            : Array[1..64] of Byte;
-   PrintScreenStatus     : Byte;
-  End Absolute $0040:$0000;
-
-{컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
   Implementation
 {컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
 
 
 Uses Crt;
 
-Const
- OutRedir: Boolean = False;
-
-Var
- Reg           : Registers;
- OldIntVect29  : Pointer;
-
-Procedure CursorOn;
-Begin
-  Reg.Ax := 1 Shl 8;
-  Reg.Cx := 6 Shl 8 + 7;
-  Intr($10,Reg);
-End;
-
-Procedure CursorOff;
-Begin
-  Reg.Ax := 1 Shl 8;
-  Reg.Cx := 14 Shl 8;
-  Intr($10,Reg);
-End;
-
-Procedure Save_Screen;
-Begin
- If Saved[11]<>Nil Then
-  Begin
-   GotoXY(19,12);
-   TextAttr:=$07;
-   Write(' Save_Screen ptr 11 not nil, cannot save! ');
-   Halt;
-  End;
- New(Saved[11]);
- With Saved[11]^ Do
-  Begin
-   X:=WhereX;
-   Y:=WhereY;
-   TxtAttr:=TextAttr;
-   WndMin:=WindMin;
-   WndMax:=WindMax;
-   If (Mem[0000:$0449] = $7) Then
-    Move(Mem[$b000:0000],Screen,SizeOf(Screen))
-   Else
-    Move(Mem[$b800:0000],Screen,SizeOf(Screen));
-  End;
-End;
-
-Procedure Restore_Screen;
-Begin
- If Saved[11]=Nil Then
-  Begin
-   GotoXY(18,12);
-   TextAttr:=$07;
-   Write(' Restore_Screen ptr 11 nil, cannot restore! ');
-   Halt;
-  End;
- With Saved[11]^ Do
-  Begin
-   If (Mem[0000:$0449] = $7) Then
-    Move(Screen,Mem[$b000:0000],SizeOf(Screen))
-   Else
-    Move(Screen,Mem[$b800:0000],SizeOf(Screen));
-   WindMin:=WndMin;
-   WindMax:=WndMax;
-   GotoXY(X,Y);
-   TextAttr:=TxtAttr;
-  End;
- Dispose(Saved[11]); Saved[11]:=Nil;
-End;
-
-Procedure Save_Screen2;
-Begin
- If Saved[12]<>Nil Then
-  Begin
-   GotoXY(19,12);
-   TextAttr:=$07;
-   Write(' Save_Screen2 ptr 12 not nil, cannot save! ');
-   Halt;
-  End;
- New(Saved[12]);
- With Saved[12]^ Do
-  Begin
-   X:=WhereX;
-   Y:=WhereY;
-   TxtAttr:=TextAttr;
-   WndMin:=WindMin;
-   WndMax:=WindMax;
-   If (Mem[0000:$0449] = $7) Then
-    Move(Mem[$b000:0000],Screen,SizeOf(Screen))
-   Else
-    Move(Mem[$b800:0000],Screen,SizeOf(Screen));
-  End;
-End;
-
-Procedure Restore_Screen2;
-Begin
- If Saved[12]=Nil Then
-  Begin
-   GotoXY(18,12);
-   TextAttr:=$07;
-   Write(' Restore_Screen ptr 12 nil, cannot restore! ');
-   Halt;
-  End;
- With Saved[12]^ Do
-  Begin
-   If (Mem[0000:$0449] = $7) Then
-    Move(Screen,Mem[$b000:0000],SizeOf(Screen))
-   Else
-    Move(Screen,Mem[$b800:0000],SizeOf(Screen));
-   WindMin:=WndMin;
-   WindMax:=WndMax;
-   GotoXY(X,Y);
-   TextAttr:=TxtAttr;
-  End;
- Dispose(Saved[12]); Saved[12]:=Nil;
-End;
-
 Procedure SaveScreen(Idx: Byte);
+{ No direct video memory on this target - captures cursor position and
+  attribute only, not screen content, pending the ncurses/Video-unit port. }
 Begin
- If (Idx>10) Or (Idx=0) {Or (Saved[Idx]<>Nil)} Then
+ If (Idx>10) Or (Idx=0) Then
   Begin
    GotoXY(19,12);
    TextAttr:=$07;
@@ -468,16 +87,12 @@ Begin
    TxtAttr:=TextAttr;
    WndMin:=WindMin;
    WndMax:=WindMax;
-   If (Mem[0000:$0449] = $7) Then
-    Move(Mem[$b000:0000],Screen,SizeOf(Screen))
-   Else
-    Move(Mem[$b800:0000],Screen,SizeOf(Screen));
   End;
 End;
 
 Procedure RestoreScreen(Idx: Byte);
 Begin
- If (Idx>10) Or (Idx=0) {Or (Saved[Idx]=Nil)} Then
+ If (Idx>10) Or (Idx=0) Then
   Begin
    GotoXY(18,12);
    TextAttr:=$07;
@@ -486,244 +101,20 @@ Begin
   End;
  With Saved[Idx]^ Do
   Begin
-   If (Mem[0000:$0449] = $7) Then
-    Move(Screen,Mem[$b000:0000],SizeOf(Screen))
-   Else
-    Move(Screen,Mem[$b800:0000],SizeOf(Screen));
    WindMin:=WndMin;
    WindMax:=WndMax;
    GotoXY(X,Y);
    TextAttr:=TxtAttr;
   End;
- DIspose(Saved[Idx]); Saved[Idx]:=Nil;
-End;
-
-Procedure BigCursor; Assembler;
-asm
-    mov     ah,1
-    mov     ch,1
-    mov     cl,5
-    int     10h
-end;
-
-Procedure SmallCursor; Assembler;
-asm
-    mov     ah,1
-    mov     ch,4
-    mov     cl,5
-    int     10h
-End;
-
-Function InsStat: Boolean;
-Begin
- InsStat:=(Mem[$0040:$0017] And 128 <> 0);
-{
- CapsStat:=(Mem[$0040:$0017] And 64 <> 0);
- NumStat:=(Mem[$0040:$0017] And 32 <> 0);
- SlkStat:=(Mem[$0040:$0017] And 16 <> 0);
-}
-End;
-
-Procedure SetIns(Assert: Boolean);
-Begin
- { InsStat means non-block cursor }
- If Assert Then
-   Mem[$0040:$0017]:=(Mem[$0040:$0017] Or 128);
- If (Not Assert) Then
-   Mem[$0040:$0017]:=(Mem[$0040:$0017] And (Not 128));
-End;
-
-Procedure Read_Str(VAR Return: String; Max: Integer; Default: String);
-Var
-   GotStr   : String;
-   Ch       : Char;
-   CharCount: Integer;
-   StartPos : Integer;
-   Tmp      : Integer;
-   W        : Word;
-   InsStat  : Boolean; { Override function }
-Begin
-     InsStat:=True;
-     If InsStat Then SmallCursor Else BigCursor;
-     Write(MakeStr(Max,Read_StrBG));
-     GotoXY(WhereX-Max,WhereY);
-     StartPos:=WhereX;
-     GotStr:=Default;
-     If Read_StrMask Then Write(MakeStr(Length(Default),RSMaskChar)) Else Write(Default);
-      Ch:=' ';
-     Repeat
-      Ch:=' ';
-      If KeyPressed Then
-       Begin
-        Ch:=ReadKey;
-       If (Ch=#8) And (Length(GotStr)>0) Then
-         Begin
-          If WhereX-StartPos<=Length(GotStr) Then
-           Begin
-            If WhereX-StartPos>=1 Then
-             Begin
-              Tmp:=WhereX;
-              Delete(GotStr,Tmp-StartPos,1);
-              GotoXY(Tmp-1,WhereY);
-              Write(Copy(GotStr,Tmp-StartPos,255),Read_StrBG);
-              GotoXY(Tmp-1,WhereY);
-             End;
-           End
-           Else
-           Begin
-            Write(#8,Read_StrBG,#8);
-            Delete(GotStr,Length(GotStr),1);
-           End;
-         End;
-        If Ch=#25 Then
-         Begin
-          GotStr:='';
-          GotoXY(StartPos,WhereY);
-          For CharCount:=1 To Max Do
-           Write(Read_StrBG);
-          GotoXY(StartPos,WhereY);
-         End;
-        If Ch<>#0 Then
-         Begin
-          If ((Length(GotStr)<Max) Or
-              ((Not InsStat) And (WhereX-StartPos<Length (GotStr)))) Then
-           Begin
-            If Ord(Ch)>31 Then
-             Begin
-              If WhereX-StartPos<Length(GotStr) Then
-               Begin
-                If InsStat Then
-                 Begin
-                  Tmp:=WhereX+1;
-                  Insert(Ch,GotStr,Tmp-StartPos);
-                  If Read_StrMask Then
-                   Write(MakeStr(Length(Copy(GotStr,Tmp-StartPos,255)),RSMaskChar))
-                  Else
-                   Write(Copy(GotStr,Tmp-StartPos,255));
-                  GotoXY(Tmp,WhereY);
-                 End
-                 Else
-                 Begin
-                  Tmp:=WhereX+1;
-                  GotStr[Tmp-StartPos]:=Ch;
-                  If Read_StrMask Then
-                   Write(MakeStr(Length(Copy(GotStr,Tmp-StartPos,255)),RSMaskChar))
-                  Else
-                  Write(Copy(GotStr,Tmp-StartPos,255));
-                  GotoXY(Tmp,WhereY);
-                 End;
-               End
-               Else
-               Begin
-                If Read_StrMask Then Write(RSMaskChar) Else Write(Ch);
-                GotStr:=GotStr+Ch;
-               End;
-             End;
-           End;
-         End;
-        If Ch=#0 Then
-         Begin
-          Ch:=ReadKey;
-          If Ch=#71 Then GotoXY(StartPos,WhereY); { Home }
-          If Ch=#79 Then GotoXY(StartPos+Length(GotStr),WhereY); { End }
-          If Ch=#82 Then { Ins }
-           Begin
-            InsStat:=Not InsStat;
-            If InsStat Then SmallCursor Else BigCursor;
-           End;
-          If Ch=#83 Then { Del }
-           Begin
-            If WhereX-StartPos>=1 Then
-             Begin
-              Tmp:=WhereX;
-              Delete(GotStr,Tmp-StartPos+1,1);
-              GotoXY(Tmp-1,WhereY);
-              If Read_StrMask Then
-               Write(MakeStr(Length(Copy(GotStr,Tmp-StartPos,255)),RSMaskChar))
-              Else
-               Write(Copy(GotStr,Tmp-StartPos,255),Read_StrBG);
-              GotoXY(Tmp,WhereY);
-             End
-             Else
-             Begin
-              Tmp:=WhereX;
-              Delete(GotStr,1,1);
-              Write(GotStr,Read_StrBG);
-              GotoXY(Tmp,WhereY);
-             End;
-           End;
-          If Ch='K' Then {RetnFlag:=Left;}
-           Begin
-            If WhereX>StartPos Then
-             GotoXY(WhereX-1,WhereY);
-           End;
-          If Ch='M' Then {RetnFlag:=Right;}
-           Begin
-            If (WhereX<StartPos+Max) And (WhereX<StartPos+Length(GotStr)) Then
-             GotoXY(WhereX+1,WhereY);
-           End;
-         End;
-      End;
-     Until Ch=#13;
-     Return:=GotStr;
-     If Read_StrLF Then WriteLn;
-     Read_StrLF:=True;
-     Read_StrMask:=False;
-     SmallCursor;
-End;
-
-Procedure Read_Int(VAR WhatInt: LongInt; Maximum,Default: LongInt);
-Var
- Ch: Char;
- RCount: Integer;
- WhatStr: String;
-Begin
- WhatInt:=Default;
- WhatStr:=StrVal(WhatInt);
- Write(WhatStr);
- Repeat;
-  Ch:=ReadKey;
-  If (Ch=#8) And (WhatStr<>'') Then
-   Begin
-    GotoXY(WhereX-1,WhereY); Write(' '); GotoXY(WhereX-1,WhereY);
-    Delete(WhatStr,Length(WhatStr),1);
-   End;
-  If (Ch<>#0) And (Ch<>#8) And (Ch<>#25) And (Ch<>#13) And
-     (LIntVal(WhatStr+Ch)<=Maximum) And (Pos(Ch,'1234567890')>0) And (Not ((WhatStr='0') And (Ch='0'))) Then
-   Begin
-    Write(Ch);
-    WhatStr:=WhatStr+Ch;
-   End;
-  If Ch=#25 Then
-   Begin
-    GotoXY(WhereX-Length(WhatStr),WhereY);
-    For RCount:=1 To Length(WhatStr) Do Write(' ');
-    GotoXY(WhereX-Length(WhatStr),WhereY);
-    WhatStr:='';
-   End;
-  If Ch=#27 Then
-   Begin
-    WhatStr:=StrVal(Default);
-    Ch:=#13;
-   End;
-  If Ch=#0 Then Ch:=ReadKey;
- Until Ch=#13;
- WhatInt:=LIntVal(WhatStr);
-End;
-
-Function Strip(WhatName: String): String;
-Begin
- While Pos('\',WhatName)>0 Do
-  Delete(WhatName,1,Pos('\',WhatName));
- Strip:=WhatName;
+ Dispose(Saved[Idx]); Saved[Idx]:=Nil;
 End;
 
 Function RemoveWildcard(St: String): String;
 Begin
- While (St[Length(St)]<>'\') And (St<>'') Do
-  Delete(St,Length(St),1);
+ While (St[Length(St)]<>'\') And (St<>'') Do Delete(St,Length(St),1);
  RemoveWildcard:=St;
 End;
+
 
 Function FileExists(FN: String): Boolean;
 var
@@ -785,15 +176,6 @@ Begin
  LeadingZero:=S;
 End;
 
-Function Extension(Filename: String): String;
-Begin
- If Pos('.',Filename) >0 Then
-  Delete(Filename,1,Pos('.',Filename))
- Else
-  FileName:='';
- Extension:=Filename;
-End;
-
 Function UCase(UpString: String): String;
 Var LtrNum: Integer;
 Begin
@@ -807,26 +189,6 @@ Function LoCase(C: Char): Char;
 Begin
  If C in ['A'..'Z'] Then C:=Chr(Ord(C)+32);
  LoCase:=C;
-End;
-
-Function LCase(UpString: String): String;
-Var LtrNum: Integer;
-Begin
- LtrNum:=0;
- For LtrNum:=1 To Length(UpString) do
-  UpString[LtrNum]:=LoCase(UpString[LtrNum]);
- LCase:=UpString;
-End;
-
-Function Backwards(Forwards: String): String;
-Var
- OutStr: String;
- Count : Integer;
-Begin
- OutStr:='';
- For Count:=Length(Forwards) DownTo 1 Do
-  OutStr:=OutStr+Forwards[Count];
- Backwards:=OutStr;
 End;
 
 Function Pad(St: String; I: Integer): String;
@@ -850,12 +212,6 @@ Begin
  LTrim:=WhatStr;
 End;
 
-Function Copy1(S: String; Len: Byte): String;
-Begin
- If Len<Length(S) Then S[0]:=Chr(Len);
- Copy1:=S;
-End;
-
 Function RTrim(WhatStr: String): String;
 Begin
  While (WhatStr[Length(WhatStr)]=' ') And (WhatStr<>'') Do
@@ -864,8 +220,10 @@ Begin
 End;
 
 Function Timer: Real;
+Var H,M,S,S100: Word;
 Begin
- Timer:=MemL[$0040:$006C]/18.2065;
+ GetTime(H,M,S,S100);
+ Timer:=H*3600.0+M*60.0+S+S100/100.0;
 End;
 
 Procedure CDelay(D: Word);
@@ -873,30 +231,6 @@ Var CTime: Real;
 Begin
  CTime:=Timer+(D / 1000);
  Repeat Until Timer>=CTime;
-End;
-
-Procedure SetCLk(Assert: Boolean);
-Begin
- If Assert Then
-  Mem[$0000:$0417]:=Mem[$0000:$0417] Or 64
- Else
-  Mem[$0000:$0417]:=Mem[$0000:$0417] And Not 64
-End;
-
-Procedure SetSLk(Assert: Boolean);
-Begin
- If Assert Then
-  Mem[$0000:$0417]:=Mem[$0000:$0417] Or 16
- Else
-  Mem[$0000:$0417]:=Mem[$0000:$0417] And Not 16
-End;
-
-Procedure SetNLk(Assert: Boolean);
-Begin
- If Assert Then
-  Mem[$0000:$0417]:=Mem[$0000:$0417] Or 32
- Else
-  Mem[$0000:$0417]:=Mem[$0000:$0417] And Not 32
 End;
 
 Function FormatTime(Rl:Real):String;
@@ -943,38 +277,6 @@ Begin
  MakeStr:=Out;
 End;
 
-Procedure RTC_Delay(microsecs:longint); { 1000000 microsecs = 1 second}
-var r : registers;
-begin
- r.ah := $86;                           {RTC function number}
- r.cx := microsecs shr 16;              {cx:dx = # of microseconds}
- r.dx := microsecs and $FFFF;
- intr($15,r);                           {call INT 15h (RTC)}
-end;
-
-Function CommaFmt(Value: LongInt): String;
-const
-  s: byte = 0;
-var
-  TS: String;
-  W: string[20];
-  i: byte;
-  d: byte;
-  N: Boolean;
-begin
-  TS:=StrVal(Value);
-  W:=TS;
-  N:=False;
-  if W[1] = '-' then Begin Delete(W,1,1); N:=True; End;
-  d := Length(W);
-  for i := 3 to (d-1-s) do
-    if i mod 3 = 0 then
-      Insert(',',W,(d-I+1+s));
- IF N Then W:='-'+W;
- TS:=W;
- CommaFmt:=TS;
-end;
-
 Function Zero(I: LongInt; Z: Byte): String;
 Var S: String;
 Begin
@@ -983,349 +285,11 @@ Begin
  Zero:=S;
 End;
 
-Function ZeroS(S: String; Z: Byte): String;
+Function GetChar: Char;
+{ Was a BIOS "read char under cursor" call - no equivalent without a real
+  screen buffer. Stubbed pending the ncurses/Video-unit port. }
 Begin
- While Length(S)<Z Do S:='0'+S;
- ZeroS:=S;
-End;
-
-Procedure ZWrite(C: Char); Assembler;
-Asm
-    mov     bh,0
-    mov     bl,TextAttr
-    mov     cx,1
-    mov     al,C
-    mov     ah,9
-    int     10h
-End;
-
-Function HexW(I: Word): String;
-Const
-  hc : Array[0..15] of Char = '0123456789ABCDEF';
-Var
-  Out1,Out2,Out3,Out4: Byte;
-Begin
- Out1:=0; Out2:=0; Out3:=0; Out4:=0;
- Asm
-     mov     ax,I
-     mov     bx,ax
-
-     shr     ah,04h
-     mov     out1,ah
-
-     mov     ax,bx
-     and     ah,0Fh
-     mov     out2,ah
-
-     shr     al,04h
-     mov     out3,al
-
-     mov     ax,bx
-     and     al,0Fh
-     mov     out4,al
-   End;
-  HexW:=hc[Out1]+hc[Out2]+hc[Out3]+hc[Out4];
-End {Hex} ;
-
-Function Hex(L:LongInt):String;
-Const
- HexDigits : ARRAY[0..16] OF Char = '0123456789ABCDEF';
-Var T: String[8];
-Begin
- T:=HexDigits[(L SHR 28) AND $F];
- T:=T+HexDigits[(L SHR 24) AND $F];
- T:=T+HexDigits[(L SHR 20) AND $F];
- T:=T+HexDigits[(L SHR 16) AND $F];
- T:=T+HexDigits[(L SHR 12) AND $F];
- T:=T+HexDigits[(L SHR 08) AND $F];
- T:=T+HexDigits[(L SHR 04) AND $F];
- T:=T+HexDigits[L AND $F];
- Hex:=T;
-End;
-
-Function HexZ(L:LongInt):String;
-Const
- HexDigits : ARRAY[0..16] OF Char = '0123456789ABCDEF';
-Var T: String[8];
-Begin
- T:=HexDigits[(L SHR 28) AND $F];
- T:=T+HexDigits[(L SHR 24) AND $F];
- T:=T+HexDigits[(L SHR 20) AND $F];
- T:=T+HexDigits[(L SHR 16) AND $F];
- T:=T+HexDigits[(L SHR 12) AND $F];
- T:=T+HexDigits[(L SHR 08) AND $F];
- T:=T+HexDigits[(L SHR 04) AND $F];
- T:=T+HexDigits[L AND $F];
- While (T[1]='0') And (Length(T)>0) Do Delete(T,1,1);
- HexZ:=T;
-End;
-
-Function GetChar: Char; Assembler;
-Asm
-    mov     ah,8
-    mov     bh,0
-    int     10h
-End;
-
-Function GetAttr: Byte; Assembler;
-Asm
-    mov     ah,8
-    mov     bh,0
-    int     10h
-    mov     al,ah
-End;
-
-  procedure StuffKey(W : Word);
-    {-Stuff one key into the keyboard buffer}
-  const
-    KbdStart = $1E;
-    KbdEnd = $3C;
-  var
-    SaveKbdTail : Word;
-    KbdHead : Word absolute $40 : $1A;
-    KbdTail : Word absolute $40 : $1C;
-  begin
-    SaveKbdTail := KbdTail;
-    if KbdTail = KbdEnd then
-      KbdTail := KbdStart
-    else
-      Inc(KbdTail, 2);
-    if KbdTail = KbdHead then
-      KbdTail := SaveKbdTail
-    else
-      MemW[$40:SaveKbdTail] := W;
-  end;
-
-Procedure FillScr(C: Char; A: Byte);
-Type
-  Scr = Array[1..2000] Of Record
-          Character: Char;
-          Attribute: Byte;
-         End;
-Var
- ScrBuff: ^Scr;
- WorkScr: ^Scr;
- Tmp: Word;
-Begin
-  If (Mem[0000:$0449] = $7) Then
-   ScrBuff := Ptr($B000,0000)
-  Else
-   ScrBuff := Ptr($B800,0000);
-  New(WorkScr);
-  For Tmp:=1 To 2000 Do
-   Begin WorkScr^[Tmp].Character:=C; WorkScr^[Tmp].Attribute:=A; End;
-  Move(WorkScr^,ScrBuff^,SizeOf(WorkScr^));
-  Dispose(WorkScr);
-End;
-
-Procedure CallProc(UserProc: Pointer);
-Begin
- InLine($FF/$1E/UserProc);
-End;
-
-Procedure Set25Lines;
-Var
- Regs: Registers;
-Begin
- Regs.AX:=$1111;
- Regs.BX:=0;
- Intr($10,Regs);
- Mem[$0040:$0087]:=Mem[$0040:$0087] Or $01;
- Regs.AX:=$0100;
- Regs.BX:=0;
- Regs.CX:=$0C00;
- Intr($10,Regs);
-End;
-
-Procedure WarmBoot;
-Begin
- Inline(
-        $FB/                  { STI                                  }
-        $B8/00/00/            { MOV   AX,0000                        }
-        $8E/$D8/              { MOV   DS,AX                          }
-        $B8/$34/$12/          { MOV   AX,1234                        }
-        $A3/$72/$04/          { MOV   [0472],AX                      }
-        $EA/$00/$00/$FF/$FF); { JMP   FFFF:0000                      }
-End;
-
-Procedure ColdBoot;
-Begin
- Inline(
-        $FB/                  { STI                                  }
-        $B8/01/00/            { MOV   AX,0001                        }
-        $8E/$D8/              { MOV   DS,AX                          }
-        $B8/$34/$12/          { MOV   AX,1234                        }
-        $A3/$72/$04/          { MOV   [0472],AX                      }
-        $EA/$00/$00/$FF/$FF); { JMP   FFFF:0000                      }
-End;
-
-Procedure Drive_Light_On(Drive: Char);
-Begin { Remember to wait about a half second before trying to read! }
- If UpCase(Drive) in ['A','B'] Then Port[$3F2]:=12+(Ord(Drive)-65)+1 SHL (4+(Ord(Drive)-65));
-End;
-
-Procedure Drive_Light_Off(Drive: Char);
-Begin
- If UpCase(Drive) in ['A','B'] Then Port[$3F2]:=12+(Ord(Drive)-65);
-End;
-
-Procedure HighIntensity(SetHi: Boolean);
-Var Regs: Registers;
-Begin
- Regs.AX:=$1003;
- Regs.BX:=Byte(Not SetHi);
- Intr($10,Regs);
-End;
-
-Function PeekKey: Char;
-Var Head: Word ABSOLUTE $0040:$001A;
-Begin
- PeekKey:=Char(Mem[$40:Head]);
-End;
-
-Procedure SetPrtScr(Assert: Boolean);
-Begin If Assert Then Mem[$0050:0000] := 0 Else  Mem[$0050:0000] := 1; End;
-
-Function SetOutput(FileName: String): Boolean;
-Begin
- FileName:=FileName+#0;
- SetOutput:=False;
- Asm
-     push  ds
-     mov   ax, ss
-     mov   ds, ax
-     lea   dx, FileName[1]
-     mov   ah, 3Ch
-     int   21h
-     pop   ds
-     jnc   @@1
-     ret
-@@1:
-     push  ax
-     mov   bx, ax
-     mov   cx, Output.FileRec.Handle
-     mov   ah, 46h
-     int   21h
-     mov   ah, 3Eh
-     pop   bx
-     jnc   @@2
-     ret
-@@2:
-     int   21h
-  End;
- OutRedir:=True;
- SetOutput:=True;
-End;
-
-Procedure CancelOutput;
-Var
- FileName: String[4];
-Begin
- If not OutRedir Then Exit;
- FileName:='CON'#0;
- Asm
-     push  ds
-     mov   ax, ss
-     mov   ds, ax
-     lea   dx, FileName[1]
-     mov   ax, 3D01h
-     int   21h
-     pop   ds
-     jnc   @@1
-     ret
-@@1:
-     push  ax
-     mov   bx, ax
-     mov   cx, Output.FileRec.Handle
-     mov   ah, 46h
-     int   21h
-     mov   ah, 3Eh
-     pop   bx
-     int   21h
-  End;
- OutRedir:=False;
-End;
-
-Function FormatDate(L: LongInt; UseCInfo: Boolean): String;
-Var DT: DateTime;
-    S: String; C: Char; B: Byte;
-    DFmt: String;
-Begin
- UnpackTime(L,DT);
-{$IFDEF SysInfo}
- If Not UseCInfo Then
-  DFmt:='mm/dd/yy'  {mm/dd/yy}
- Else
- Begin
-  If Not CountryData(S,DFmt,C,C,C,C,C,B,B) Then DFmt:='mm/dd/yy';
- End;
-{$ELSE}
-  DFmt:='mm/dd/yy';
-{$ENDIF}
- B:=Pos('mm',DFmt); Delete(DFmt,B,2); Insert(LeadingZero(DT.Month),DFmt,B);
- B:=Pos('dd',DFmt); Delete(DFmt,B,2); Insert(LeadingZero(DT.Day),DFmt,B);
- B:=Pos('yy',DFmt); Delete(DFmt,B,2); Insert(LeadingZero(DT.Year-1900),DFmt,B);
- Delete(DFmt,7,1);
- FormatDate:=DFmt;
-End;
-
-(*
-Function FormatDate(L: LongInt; UseCInfo: Boolean): String;
-Var DT: DateTime;
-    S: String; C: Char; B: Byte;
-    DFmt: String;
-Begin
- UnpackTime(L,DT);
-{$IFDEF SysInfo}
- If Not UseCInfo Then
-  DFmt:='mm/dd/yy'
- Else
- Begin
-  If Not CountryData(S,DFmt,C,C,C,C,C,B,B) Then DFmt:='mm/dd/yy';
- End;
-{$ELSE}
-  DFmt:='mm/dd/yy';
-{$ENDIF}
- B:=Pos('mm',DFmt); Delete(DFmt,B,2); Insert(LeadingZero(DT.Month),DFmt,B);
- B:=Pos('dd',DFmt); Delete(DFmt,B,2); Insert(LeadingZero(DT.Day),DFmt,B);
- B:=Pos('yy',DFmt); Delete(DFmt,B,2); Insert(LeadingZero(DT.Year-1900),DFmt,B);
- FormatDate:=DFmt;
-End;
-*)
-
-Function HexPtr(P : Pointer) : String;
-  {-Return hex string for pointer}
-Type
- OS=Record
-     O,S: Word;
-    End;
-
-Begin
-  HexPtr := HexW(OS(P).S)+':'+HexW(OS(P).O);
-End;
-
-Function FileOpen(Var F): Boolean;
-Var FileInfo: FileRec Absolute F;
-Begin
- FileOpen:=FileInfo.Mode And FMClosed <> 0;
-End;
-
-Function Gregorian(Julian: LongInt): String;
-Var
- Temp,XYear: LongInt;
- YYear,YMonth,YDay: Integer;
-Begin
- Temp:=(((Julian-1721119) Shl 2)-1);
- XYear:=(Temp Mod 146097) Or 3;
- Julian:=Temp Div 146097;
- YYear:=(XYear Div 1461);
- Temp:=((((XYear Mod 1461)+4) Shr 2)*5)-3;
- YMonth:=Temp Div 153;
- If YMonth>=10 Then Begin Inc(YYear); Dec(YMonth,12); End;
- Inc(YMonth,3);
- YDay:=Temp Mod 153;
- YDay:=(YDay+5) Div 5;
- Gregorian:=LeadingZero(YMonth)+'/'+LeadingZero(YDay)+'/'+LeadingZero(YYear);
+ GetChar:=' ';
 End;
 
 Function Julian(DT: String): Longint;             { MM/DD/YY -> Julian Date }
@@ -1348,22 +312,6 @@ Begin
 End;
 
 
-Function PackedDT(MMDDYYHHMMSS: String; DT: DateTime; UseDT: Boolean): LongInt;
-Var L: LongInt;
-Begin
- If Not UseDT Then
-  Begin
-   DT.Month:=IntVal(Copy(MMDDYYHHMMSS,1,2)); Delete(MMDDYYHHMMSS,1,3);
-   DT.Day:=IntVal(Copy(MMDDYYHHMMSS,1,2)); Delete(MMDDYYHHMMSS,1,3);
-   DT.Year:=IntVal(Copy(MMDDYYHHMMSS,1,2)); Delete(MMDDYYHHMMSS,1,3);
-   DT.Hour:=IntVal(Copy(MMDDYYHHMMSS,1,2)); Delete(MMDDYYHHMMSS,1,3);
-   DT.Min:=IntVal(Copy(MMDDYYHHMMSS,1,2)); Delete(MMDDYYHHMMSS,1,3);
-   DT.Sec:=IntVal(Copy(MMDDYYHHMMSS,1,2));
-  End;
- PackTime(DT,L);
- PackedDT:=L;
-End;
-
 Function UnpackedDT(L: LongInt): String;
 Var DT: DateTime;
 Begin
@@ -1383,49 +331,11 @@ Begin
  CurrentDT:=L;
 End;
 
-Procedure SetCursor(CursorFlag: Boolean); assembler;
-Asm
-    cmp CursorFlag,True
-    jne @@2
-    cmp byte ptr [LastMode],Mono
-    je  @@1
-    mov cx,CursorShape  { Switch on cursor using the default shape }
-    jmp @@4
-@@1:
-    mov cx,0B0Ch  { Switch on mono cursor }
-    jmp @@4
-@@2:
-    cmp byte ptr [LastMode],Mono
-    je  @@3
-    mov cx,2000h  { Switch off cursor }
-    jmp @@4
-@@3:
-    xor cx,cx     { Switch off mono cursor }
-@@4:
-    mov ah,01h
-    xor bh,bh
-    int 10h
-End;
-
-Function GetCursorType: Word;
-Begin
- GetCursorType:=MemW[Seg0040:$0060]
-End;
-
-Function SetCursorType(Shape: Word): Word; Assembler;
-Asm
-    mov ax,CursorShape { save old value }
-    mov bx,Shape
-    cmp byte ptr [LastMode],Mono
-    jne @@1
-    xor bx,bx { Switch off mono cursor }
-@@1:
-    mov CursorShape,BX
-End;
-
 Function VSeg: Word;
+{ No direct video memory on this target; kept only for API compatibility
+  pending the ncurses/Video-unit port. }
 Begin
- If (Mem[0000:$0449] = $7) Then VSeg:=$B000 Else VSeg:=$B800;
+ VSeg:=0;
 End;
 
 

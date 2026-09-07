@@ -1,6 +1,6 @@
 Unit SE_Util;
 {$DEFINE CompileExtra}
-{$DEFINE SpellChecker}
+{.$DEFINE SpellChecker}
 {$I DEFINES.INC}
 {$D-}
 Interface
@@ -215,8 +215,10 @@ Implementation
 Uses Utilpack,TurboCOM,Crt,RCRC32;
 
 Function Timer: Real;
+Var H,M,S,S100: Word;
 Begin
- Timer:=MemL[$0040:$006C]/18.2065;
+ GetTime(H,M,S,S100);
+ Timer:=H*3600.0+M*60.0+S+S100/100.0;
 End;
 
 Procedure XSWrite(S: String);
@@ -666,10 +668,10 @@ Begin
 End;
 
 Procedure GetAttrChar(Var SAttr: Integer; Var SChar: Char);
-Var Regs: Registers;
+{ Was a BIOS "read char/attr under cursor" call - no equivalent without a
+  real screen buffer. Stubbed pending the ncurses/Video-unit port. }
 Begin
- Regs.AH:=8; Regs.BH:=0; Intr($10,Regs);
- SChar:=Chr(Regs.AL); SAttr:=Regs.AH;
+ SChar:=' '; SAttr:=7;
 End;
 
 Procedure SaveWin(X1,Y1,Wid,Hgt: Integer);
@@ -809,24 +811,11 @@ Begin
 End;
 
 Procedure FancyClear;
-Var
- R: Real; Tmp: Byte;
- TopHalf,BotHalf: Word;
+{ Was a direct video-memory scroll-wipe animation - no equivalent without
+  a real screen buffer. Stubbed to a plain clear pending the
+  ncurses/Video-unit port. }
 Begin
- TopHalf:=2160; BotHalf:=2000;
- Repeat
-
-  { Move up upper screen }
-  Move(Mem[VSeg:160],Mem[VSeg:0],TopHalf-160);
-  GotoXY(1,TopHalf Div 160); ClrEol;
-  Dec(TopHalf,160);
-
-  { Move down lower screen }
-  Move(Mem[VSeg:BotHalf],Mem[VSeg:BotHalf+160],2000-(BotHalf-2000));
-  GotoXY(1,BotHalf Div 160+2); ClrEol;
-  Inc(BotHalf,160);
-
- Until (TopHalf=80) And (BotHalf=4080);
+ ClrScr;
 End;
 
 Procedure FixChainsaw;
@@ -2320,17 +2309,6 @@ Var
  Function CW(C: Byte; Seed: ShortInt): Byte; Var I: LongInt; Begin I:=C+Seed;
  If (Seed>0) Then Begin If I<=255 Then C:=I Else Begin While I>255 Do Dec(I,256); C:=I; End; End
  Else Begin If I>=0 Then C:=I Else Begin While I<0 Do Inc(I,256); C:=I; End; End; CW:=C; End;
-
- Procedure XXDecode(MSeg,MOfs,Size: Word);
- Var TmpW: Word; Adjust: Byte;
- Begin
-  Mem[MSeg:MOfs+Size-1]:=Mem[MSeg:MOfs+Size-1]-192;
-  For TmpW:=Size DownTo 1 Do
-   Begin
-    If TmpW<>Size Then
-     Mem[MSeg:MOfs+TmpW-1]:=CW(Mem[MSeg:MOfs+TmpW-1],-Mem[MSeg:MOfs+TmpW]-Trunc(Sqr(TmpW)*LineNo));
-   End;
- End;
 
  Procedure HdrCRCError;
  Begin

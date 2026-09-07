@@ -34,21 +34,38 @@ Unit TurboCOM;
   (TurboCOM.Security>=Config^.ImportSecurity/ExportSecurity); defaulted
   high so a local single-user run is never blocked by it.
 
-  SysOpName/UserName/UserFirst/UserLast/BBSName default to empty since
-  nothing populates them anymore (the LOCAL.DEF-reading code that used
-  to set them was BBS-door-session setup, removed with the MSGINF
-  rewrite). SysOpName gets a real value from Config^.RegName right
-  after InitTurboCOMM runs (see oedit2.pas); UserName/UserFirst/UserLast
-  staying empty is a known gap - se_util.pas's LoadUser (keys per-user
-  color prefs off UserName) and PersonalDicName (spell-check personal
-  dictionary filename, off UserFirst/UserLast) degrade to a single
-  shared identity until something asks the local user who they are.
+  SysOpName/BBSName default to empty since nothing populates them
+  anymore (the LOCAL.DEF-reading code that used to set them was
+  BBS-door-session setup, removed with the MSGINF rewrite). SysOpName
+  gets a real value from Config^.RegName right after InitTurboCOMM runs
+  (see oedit2.pas); UserName/UserFirst/UserLast default to the OS
+  username (also set in oedit2.pas's main flow) - se_util.pas's
+  LoadUser (per-user color prefs) and PersonalDicName (spell-check
+  personal dictionary filename) both key off them.
+
+  AnsiCode (ANSI color-code lookup table, index 0-47) was missed by
+  the first two restore passes - those checked Const/Var names but not
+  a Const *array* - and only surfaced once an actual FPC compile got
+  far enough to hit it. Restored verbatim from the original unit;
+  values are plain ANSI escape sequences, no BIOS/hardware dependency.
 }
 
 Interface
 
 Const
  Security: Word = 65535;
+ AnsiCode      : Array[0..47] Of String[7] =    {  ANSI codes, 40+ = BG attr }
+        ('[0m',    '[0;34m', '[0;32m',
+         '[0;36m', '[0;31m', '[0;35m',
+         '[0;33m', '[0;37m', '[1;30m',
+         '[1;34m', '[1;32m', '[1;36m',
+         '[1;31m', '[1;35m', '[1;33m',
+         '[1;37m', '','', '', '','', '',
+         '','', '', '','', '', '','', '',
+         '','', '', '','', '', '','', '',
+         '[40m',   '[44m',   '[42m',
+         '[46m',   '[41m',   '[45m',
+         '[43m',   '[47m');
 
 Var
  SysPath         : String[50];
