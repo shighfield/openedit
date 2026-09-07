@@ -38,11 +38,9 @@ Procedure FixChainsaw;
 Procedure LoadQuoteData;
 {$IFDEF CompileExtra}
 Function TagLine: Boolean;
-Function GetAreaFPos(S: String): LongInt;
 {$ENDIF}
 Procedure ResetUser;
 Procedure LoadUser;
-Procedure CheckUserOK;
 Procedure TagError;
 Procedure ForceExit;
 Procedure HangUpUser;
@@ -88,21 +86,9 @@ Procedure Cursor_EndLine;
 Procedure Display_Footer(B: Byte);
 Procedure Plain_Footer(B: Byte);
 Procedure DisplayFooterTime;
-{$IFDEF CompileExtra}
-Procedure LoadCCInfo;
-Procedure LoadRAInfo;
-Procedure LoadQKInfo;
-{Procedure LoadEZInfo;}
-{$ENDIF}
 Function Expired: Boolean;
 
 {$I SEDIT.INC}
-{$IFDEF CompileExtra}
-{$I RA_INC.PAS}
-{$I CC_INC.PAS}
-{$I QK_INC.PAS}
-{.$I EZ_INC.PAS}
-{$ENDIF}
 
 Type
  Str20          = String[20];
@@ -155,10 +141,6 @@ Const
  InputFunky     : Boolean = False;
  PF_overridepos : Byte = 0;
  OKPageNum      : Boolean = True;
- CCExitFound    : Boolean = False;
- QKExitFound    : Boolean = False;
- EZExitFound    : Boolean = False;
- RAExitFound    : Boolean = False;
  TimeUpdated    : Boolean = False;
  OKUpdateFooter : Boolean = False;
  HasAddedSig    : Boolean = False;
@@ -172,8 +154,6 @@ Var
  LastAutoSave   : Real;
  LastStatTime   : Real;
  QuoteOrMenu    : String[30];
- CurrGroup      : LongInt;
- CurrGroupN     : String[3];
  CfgPath        : String[126];
  DecryptKey     : String;
  Config         : ^ConfigRec;
@@ -232,87 +212,10 @@ Var
  MSGINF         : String[12];
  XtraTxt        : Text;
  XtraS          : String[127];
-{$IFDEF CompileExtra}
- CCExitInfo     : ExitRecord;
- CCExitFile     : File Of ExitRecord;
- RAExitInfo     : ExitInfoRecord;
- RAExitFile     : File Of ExitInfoRecord;
- QKExitInfo     : QKExitRecord;
- QKExitFile     : File Of QKExitRecord;
-
-{ EZExitInfo     : EZExitinfoRecord;
- EZExitFile     : File Of EZExitinfoRecord;}
-{$ENDIF}
-
 Implementation
 
 Uses Utilpack,TurboCOM,Crt,RCRC32;
 
-{$IFDEF CompileExtra}
-Procedure LoadCCInfo;
-Begin
- Assign(CCExitFile,SysPath+'EXITINFO.DAT');
- {$I-} Reset(CCExitFile); {$I-}
- If IOresult<>0 Then
-  Begin
-   Assign(CCExitFile,'EXITINFO.DAT');
-   {$I-} Reset(CCExitFile); {$I-}
-  End;
- If IOResult<>0 Then Exit;
- CCExitFound:=True;
- Reset(CCExitFile);
- Read(CCExitFile,CCExitInfo);
- Close(CCExitFile);
-End;
-
-Procedure LoadRAInfo;
-Begin
- Assign(RAExitFile,SysPath+'EXITINFO.BBS');
- {$I-} Reset(RAExitFile); {$I-}
- If IOresult<>0 Then
-  Begin
-   Assign(RAExitFile,'EXITINFO.BBS');
-   {$I-} Reset(RAExitFile); {$I-}
-  End;
- If IOResult<>0 Then Exit;
- RAExitFound:=True;
- Reset(RAExitFile);
- Read(RAExitFile,RAExitInfo);
- Close(RAExitFile);
-End;
-
-Procedure LoadQKInfo;
-Begin
- Assign(QKExitFile,SysPath+'EXITINFO.BBS');
- {$I-} Reset(QKExitFile); {$I-}
- If IOresult<>0 Then
-  Begin
-   Assign(QKExitFile,'EXITINFO.BBS');
-   {$I-} Reset(QKExitFile); {$I-}
-  End;
- If IOResult<>0 Then Exit;
- QKExitFound:=True;
- Reset(QKExitFile); Read(QKExitFile,QKExitInfo); Close(QKExitFile);
-End;
-
-(*
-Procedure LoadEZInfo;
-Begin
- Assign(EZExitFile,SysPath+'EXITINFO.'+StrVal(NodeNum));
- {$I-}Reset(EZExitFile);{$I-}
- If IOresult<>0 Then
-  Begin
-   Assign(EZExitFile,'EXITINFO.'+StrVal(NodeNum));
-   {$I-}Reset(EZExitFile);{$I-}
-  End;
- If IOResult<>0 Then Exit;
- EZExitFound:=True;
- Reset(EZExitFile);
- Read(EZExitFile,EZExitInfo);
- Close(EZExitFile);
-End;
-*)
-{$ENDIF}
 Function Timer: Real;
 Begin
  Timer:=MemL[$0040:$006C]/18.2065;
@@ -1110,165 +1013,6 @@ Begin
   End;
  If UIDX=-1 Then Begin UIDX:=FileSize(UserFile); ResetUser; End;
  Close(UserFile);
-End;
-
-{$IFDEF CompileExtra}
-Function GetAreaFPos(S: String): LongInt;
-Var
- MFile: File Of MESSAGErecord;
- M: MESSAGErecord;
- CCMFile: File Of MAreaRec;
- CCM: MAreaRec;
- QKMFile: File Of BoardRecord;
- QKM: BoardRecord;
-
-{ EZMFile: File Of EZmessagerecord;
- EZM: EZmessagerecord;}
-Begin
- GetAreaFPos:=-1;
- CurrGroup:=-1;
- CurrGroupN:='';
-
- If Config^.BBSProg=bbs_XX Then Exit;
- If Config^.BBSPath[Length(Config^.BBSPath)]<>'\' Then Config^.BBSPath:=Config^.BBSPath+'\';
-
- Case Config^.BBSProg Of
-   bbs_RA: Begin
-            Assign(MFile,Config^.BBSPath+'MESSAGES.RA');
-            {$I-} Reset(MFile); {$I+} If IOResult<>0 Then Begin Config^.BBSProg:=bbs_XX; Exit; End;
-            While Not Eof(MFile) Do
-             Begin
-              Read(MFile,M);
-              If Copy(UCase(M.Name),1,Length(S))=UCase(S) Then
-               Begin
-                GetAreaFPos:=FilePos(MFile); CurrGroup:=M.Group;
-                Close(MFile); Exit;
-               End;
-             End;
-            Close(MFile);
-           End;
-   bbs_QK: Begin
-            Assign(QKMFile,Config^.BBSPath+'MSGCFG.DAT');
-            {$I-} Reset(QKMFile); {$I+} If IOResult<>0 Then Begin Config^.BBSProg:=bbs_XX; Exit; End;
-            While Not Eof(QKMFile) Do
-             Begin
-              Read(QKMFile,QKM);
-              If Copy(UCase(QKM.Name),1,Length(S))=UCase(S) Then
-               Begin GetAreaFPos:=FilePos(QKMFile); CurrGroup:=QKM.Group; Close(QKMFile); Exit; End;
-             End;
-            Close(QKMFile);
-           End;
-(*   bbs_EZ: Begin
-            Assign(EZMFile,Config^.BBSPath+'MESSAGES.EZY');
-            {$I-}Reset(EZMFile);{$I+}
-            If IOResult<>0 Then
-            Begin
-              Config^.BBSProg:=bbs_XX;
-              Exit;
-            End;
-            While Not Eof(EZMFile) Do
-             Begin
-              Read(EZMFile,EZM);
-              If Copy(UCase(EZM.Name),1,Length(S))=UCase(S) Then
-              Begin
-                GetAreaFPos:=FilePos(EZMFile);
-                CurrGroupN:=EZM.AreaGroup;
-                Close(EZMFile);
-                Exit;
-               End;
-             End;
-            Close(EZMFile);
-           End;*)
-   bbs_CC: Begin
-            Assign(CCMFile,Config^.BBSPath+'MAREAS.DAT');
-            {$I-} Reset(CCMFile); {$I+} If IOResult<>0 Then Begin Config^.BBSProg:=bbs_XX; Exit; End;
-            While Not Eof(CCMFile) Do
-             Begin
-              Read(CCMFile,CCM);
-              If Copy(UCase(CCM.Name),1,Length(S))=UCase(S) Then
-               Begin GetAreaFPos:=FilePos(CCMFile); CurrGroupN:=CCM.Group; Close(CCMFile); Exit; End;
-             End;
-            Close(CCMFile);
-           End;
-  End;
- Config^.BBSProg:=bbs_XX;
-End;
-{$ENDIF}
-
-Procedure CheckUserOK;
-Var
- F: Text;
- Tmp,
- UN,
- S: String[80];
- Nuke,
- NukeAll,
- NukeExcept: Boolean;
-Begin
- If Expired Then Exit;
-{$IFDEF CompileExtra}
- If (Not (Config^.BBSProg in [bbs_CC,bbs_EZ])) and (CurrGroup=-1) Then Exit;
- If (Config^.BBSProg in [bbs_CC,bbs_EZ]) And (CurrGroupN='') Then Exit;
- NukeAll:=False;
- NukeExcept:=False;
- Nuke:=False;
- Assign(F,CfgPath+'BADUSER.CTL');
- {$I-} Reset(F); {$I+}
- If IOresult<>0 Then Exit;
- While Not Eof(F) Do
-  Begin
-   If Nuke Then Break;
-   ReadLn(F,S);
-   If (S='') Or (S[1]=';') Then Continue;
-   UN:=Copy(S,1,Pos('/',S)-1); UN:=RTrim(LTrim(UN));
-   If (UCase(UN)<>UCase(UserName)) Then Continue;
-   Delete(S,1,Pos('/',S));
-   S:=RTrim(LTrim(S));
-   While (S<>'') Do
-    Begin
-     If Pos(',',S)>0 Then
-      Begin
-       Tmp:=Copy(S,1,Pos(',',S)-1);
-       Delete(S,1,Pos(',',S));
-      End
-      Else
-      Begin
-       Tmp:=S;
-       S:='';
-      End;
-     If (UCase(Tmp)='ALL') Then NukeAll:=True;
-     If (UCase(Tmp)='EXCEPT') Then NukeExcept:=True;
-
-     If (Not (Config^.BBSProg in [bbs_CC,bbs_EZ])) And (LIntVal(Tmp)=CurrGroup) Then Nuke:=True;
-     If (Config^.BBSProg in [bbs_CC,bbs_EZ]) And (Tmp=CurrGroupN) Then Nuke:=True;
-    End;
-  End;
- Close(F);
-
- If (NukeExcept) Then
-  Begin
-   Nuke:=Not Nuke;
-  End
-  Else
-  Begin
-   If NukeAll Then Nuke:=True;
-  End;
-
- If Nuke Then
-  Begin
-   SWriteLn(NC+'Ä'+HC+'Ä'+PC+'Ä'+BC+'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ'+
-            'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ'+PC+'Ä'+HC+'Ä'+NC+'Ä');
-   FunkyWriteLn(' þ '+LS(39));
-   While Pos('[0m',AreaName)>0 Do Delete(AreaName,Pos('[0m',AreaName),4);
-   FunkyWrite('   '+RTrim(LTrim(NoPipe(AreaName)))); SWriteLn('');
-   FunkyWriteLn(' þ '+LS(40));
-   FunkyWriteLn(' þ '+LS(41));
-   SWriteLn(NC+'Ä'+HC+'Ä'+PC+'Ä'+BC+'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ'+
-            'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ'+PC+'Ä'+HC+'Ä'+NC+'Ä');
-   CDelay(1000);
-   Halt(2);
-  End;
-{$ENDIF}
 End;
 
 Procedure TagError;
@@ -2468,9 +2212,6 @@ Begin
  Case StatBar Of
    1: Begin
        TextAttr:=$1F; ClrEol;
-       If (RAExitFound) Or (CCExitFound) Or (QKExitFound) Or (EZExitFound) Then
-        Write(' ',Pad(UserName,44)+'[F1] Help  [F9] Edit')
-       Else
         Write(' ',Pad(UserName,55)+'[F1] Help');
 
        Write('   Time: '+Copy(FormatTime(Nsl),1,5))

@@ -14,9 +14,17 @@ Unit TurboCOM;
   All bodies here are placeholder stubs pending the ncurses/Video-unit
   port: Local always reports True, the read routines never return input,
   and the write routines do nothing yet.
+
+  Security was the caller's BBS security level, read from the door drop
+  file in the original unit. oedit2.pas gates Import/Export on it
+  (TurboCOM.Security>=Config^.ImportSecurity/ExportSecurity); defaulted
+  high so a local single-user run is never blocked by it.
 }
 
 Interface
+
+Var
+ Security: Word = 65535;
 
 Function Local: Boolean;
 Function Remote_Keypressed: Boolean;

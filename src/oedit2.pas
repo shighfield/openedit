@@ -625,41 +625,41 @@ Begin
   End;
 
   SGotoXY(3,08);
-  XSWrite('|BCï¿½ï¿½ ');
+  XSWrite('|BCÚÄ ');
   FunkyWrite(LS(7));
-  XSWrite(' |BC'+MakeStr(67-Length(LS(7)),#196)+'|PCï¿½ï¿½|HCï¿½ï¿½|NCï¿½');
+  XSWrite(' |BC'+MakeStr(67-Length(LS(7)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
   SGotoXY(3,09);
-  XSWrite('|BCï¿½ ');
+  XSWrite('|BC³ ');
   FunkyWrite(Pad(LS(8),72));
-  XSWrite(' |HCï¿½');
+  XSWrite(' |HC³');
   SGotoXY(3,10);
-  XSWrite('|BCï¿½ ');
+  XSWrite('|BC³ ');
   FunkyWrite(Pad(LS(9),72));
-  XSWrite(' |PCï¿½');
+  XSWrite(' |PC³');
   SGotoXY(3,11);
-  XSWrite('|BCï¿½                                                                          |BCï¿½');
+  XSWrite('|BC³                                                                          |BC³');
   SGotoXY(3,12);
-  XSWrite('|BCï¿½ |FD1|FS: ');
+  XSWrite('|BC³ |FD1|FS: ');
   FunkyWrite(Pad(Sig[1],69));
-  XSWrite('[0m |BCï¿½');
+  XSWrite('[0m |BC³');
   SGotoXY(3,13);
-  XSWrite('|BCï¿½ |FD2|FS: ');
+  XSWrite('|BC³ |FD2|FS: ');
   FunkyWrite(Pad(Sig[2],69));
-  XSWrite('[0m |BCï¿½');
+  XSWrite('[0m |BC³');
   SGotoXY(3,14);
-  XSWrite('|BCï¿½ |FD3|FS: ');
+  XSWrite('|BC³ |FD3|FS: ');
   FunkyWrite(Pad(Sig[3],69));
-  XSWrite('[0m |BCï¿½');
+  XSWrite('[0m |BC³');
   SGotoXY(3,15);
-  XSWrite('|PCï¿½ |FD4|FS: ');
+  XSWrite('|PC³ |FD4|FS: ');
   FunkyWrite(Pad(Sig[4],69));
-  XSWrite('[0m |BCï¿½');
+  XSWrite('[0m |BC³');
   SGotoXY(3,16);
-  XSWrite('|HCï¿½ |FD5|FS: ');
+  XSWrite('|HC³ |FD5|FS: ');
   FunkyWrite(Pad(Sig[5],69));
-  XSWrite('[0m |BCï¿½');
+  XSWrite('[0m |BC³');
   SGotoXY(3,17);
-  XSWrite('|NCï¿½|HCï¿½ï¿½|PCï¿½ï¿½|BCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
+  XSWrite('|NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   Hil:=1;
   Repeat
     SGotoXY(4,11+Hil);
@@ -801,12 +801,12 @@ Begin
     Exit;
   End;
   Center('|NC'+LS(99)+' Open!EDIT v'+Ver+'!',9);
-  SGotoXY(25,10); XSWrite('|NCï¿½|HCï¿½ï¿½|PCï¿½ï¿½|BCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿');
-  SGotoXY(25,11); XSWrite('|HCï¿½|FZÛ²ï¿½ï¿½                       |FZï¿½|BCï¿½');
-  SGotoXY(25,12); XSWrite('|PCï¿½|FZï¿½ï¿½ï¿½                       |FZï¿½ï¿½|BCï¿½');
-  SGotoXY(25,13); XSWrite('|BCï¿½|FZï¿½ï¿½                       |FZï¿½ï¿½ï¿½|PCï¿½');
-  SGotoXY(25,14); XSWrite('|BCï¿½|FZï¿½                       |FZï¿½ï¿½ï¿½ï¿½|HCï¿½');
-  SGotoXY(25,15); XSWrite('|BCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½|PCï¿½ï¿½|HCï¿½ï¿½|NCï¿½');
+  SGotoXY(25,10); XSWrite('|NCÚ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
+  SGotoXY(25,11); XSWrite('|HC³|FZÛ²±°                       |FZ°|BC³');
+  SGotoXY(25,12); XSWrite('|PC³|FZ²±°                       |FZ°±|BC³');
+  SGotoXY(25,13); XSWrite('|BC³|FZ±°                       |FZ°±²|PC³');
+  SGotoXY(25,14); XSWrite('|BC³|FZ°                       |FZ°±²Û|HC³');
+  SGotoXY(25,15); XSWrite('|BCÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ');
   Center('|NC'+LS(100),16);
   Center('|BC(|PCUp|BC/|PCDn|BC) |NC'+LS(52)+'  |BC(|PCEnter|BC)|NC '+LS(57),17);
   Top:=0;
@@ -920,49 +920,49 @@ Begin
   ShowOrigScreen:
   SWrite('[0m');
   SClrScr; StatusBar;
-  XSWrite(' |BCï¿½ï¿½'); FunkyWrite(' '+LS(10)+' ');
-  XSWriteLn('|BC'+MakeStr(69-Length(LS(10)),#196)+'|PCï¿½ï¿½|HCï¿½ï¿½|NCï¿½');
-  XSWriteLn(' |BCï¿½                                                                            |HCï¿½');
-  XSWrite(' |BCï¿½    '); FunkyWrite(Pad(LS(11),52));
-  XSWriteLn('                    |PCï¿½');
-  XSWriteLn(' |BCï¿½    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½                    |BCï¿½');
-  XSWrite(' |BCï¿½ |FD1|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDA|FS. '); FunkyWrite(Pad(LS(12),13)); XSWriteLn(' |FC'+YN[User.UseTaglines]+' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD2|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDB|FS. '); FunkyWrite(Pad(LS(13),13)); XSWriteLn(' |FC'+YN[User.UseExpand]+' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD3|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDC|FS. '); FunkyWrite(Pad(LS(14),13)); XSWriteLn(' |FC'+YN[User.UseKeywords]+' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD4|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDD|FS. '); FunkyWrite(Pad(LS(15),13)); XSWriteLn(' |FC'+YN[Not User.UseSpellchk]+' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD5|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDE|FS. '); FunkyWrite(Pad(LS(16),13)); XSWriteLn(' |FC'+YN[User.AutoTagline]+' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD6|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDF|FS. '); FunkyWrite(Pad(LS(17),13)); XSWriteLn(' |FC'+YN[User.AutoSigs]+' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD7|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDG|FS. '); FunkyWrite(Pad(LS(102),15)); XSWriteLn(' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD8|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDH|FS. ');
+  XSWrite(' |BCÚÄ'); FunkyWrite(' '+LS(10)+' ');
+  XSWriteLn('|BC'+MakeStr(69-Length(LS(10)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
+  XSWriteLn(' |BC³                                                                            |HC³');
+  XSWrite(' |BC³    '); FunkyWrite(Pad(LS(11),52));
+  XSWriteLn('                    |PC³');
+  XSWriteLn(' |BC³    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                    |BC³');
+  XSWrite(' |BC³ |FD1|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDA|FS. '); FunkyWrite(Pad(LS(12),13)); XSWriteLn(' |FC'+YN[User.UseTaglines]+' |BC³');
+  XSWrite(' |BC³ |FD2|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDB|FS. '); FunkyWrite(Pad(LS(13),13)); XSWriteLn(' |FC'+YN[User.UseExpand]+' |BC³');
+  XSWrite(' |BC³ |FD3|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDC|FS. '); FunkyWrite(Pad(LS(14),13)); XSWriteLn(' |FC'+YN[User.UseKeywords]+' |BC³');
+  XSWrite(' |BC³ |FD4|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDD|FS. '); FunkyWrite(Pad(LS(15),13)); XSWriteLn(' |FC'+YN[Not User.UseSpellchk]+' |BC³');
+  XSWrite(' |BC³ |FD5|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDE|FS. '); FunkyWrite(Pad(LS(16),13)); XSWriteLn(' |FC'+YN[User.AutoTagline]+' |BC³');
+  XSWrite(' |BC³ |FD6|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDF|FS. '); FunkyWrite(Pad(LS(17),13)); XSWriteLn(' |FC'+YN[User.AutoSigs]+' |BC³');
+  XSWrite(' |BC³ |FD7|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m |FDG|FS. '); FunkyWrite(Pad(LS(102),15)); XSWriteLn(' |BC³');
+  XSWrite(' |BC³ |FD8|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDH|FS. ');
   If LFs>1 Then FunkyWrite(Pad(LS(101),15)) Else SWrite('[1;30m'+Pad(LS(101),15));
-  XSWriteLn(' |BCï¿½');
-  XSWrite(' |BCï¿½ |FD9|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDI|FS. '); FunkyWrite(Pad(LS(18),14));
-  XSWriteLn('  |BCï¿½');
-  XSWriteLn(' |BCï¿½                                                                            ï¿½');
-  XSWrite(' |BCï¿½   '); FunkyWrite(Pad(LS(19),72));
-  XSWriteLn(' |BCï¿½');
-  XSWriteLn(' |BCï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½     ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½      ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½     ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½');
-  XSWrite(' |BCï¿½  |FDJ|FS. ');       FunkyWrite(Pad(LS(20),7)); XSWrite(' |FS[ï¿½]     |FDN|FS. '); FunkyWrite(Pad(LS(21),7));
-  XSWrite(' |FS[ï¿½]      |FDR|FS. '); FunkyWrite(Pad(LS(21),7));
-  XSWriteLn(' |FS[ï¿½]     |FDV|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[1],10)+'[0m|BC   ï¿½');
-  XSWrite(' |BCï¿½  |FDK|FS. ');       FunkyWrite(Pad(LS(22),7)); XSWrite(' |FS[ï¿½]     |FDO|FS. '); FunkyWrite(Pad(LS(23),7));
-  XSWrite(' |FS[ï¿½]      |FDS|FS. '); FunkyWrite(Pad(LS(23),7));
-  XSWriteLn(' |FS[ï¿½]     |FDW|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[2],10)+'[0m|BC   ï¿½');
-  XSWrite(' |BCï¿½  |FDL|FS. ');       FunkyWrite(Pad(LS(24),7)); XSWrite(' |FS[ï¿½]     |FDP|FS. '); FunkyWrite(Pad(LS(25),7));
-  XSWrite(' |FS[ï¿½]      |FDT|FS. '); FunkyWrite(Pad(LS(25),7));
-  XSWriteLn(' |FS[ï¿½]     |FDX|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[3],10)+'[0m|BC   ï¿½');
-  XSWrite(' |PCï¿½  |FDM|FS. ');       FunkyWrite(Pad(LS(26),7)); XSWrite(' |FS[ï¿½]     |FDQ|FS. '); FunkyWrite(Pad(LS(27),7));
-  XSWrite(' |FS[ï¿½]      |FDU|FS. '); FunkyWrite(Pad(LS(27),7));
-  XSWriteLn(' |FS[ï¿½]     |FDY|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[4],10)+'[0m|BC   ï¿½');
-  XSWriteLn(' |HCï¿½                                                                            |BCï¿½');
-  XSWriteLn(' |NCï¿½|HCï¿½ï¿½|PCï¿½ï¿½|BCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
+  XSWriteLn(' |BC³');
+  XSWrite(' |BC³ |FD9|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDI|FS. '); FunkyWrite(Pad(LS(18),14));
+  XSWriteLn('  |BC³');
+  XSWriteLn(' |BC³                                                                            ³');
+  XSWrite(' |BC³   '); FunkyWrite(Pad(LS(19),72));
+  XSWriteLn(' |BC³');
+  XSWriteLn(' |BC³  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ³');
+  XSWrite(' |BC³  |FDJ|FS. ');       FunkyWrite(Pad(LS(20),7)); XSWrite(' |FS[ş]     |FDN|FS. '); FunkyWrite(Pad(LS(21),7));
+  XSWrite(' |FS[ş]      |FDR|FS. '); FunkyWrite(Pad(LS(21),7));
+  XSWriteLn(' |FS[ş]     |FDV|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[1],10)+'[0m|BC   ³');
+  XSWrite(' |BC³  |FDK|FS. ');       FunkyWrite(Pad(LS(22),7)); XSWrite(' |FS[ş]     |FDO|FS. '); FunkyWrite(Pad(LS(23),7));
+  XSWrite(' |FS[ş]      |FDS|FS. '); FunkyWrite(Pad(LS(23),7));
+  XSWriteLn(' |FS[ş]     |FDW|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[2],10)+'[0m|BC   ³');
+  XSWrite(' |BC³  |FDL|FS. ');       FunkyWrite(Pad(LS(24),7)); XSWrite(' |FS[ş]     |FDP|FS. '); FunkyWrite(Pad(LS(25),7));
+  XSWrite(' |FS[ş]      |FDT|FS. '); FunkyWrite(Pad(LS(25),7));
+  XSWriteLn(' |FS[ş]     |FDX|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[3],10)+'[0m|BC   ³');
+  XSWrite(' |PC³  |FDM|FS. ');       FunkyWrite(Pad(LS(26),7)); XSWrite(' |FS[ş]     |FDQ|FS. '); FunkyWrite(Pad(LS(27),7));
+  XSWrite(' |FS[ş]      |FDU|FS. '); FunkyWrite(Pad(LS(27),7));
+  XSWriteLn(' |FS[ş]     |FDY|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[4],10)+'[0m|BC   ³');
+  XSWriteLn(' |HC³                                                                            |BC³');
+  XSWriteLn(' |NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]);
   For Tmp:=0 To 8 Do
   Begin
@@ -970,18 +970,18 @@ Begin
   End;
   Repeat
     SWrite('[0m');
-    SGotoXY(17,17); SWrite(ANSICode[User.NC]); SWrite('ï¿½');
-    SGotoXY(17,18); SWrite(ANSICode[User.HC]); SWrite('ï¿½');
-    SGotoXY(17,19); SWrite(ANSICode[User.PC]); SWrite('ï¿½');
-    SGotoXY(17,20); SWrite(ANSICode[User.BC]); SWrite('ï¿½');
-    SGotoXY(36,17); SWrite(ANSICode[User.FC]); SWrite('ï¿½');
-    SGotoXY(36,18); SWrite(ANSICode[User.FL]); SWrite('ï¿½');
-    SGotoXY(36,19); SWrite(ANSICode[User.FD]); SWrite('ï¿½');
-    SGotoXY(36,20); SWrite(ANSICode[User.FS]); SWrite('ï¿½');
-    SGotoXY(56,17); SWrite(ANSICode[User.IC]+ANSICode[40+User.FieldColor]); SWrite('ï¿½');
-    SGotoXY(56,18); SWrite(ANSICode[User.IL]+ANSICode[40+User.FieldColor]); SWrite('ï¿½');
-    SGotoXY(56,19); SWrite(ANSICode[User.ID]+ANSICode[40+User.FieldColor]); SWrite('ï¿½');
-    SGotoXY(56,20); SWrite(ANSICode[User.IS]+ANSICode[40+User.FieldColor]); SWrite('ï¿½');
+    SGotoXY(17,17); SWrite(ANSICode[User.NC]); SWrite('ş');
+    SGotoXY(17,18); SWrite(ANSICode[User.HC]); SWrite('ş');
+    SGotoXY(17,19); SWrite(ANSICode[User.PC]); SWrite('ş');
+    SGotoXY(17,20); SWrite(ANSICode[User.BC]); SWrite('ş');
+    SGotoXY(36,17); SWrite(ANSICode[User.FC]); SWrite('ş');
+    SGotoXY(36,18); SWrite(ANSICode[User.FL]); SWrite('ş');
+    SGotoXY(36,19); SWrite(ANSICode[User.FD]); SWrite('ş');
+    SGotoXY(36,20); SWrite(ANSICode[User.FS]); SWrite('ş');
+    SGotoXY(56,17); SWrite(ANSICode[User.IC]+ANSICode[40+User.FieldColor]); SWrite('ş');
+    SGotoXY(56,18); SWrite(ANSICode[User.IL]+ANSICode[40+User.FieldColor]); SWrite('ş');
+    SGotoXY(56,19); SWrite(ANSICode[User.ID]+ANSICode[40+User.FieldColor]); SWrite('ş');
+    SGotoXY(56,20); SWrite(ANSICode[User.IS]+ANSICode[40+User.FieldColor]); SWrite('ş');
     User.FZ:=User.PC;
     SGotoXY(1,23);
     SWrite('[0m');
@@ -2012,37 +2012,37 @@ Begin
   Begin
    {$IFDEF CompileExtra}
    TextAttr:=$01;
-   WriteLn('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿');
-   WriteLn('ï¿½'+Pad('',72)+'ï¿½');
-   Write('ï¿½  ');
+   WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
+   WriteLn('³'+Pad('',72)+'³');
+   Write('³  ');
    TextAttr:=$0B;
    Write(Pad('Open!EDIT v'+Ver,70));
-   TextAttr:=$01; WriteLn('ï¿½');
-   Write('ï¿½  ');
+   TextAttr:=$01; WriteLn('³');
+   Write('³  ');
    TextAttr:=$0B;
    Write(Pad('Config file error',70));
    TextAttr:=$01;
-   WriteLn('ï¿½');
-   WriteLn('ï¿½'+Pad('',72)+'ï¿½');
+   WriteLn('³');
+   WriteLn('³'+Pad('',72)+'³');
    TextAttr:=$01;
-   Write('ï¿½   ');
+   Write('³   ');
    TextAttr:=$09;
-   Write('ï¿½ ');
+   Write('ş ');
    TextAttr:=$0F; Write('Open!EDIT cannot locate ' + Pad('OEDIT.CFG',43));
    TextAttr:=$01;
-   WriteLn('ï¿½');
-   Write('ï¿½   ');
+   WriteLn('³');
+   Write('³   ');
    TextAttr:=$09;
-   Write('ï¿½ ');
+   Write('ş ');
    TextAttr:=$0F;
    Write('Please run OESetup.EXE to create this configuration file');
    TextAttr:=$01;
-   WriteLn('           ï¿½');
-   WriteLn('ï¿½'+Pad('',72)+'ï¿½');
-   WriteLn('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½                                                                 ï¿½');
-   Write('ï¿½ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-   WriteLn(' ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
-   WriteLn('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
+   WriteLn('           ³');
+   WriteLn('³'+Pad('',72)+'³');
+   WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
+   Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
+   WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+   WriteLn('ÀÄÄÄÄÄÄÄÙ');
    {$ENDIF}
    Halt(2);
    End;
@@ -2135,14 +2135,6 @@ Begin
  If MsgTxtFile='' Then MsgTxtFile:=SysPath+'MSGTMP.';
  Window(1,1,80,25);
  ClrScr;
-{$IFDEF CompileExtra}
- Case Config^.BBSProg Of
-   bbs_CC: LoadCCInfo;
-   bbs_RA: LoadRAInfo;
-   bbs_QK: LoadQKInfo;
-{   bbs_EZ: LoadEZInfo;}
-  End;
-{$ENDIF}
 
 {$IFDEF CompileExtra}
  If FileExists(CfgPath+'OEDIT.REG') Then
@@ -2195,24 +2187,24 @@ Begin
     Begin
      {$IFDEF CompileExtra}
       TextAttr:=$01;
-      WriteLn('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿');
-      WriteLn('ï¿½'+Pad('',72)+'ï¿½');
-      Write('ï¿½  '); TextAttr:=$0B; Write(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; WriteLn('ï¿½');
-      Write('ï¿½  '); TextAttr:=$0B; Write(Pad('Datafile error',70)); TextAttr:=$01; WriteLn('ï¿½');
-      WriteLn('ï¿½'+Pad('',72)+'ï¿½');
+      WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
+      WriteLn('³'+Pad('',72)+'³');
+      Write('³  '); TextAttr:=$0B; Write(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; WriteLn('³');
+      Write('³  '); TextAttr:=$0B; Write(Pad('Datafile error',70)); TextAttr:=$01; WriteLn('³');
+      WriteLn('³'+Pad('',72)+'³');
       TextAttr:=$01;
-      Write('ï¿½   '); TextAttr:=$09; Write('ï¿½ '); TextAttr:=$0F; Write('Open!EDIT cannot locate the datafile '+
+      Write('³   '); TextAttr:=$09; Write('ş '); TextAttr:=$0F; Write('Open!EDIT cannot locate the datafile '+
       Pad(SysPath+MSGINF,30));
-      TextAttr:=$01; WriteLn('ï¿½');
-      Write('ï¿½   '); TextAttr:=$09; Write('ï¿½ '); TextAttr:=$0F;
+      TextAttr:=$01; WriteLn('³');
+      Write('³   '); TextAttr:=$09; Write('ş '); TextAttr:=$0F;
       Write('Please use the -P<path_to_bbs> parameter to fix this problem');
-      TextAttr:=$01; WriteLn('       ï¿½');
-      Write('ï¿½     '); TextAttr:=$0F; Write(Pad('i.e. OEDIT -PC:\BBS',67)); TextAttr:=$01; WriteLn('ï¿½');
-      WriteLn('ï¿½'+Pad('',72)+'ï¿½');
-      WriteLn('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½                                                                 ï¿½');
-      Write('ï¿½ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-      WriteLn(' ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
-      WriteLn('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
+      TextAttr:=$01; WriteLn('       ³');
+      Write('³     '); TextAttr:=$0F; Write(Pad('i.e. OEDIT -PC:\BBS',67)); TextAttr:=$01; WriteLn('³');
+      WriteLn('³'+Pad('',72)+'³');
+      WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
+      Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
+      WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+      WriteLn('ÀÄÄÄÄÄÄÄÙ');
      {$ENDIF}
       Halt(2);
     End;
@@ -2278,11 +2270,7 @@ Begin
               ReadLn(F,ToName);   ToInitials:=Initials(ToName); ToName:=Capitalize(ToName);
               ReadLn(F,Subject);
               ReadLn(F,AreaName);
-            {$IFDEF CompileExtra}
-              MsgAreaPos:=GetAreaFPos(AreaName);
-            {$ELSE}
-              MsgAreaPos:=0;
-            {$ENDIF}
+              MsgAreaPos:=-1;
               ReadLn(F,Tmp);
               PrivMsg:=(UCase(Tmp[2])='R');
             End;
@@ -2292,11 +2280,7 @@ Begin
                ReadLn(F,Subject);
                ReadLn(F,MNum);
                ReadLn(F,AreaName);
-             {$IFDEF CompileExtra}
-               MsgAreaPos:=GetAreaFPos(AreaName);
-            {$ELSE}
-               MsgAreaPos:=0;
-            {$ENDIF}
+               MsgAreaPos:=-1;
                ReadLn(F,Tmp);
                PrivMsg:=(Tmp[1]='Y');
              End;
@@ -2341,7 +2325,6 @@ Begin
     End;
     If Not FileExists(Config^.TagFileName) Then TagError;
   End;
-  CheckUserOK;
   New(PhyLine);
   Max_Msg_Lines:=((MaxAvail div 3)*2) div SizeOf(Str81);
   If Max_Msg_Lines>Config^.AbsMaxMsgLines Then Max_Msg_Lines:=Config^.AbsMaxMsgLines; Dec(Max_Msg_Lines);
@@ -2477,10 +2460,6 @@ End
    For A:=1 To LineCnt-SubVal Do WriteLn(F,MText[A]^);
 
    For A:=LineCnt-SubVal+1 To LineCnt Do WriteLn(F,MText[A]^);
-   If Config^.BBSProg=bbs_RA Then
-   Begin
-     WriteLn(F,StrVal(Round(Config^.DataUEC*263/120)));
-   End;
    Close(F);
   End;
   CDelay(1000); {1000}
