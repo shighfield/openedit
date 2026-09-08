@@ -36,9 +36,7 @@ Function HackPrevent(S: String): String;
 Procedure FancyClear;
 Procedure FixChainsaw;
 Procedure LoadQuoteData;
-{$IFDEF CompileExtra}
 Function TagLine: Boolean;
-{$ENDIF}
 Procedure ResetUser;
 Procedure LoadUser;
 Procedure TagError;
@@ -115,11 +113,7 @@ Const
  FtrCRC2: Array[1..2] Of LongInt =
   (180023732,940903434);
 
-{$IFDEF CompileExtra}
  InternalLineLim = 4000;
-{$ELSE}
- InternalLineLim = 400;
-{$ENDIF}
  DelimiterChars = [#32..#47,#91..#96,#123..#255];
  TopScreen      : Word = 7;              { First screen line for text entry }
  ScrLines       : Word = 15;        { Number of screen lines for text entry }
@@ -145,10 +139,8 @@ Const
  HasAddedSig    : Boolean = False;
 
 Var
-{$IFDEF CompileExtra}
 { Footer         : Array[1..2] Of String[250];}
  PlainFooter    : Array[1..2] Of String[250];
-{$ENDIF}
  MsgTxtFile     : String;
  LastAutoSave   : Real;
  LastStatTime   : Real;
@@ -374,7 +366,6 @@ Var
  N,LN,FN: String[35];
  D,DD,DM,DY,T: String[30];
 Begin
-{$IFDEF CompileExtra}
  N:=ToName;
  If Pos(' ',N)>0 Then FN:=Copy(N,1,Pos(' ',N)-1) Else FN:=N;
  If Pos(' ',N)>0 Then LN:=Copy(N,Pos(' ',N)+1,255) Else LN:=N;
@@ -403,7 +394,6 @@ Begin
  While Pos('@MONTH@',UCase(S))>0 Do Begin X:=Pos('@MONTH@',UCase(S)); Delete(S,X,7); Insert(DM,S,X); End;
  While Pos('@DAY@',UCase(S))>0 Do Begin X:=Pos('@DAY@',UCase(S)); Delete(S,X,5); Insert(DD,S,X); End;
  TagExpand:=S;
- {$ENDIF}
 End;
 
 Function Censor(S: String): String;
@@ -418,7 +408,6 @@ Var
  CenPtr: Byte;
 Begin
  If Expired Then Exit;
-{$IFDEF CompileExtra}
  FillChar(CensorMask,SizeOf(CensorMask),#32);
  CenPtr:=0;
  Repeat
@@ -450,7 +439,6 @@ Begin
       End;
     End;
  Censor:=S;
-{$ENDIF}
 End;
 
 Procedure FilterText;
@@ -463,7 +451,6 @@ Var
  C: Char;
 Begin
  If Expired Then Exit;
-{$IFDEF CompileExtra}
  For Tmp:=128 to 255 Do Table[Tmp]:=Chr(Tmp-128);
  Assign(F,CfgPath+'FILTER.CTL');
  {$I-} Reset(F); {$I+}
@@ -492,7 +479,6 @@ Begin
     If MText[a]^[Tmp]>#127 Then
      MText[a]^[Tmp]:=Table[Ord(MText[a]^[Tmp])];
   End;
-{$ENDIF}
 End;
 
 Function LongRandom(Max: LongInt): LongInt;
@@ -679,7 +665,6 @@ Var
  XCnt,YCnt,SAt: Integer;
  SCh: Char;
 Begin
-{$IFDEF CompileExtra}
  New(WinRec);
  For YCnt:=0 To Hgt-1 Do
   For XCnt:=0 To Wid-1 Do
@@ -688,7 +673,6 @@ Begin
     GotoXY(X1+XCnt,Y1+YCnt); GetAttrChar(SAt,SCh);
     WinRec^[XCnt,YCnt].A:=SAt; WinRec^[XCnt,YCnt].C:=SCh;
    End;
-{$ENDIF}
 End;
 
 Procedure LoadWin(X1,Y1,Wid,Hgt: Integer);
@@ -697,7 +681,6 @@ Var
  OldF,OldB,
  CBack,CFore: Integer;
 Begin
-{$IFDEF CompileExtra}
  CBack:=-1;
  OldF:=0; OldB:=0;
  For YCnt:=0 To Hgt-1 Do
@@ -713,7 +696,6 @@ Begin
     SWrite(WinRec^[XCnt,YCnt].C);
    End;
  Dispose(WinRec);
-{$ENDIF}
 End;
 
 Function GetTimeDate: String;
@@ -1004,7 +986,6 @@ End;
 
 Procedure TagError;
 Begin
-{$IFDEF CompileExtra}
    TextAttr:=$01;
    SWriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
    SWriteLn('³'+Pad('',72)+'³');
@@ -1023,13 +1004,11 @@ Begin
    SWrite('³ '); TextAttr:=$09; SWrite('STS97'); TextAttr:=$01;
    SWriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
    SWriteLn('ÀÄÄÄÄÄÄÄÙ');
-{$ENDIF}
    Halt(2);
 End;
 
 Procedure ForceExit;
 Begin
-{$IFDEF CompileExtra}
  SaveScreen(1);
  GotoXY(1,25);
  TextAttr:=$1F;
@@ -1040,12 +1019,10 @@ Begin
  While Keypressed Do ReadKey;
  GotoXY(1,25); TextAttr:=$0F; ClrEol;
  RestoreScreen(1);
-{$ENDIF}
 End;
 
 Procedure HangUpUser;
 Begin
-{$IFDEF CompileExtra}
  SaveScreen(1);
  GotoXY(1,25);
  TextAttr:=$1F;
@@ -1055,7 +1032,6 @@ Begin
  While Keypressed Do ReadKey;
  GotoXY(1,25); TextAttr:=$0F; ClrEol;
  RestoreScreen(1);
-{$ENDIF}
 End;
 
 Procedure Remove_Trailing;
@@ -1090,7 +1066,6 @@ Procedure Split_Line;              { Splits the current line at the Cursor, }
 Var PCol: Integer;                     { leaves Cursor in original position }
     Hold,Quote: String[100];
 Begin
-{$IFDEF CompileExtra}
  PCol:=CCol; Remove_Trailing; Par:=Copy(MText[CLine]^,CCol,79);
 
  If (Pos('>',MText[CLine]^) in [1..5]) And (CCol<=Length(MText[CLine]^)) And (CCol>Pos('>',MText[CLine]^)) Then
@@ -1112,7 +1087,6 @@ Begin
  Else
   Refresh_screen;
  Dec(CLine); CCol:=PCol;
-{$ENDIF}
 End;
 
 Procedure Cursor_NewLine;
@@ -1134,7 +1108,6 @@ End;
 Procedure Join_Lines;  { Join current line with following line, if possible }
 Var CC,CL: Byte;
 Begin
-{$IFDEF CompileExtra}
  If ((CurLength + Length(MText[CLine+1]^))>=79) And (Pos(#32,MText[CLine+1]^)=0) Then Exit;
  CC:=CCol; CL:=CurLength;
  If (CurLength + Length(MText[CLine+1]^))<79 Then
@@ -1158,7 +1131,6 @@ Begin
     End;
   End;
  Refresh_screen;
-{$ENDIF}
 End;
 
 Procedure Word_Wrap;       { Line is full and a character must be inserted. }
@@ -1717,7 +1689,6 @@ Begin
  SGotoXY(CCol,CLine-TopLine+Topscreen);
 End;
 
-{$IFDEF CompileExtra}
 Function TagLine: Boolean;
 Var
  OldKwd: Array[1..4] Of String[10];
@@ -2168,7 +2139,6 @@ Begin
     End;
   End;
 End;
-{$ENDIF}
 
 Function PageNum: String;
 Begin
@@ -2203,7 +2173,6 @@ Begin
 
        Write('   Time: '+Copy(FormatTime(Nsl),1,5))
       End;
-{$IFDEF CompileExtra}
    2: Begin
        TextAttr:=$1B; ClrEol; SWrite(' F1 ');
        TextAttr:=$1F; SWrite('More Help '); TextAttr:=$19; SWrite('þ ');
@@ -2230,7 +2199,6 @@ Begin
        TextAttr:=$1B; SWrite('F10 ');
        TextAttr:=$1F; SWrite('Shell');
       End;
-{$ENDIF}
   End;
  TextAttr:=A;
  GotoXY(X,Y);
@@ -2246,36 +2214,30 @@ End;
 Procedure Unquote_Screen;
 Var I: Integer;
 Begin
-{$IFDEF CompileExtra}
  SGotoXY(1,7);
  For I:=1 to ScrLines Do                   { Physical lines are now invalid }
   Begin PhyLine^[I]:=''; SWriteLn(''); SClrEol; End;
  Scroll_Screen(0);                                       { Causes redisplay }
  Display_Footer(2);
-{$ENDIF}
 End;
 
 Procedure MinLinesNotMet;
 Begin
-{$IFDEF CompileExtra}
  Plain_Footer(2);
  SGotoXY(70-Length(LS(68)),23);
  FunkyWrite(' '+LS(68)+' '+Zero(ForceLines,3)+' '+LS(69)+' ');
  CDelay(1000);
  Display_Footer(2);
  Reposition;
-{$ENDIF}
 End;
 
 Procedure AbortDisabled;
 Begin
-{$IFDEF CompileExtra}
  Plain_Footer(2);
  SGotoXY(74-Length(LS(70)),23); FunkyWrite(' '+LS(70)+' ');
  CDelay(1000);
  Display_Footer(2);
  Reposition;
-{$ENDIF}
 End;
 
 Procedure Display_Header;
@@ -2478,9 +2440,7 @@ Begin
    Read(XF,X);
    Move(X[6],S[1],75); S[0]:=#75; Delete(S,Pos(#0,S),255); S:=RTrim(S);
    Inc(Cnt);
-{$IFDEF CompileExtra}
    Lang^[Cnt]:=S;
-{$ENDIF}
   End;
  Close(XF);
 End;
@@ -2574,7 +2534,6 @@ Var
  Out: String;
  T: String[50];
 Begin
-{$IFDEF CompileExtra}
  Funky:=False;
  While Pos('@',S)>0 Do
   Begin
@@ -2631,7 +2590,6 @@ Begin
     End;
   End;
  If Funky Then FunkyWrite(S) Else XSWrite(S);
-{$ENDIF}
 End;
 
 Procedure Plain_Footer(B: Byte);
@@ -2655,7 +2613,6 @@ Var
  OI,I: Byte;
 
 Begin
-{$IFDEF CompileExtra}
  If (PlainFooter[1]='') And (PlainFooter[2]='') Then
   Begin
    If (Not FileExists('FOOTER.CTL')) {Or (DecryptKey<>SysOpName)} Then
@@ -2695,7 +2652,6 @@ Begin
   End;
  SGotoXY(1,Tmp); If B in [1,3] Then Begin XSFWrite(PlainFooter[1]); SWriteLn(''); End;
  SGotoXY(1,Tmp+1); If B in [2,3] Then Begin XSFWrite(PlainFooter[2]); SWriteLn(''); End;
-{$ENDIF}
 End;
 
 Procedure DisplayFooterTime;

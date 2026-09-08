@@ -85,11 +85,9 @@ Label ReMsgEdit;
 
 Var
  Key            : LongInt;
-{$IFDEF CompileExtra}
  EStr           : Array[1..8,1..2] Of ^Str35;
  ExtraExpand    : Array[1..256,1..2] Of ^Str20;
  ExtraExpands   : Word;
-{$ENDIF}
  PCnt           : Byte;
  LFs            : Byte;
 
@@ -128,7 +126,6 @@ End;
 
 Procedure Cursor_WordRight;
 Begin
-{$IFDEF CompileExtra}
   If Delimiter Then
   Begin
     Repeat
@@ -142,12 +139,10 @@ Begin
    Until Delimiter;
    Cursor_WordRight; { Then move to a word start (recursive) }
   End;
-{$ENDIF}
 End;
 
 Procedure Cursor_WordLeft;
 Begin
-{$IFDEF CompileExtra}
   If Delimiter Then
   Begin
     Repeat
@@ -169,12 +164,10 @@ Begin
     Until Delimiter;
     Cursor_WordLeft; { And then move a word left (recursive) }
   End;
-{$ENDIF}
 End;
 
 Procedure Reformat_Paragraph;     { Paragraph reformat, starting at current }
 Begin                      { line and Ending at any empty or indented line; }
-{$IFDEF CompileExtra}
   Remove_Trailing;                 { leaves Cursor after last line formatted }
   CCol:=CurLength;
   While CurChar<>' ' Do                     { For each line of the paragraph }
@@ -202,14 +195,12 @@ Begin                      { line and Ending at any empty or indented line; }
    Until CCol=0; { No more lines fit - time for next line, or EOParagraph }
    Inc(CLine); CCol:=1; Remove_Trailing;
   End;
-{$ENDIF}
 End;
 
 Procedure Msg_Reformat;                { Reformat paragraph, update display }
 Var
   Pline: Integer;
 Begin
-{$IFDEF CompileExtra}
   PLine := CLine; Reformat_Paragraph;
   While (CurLength=0) And (CLine<=LineCnt) Do Inc(CLine);
   While CLine-TopLine>Scrlines-2 do { Find top of screen for redisplay }
@@ -218,12 +209,10 @@ Begin
     Inc(TopLine,Config^.ScrollSiz); PLine:=TopLine;
   End;
   Refresh_screen;
-{$ENDIF}
 End;
 
 Procedure Delete_WordRight;
 Begin
-{$IFDEF CompileExtra}
   If CurChar=' ' Then { Skip blanks right }
   Repeat
     Delete_Char;
@@ -234,7 +223,6 @@ Begin
     Delete_Char;
     If (LastSlice+Slicing<=Timer) Then ReleaseSlice;
   Until Delimiter;
-{$ENDIF}
 End;
 
 Procedure Cursor_Tab;
@@ -324,7 +312,6 @@ Begin
   GetQuoteLine:=Qtext;
 End;
 
-{$IFDEF CompileExtra}
 Procedure Expand;
 Const
   ExpandUtils    = 2;
@@ -454,7 +441,6 @@ Begin
     Exit;
    End;
 End;
-{$ENDIF}
 
 Procedure QuoteWindow;
 Var
@@ -615,7 +601,6 @@ Begin
   Display_Footer(2);
 End;
 
-{$IFDEF CompileExtra}
 Procedure SigSetup;
 Var
  Key,
@@ -1121,7 +1106,6 @@ Begin
   Write(UserFile,User);
   Close(UserFile);
 End;
-{$ENDIF}
 
 Function CheckQuoteRatio: Boolean;
 Var
@@ -1249,7 +1233,6 @@ Begin
   For Tmp:=1 To Length(S) Do Insert_Char(S[Tmp]);
 End;
 
-{$IFDEF CompileExtra}
 Procedure DoImport(FN: String);
 Var
   F: Text;
@@ -1547,7 +1530,6 @@ Begin
    2: DoImport(Config^.AltF1to10[Num].CmdData);
   End;
 End;
-{$ENDIF}
 
 Function Msg_Edit: Boolean;
 Var
@@ -1559,7 +1541,6 @@ Var
   ExportMsg: Boolean;
   A: Byte;
 
-{$IFDEF CompileExtra}
   Procedure DoMenu;
   Var
     Hil: Byte;
@@ -1665,9 +1646,6 @@ Var
     SaveMsg:=True;
    End;
   End;
-{$ELSE}
-  Procedure DoMenu; Begin End;
-{$ENDIF}
   Procedure CleanUp;
   Var
     I: Byte;
@@ -1716,11 +1694,9 @@ Begin
              StatusBar;
              Continue;
            End;
-{$IFDEF CompileExtra}
       '<': If (LocalKeypress) And (Not Expired) Then Begin ExportFile; Continue; End;
       '=': If (LocalKeypress) And (Not Expired) Then Begin ImportFile; Cleanup; Continue; End;
       '>': If (LocalKeypress) And (Not Expired) Then Begin ForceExit; Continue; End;
-{$ENDIF}
       '?': If (LocalKeypress) And (Not Expired) Then
            Begin
              Sound(500); Delay(20); Sound(1000); Delay(20); Sound(500); Delay(20); NoSound;
@@ -1730,7 +1706,6 @@ Begin
       '@': If (LocalKeypress) And (Not Expired) Then Begin HangUpUser; Continue; End;
       'A': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft+(5*60); Continue; End;
       'B': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft-(5*60); Continue; End;
-{$IFDEF CompileExtra}
       'D': If (LocalKeypress) And (Not Expired) Then
            Begin
              Drop2DOS;
@@ -1741,7 +1716,6 @@ Begin
                   RunMacro(Ord(Key)-Ord('h')+1);
                   Continue;
                 End;
-{$ENDIF}
       'G': Key:=^L; { Home }
       'H': Key:=^E; { UpArrow }
       'I': Key:=^R; { PgUp }
@@ -1797,12 +1771,12 @@ Begin
     ^H: Begin Cursor_Left; If Insert_Mode Then Delete_Char; End;
     ^I: Cursor_Tab;
     ^J: Join_Lines;
-    ^K: {$IFDEF CompileExtra} If (Not Expired) Then UserConfig {$ENDIF} ;
+    ^K: If (Not Expired) Then UserConfig;
     ^L: Cursor_BegLine;
     ^M: Begin
          OIM:=Insert_Mode; Insert_Mode:=True;
          LastWasCR:=True;
-         {$IFDEF CompileExtra} If (Not Expired) THen Expand; {$ENDIF}
+         If (Not Expired) THen Expand;
          Insert_Mode:=OIM;
          Cursor_NewLine;
         End;
@@ -1837,9 +1811,7 @@ Begin
    #32..#126,#128..#255: Begin
                  Insert_Char(Key); { All other characters are self-inserting }
                  LastWasCR:=False;
-                 {$IFDEF CompileExtra}
                  If Not (Key in ['0'..'9','A'..'Z','a'..'z']) Then Expand;
-                 {$ENDIF}
                End;
    End;
 If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','Q','C','I','E']) And (CCol=3)) And (Not Expired)
@@ -1922,7 +1894,6 @@ Begin
   Dispose(PhyLine);
   Dispose(Config);
 
-{$IFDEF CompileExtra}
   For EE:=1 To ExtraExpands Do
   Begin
     Dispose(ExtraExpand[EE,1]);
@@ -1933,7 +1904,6 @@ Begin
     Dispose(EStr[EE,1]);
     Dispose(EStr[EE,2]);
   End;
-{$ENDIF}
   If MemLang Then Dispose(Lang); MemLang:=False;
   ExitProc:=ExitSave;
 End;
@@ -1943,7 +1913,6 @@ Var
   F: Text;
   S: String[100];
 Begin
-{$IFDEF CompileExtra}
   ExtraExpands:=0;
   Assign(F,CfgPath+'EXPAND.CTL');
   FileMode:=66;
@@ -1960,7 +1929,6 @@ Begin
     New(ExtraExpand[ExtraExpands,2]); ExtraExpand[ExtraExpands,2]^:=S;
    End;
   Close(F);
- {$ENDIF}
 End;
 
 Var
@@ -2110,9 +2078,7 @@ Begin
 
   ExitCode:=2;
   InitTurboCOMM;
- {$IFDEF CompileExtra}
   HookErrorHandler:=True;
- {$ENDIF}
   LimitExceeded:='[23;7H[0;1;31m '+LS(81)+' '+^G;
   ProhibitStatus:=True;
   ProgName:='Open!EDIT v'+Ver;
@@ -2139,7 +2105,6 @@ Begin
   UserName:=Capitalize(UserName);
   UserLast:=UserName;
   UserFirst:='';
-{$IFDEF CompileExtra}
   NC:=ANSICode[Config^.NC];
   HC:=ANSICode[Config^.HC];
   BC:=ANSICode[Config^.BC];
@@ -2153,7 +2118,6 @@ Begin
   ID:=ANSICode[Config^.ID]+ANSICode[40+Config^.FieldColor];
   IL:=ANSICode[Config^.IL]+ANSICode[40+Config^.FieldColor];
   IS:=ANSICode[Config^.IS]+ANSICode[40+Config^.FieldColor];
-{$ENDIF}
   YN[False]:='|IC N|ILo  [0m';
   YN[True ]:='|IC Y|ILes [0m';
   LoadUser;
@@ -2174,9 +2138,7 @@ Begin
   LoadExtraExpands;
   SClrScr;
   StatusBar;
-{$IFDEF CompileExtra}
   SelectLanguage;
-{$ENDIF}
   AreaName:='';
   FromName:='';
   ToName:='';
@@ -2184,7 +2146,6 @@ Begin
   Subject:='';
   Replying:=False;
   Str(MNum,MsgNum);
-{$IFDEF CompileExtra}
   For MNum:=1 To 8 Do
   Begin
     New(EStr[MNum,1]);
@@ -2198,7 +2159,6 @@ Begin
   EStr[6,1]^:='@RE@';    EStr[6,2]^:=Subject;
   EStr[7,1]^:='@VER@';   EStr[7,2]^:=Ver;
   EStr[8,1]^:='@FROM@';  EStr[8,2]^:=UserName;
-{$ENDIF}
 {---Shawn: Taglines starting here}
   If (Pos('\',Config^.TagFileName)=0) And (Config^.UseTaglines) Then
   Begin
@@ -2215,7 +2175,6 @@ Begin
   Max_Msg_Lines:=((MaxAvail div 3)*2) div SizeOf(Str81);
   If Max_Msg_Lines>Config^.AbsMaxMsgLines Then Max_Msg_Lines:=Config^.AbsMaxMsgLines; Dec(Max_Msg_Lines);
   If Max_Msg_Lines>InternalLineLim Then Max_Msg_Lines:=InternalLineLim;
-{$IFDEF CompileExtra}
   If Config^.AbsMaxMsgLines<50 Then
   Begin
     ClrScr;
@@ -2253,7 +2212,6 @@ Begin
     End;
     Halt(2);
   End;
-{$ENDIF}
   For N:=1 To Max_Msg_Lines Do
   Begin
     New(MText[n]);
