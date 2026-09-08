@@ -2057,7 +2057,7 @@ Begin
       ImportSecurity:=999999;
       ExportSecurity:=999999;
       ScrollSiz:=8;
-      UseTaglines:=True;
+      UseTaglines:=False;
       UseExpand:=True;
       UseKeywords:=True;
       Censor:=False;
