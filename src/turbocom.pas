@@ -127,57 +127,59 @@ Procedure SRead(Var S: String; Len: Byte; Default: String);
 
 Implementation
 
-{ CP437 -> UTF-8 translation for the box-drawing/line-art bytes ($80-$FF)
-  this codebase writes throughout its screen chrome. The original DOS
-  program wrote these bytes straight to a CP437 text-mode display; a
-  modern terminal expects UTF-8 and renders unmapped high bytes as a
-  replacement-character glyph. CP437Hi[b] holds the UTF-8 encoding of
-  the Unicode codepoint CP437 byte b maps to (generated programmatically
-  from the standard CP437 table - not hand-transcribed, since this file
-  has already lost invisible bytes twice this session to hand-typing). }
-Const
- CP437Hi: Array[$80..$FF] Of String[3] = (
-  #195#135,#195#188,#195#169,#195#162,
-  #195#164,#195#160,#195#165,#195#167,
-  #195#170,#195#171,#195#168,#195#175,
-  #195#174,#195#172,#195#132,#195#133,
-  #195#137,#195#166,#195#134,#195#180,
-  #195#182,#195#178,#195#187,#195#185,
-  #195#191,#195#150,#195#156,#194#162,
-  #194#163,#194#165,#226#130#167,#198#146,
-  #195#161,#195#173,#195#179,#195#186,
-  #195#177,#195#145,#194#170,#194#186,
-  #194#191,#226#140#144,#194#172,#194#189,
-  #194#188,#194#161,#194#171,#194#187,
-  #226#150#145,#226#150#146,#226#150#147,#226#148#130,
-  #226#148#164,#226#149#161,#226#149#162,#226#149#150,
-  #226#149#149,#226#149#163,#226#149#145,#226#149#151,
-  #226#149#157,#226#149#156,#226#149#155,#226#148#144,
-  #226#148#148,#226#148#180,#226#148#172,#226#148#156,
-  #226#148#128,#226#148#188,#226#149#158,#226#149#159,
-  #226#149#154,#226#149#148,#226#149#169,#226#149#166,
-  #226#149#160,#226#149#144,#226#149#172,#226#149#167,
-  #226#149#168,#226#149#164,#226#149#165,#226#149#153,
-  #226#149#152,#226#149#146,#226#149#147,#226#149#171,
-  #226#149#170,#226#148#152,#226#148#140,#226#150#136,
-  #226#150#132,#226#150#140,#226#150#144,#226#150#128,
-  #206#177,#195#159,#206#147,#207#128,
-  #206#163,#207#131,#194#181,#207#132,
-  #206#166,#206#152,#206#169,#206#180,
-  #226#136#158,#207#134,#206#181,#226#136#169,
-  #226#137#161,#194#177,#226#137#165,#226#137#164,
-  #226#140#160,#226#140#161,#195#183,#226#137#136,
-  #194#176,#226#136#153,#194#183,#226#136#154,
-  #226#129#191,#194#178,#226#150#160,#194#160);
+{ CP437 -> single-byte ASCII approximation for the box-drawing/line-art
+  bytes ($80-$FF) this codebase writes throughout its screen chrome. The
+  original DOS program wrote these bytes straight to a CP437 text-mode
+  display; a modern terminal expects UTF-8 and renders unmapped high
+  bytes as a replacement-character glyph.
 
-Function CP437ToUtf8(S: String): String;
-Var I: Integer; R: String;
+  A true CP437->UTF-8 translation was tried first (each high byte mapped
+  to the 2-3 byte UTF-8 encoding of its real Unicode codepoint) and was
+  reverted: FPC's Unix CRT unit tracks cursor column position and
+  auto-wrap by counting output *bytes*, one byte assumed to be one
+  column - true for CP437, false for multi-byte UTF-8. A full-width
+  80-column border line expands to ~240 bytes after UTF-8 translation,
+  so CRT wraps at the 80-byte mark (a third of the way through), often
+  splitting a multi-byte character in half and sending genuinely invalid
+  UTF-8 - which is why the replacement-character glyph showed up even
+  after that first translation. Worse, CRT's internal screen-shadow
+  buffer (used to redraw scrolled regions) stores exactly one byte per
+  cell, so there's no way to make multi-byte characters round-trip
+  through it correctly without replacing CRT entirely (the deferred
+  ncurses/Video-unit port, not a small fix).
+
+  CP437Hi[b] instead holds a single ASCII character that approximates
+  byte b - box-drawing lines become -/|/+, shading blocks become
+  ./:/#, so byte count still equals column count and none of CRT's
+  column math breaks. Less pretty (ASCII art instead of true Unicode
+  line-drawing) but correct. Generated programmatically, not
+  hand-transcribed, matching this session's established practice for
+  this file. }
+Const
+ CP437Hi: Array[$80..$FF] Of Char = (
+  #67,#117,#101,#97,#97,#97,#97,#99,
+  #101,#101,#101,#105,#105,#105,#65,#65,
+  #69,#97,#65,#111,#111,#111,#117,#117,
+  #121,#79,#85,#99,#76,#89,#80,#102,
+  #97,#105,#111,#117,#110,#78,#97,#111,
+  #63,#33,#33,#50,#52,#33,#60,#62,
+  #46,#58,#35,#124,#43,#43,#43,#43,
+  #43,#43,#124,#43,#43,#43,#43,#43,
+  #43,#43,#43,#43,#45,#43,#43,#43,
+  #43,#43,#43,#43,#43,#61,#43,#43,
+  #43,#43,#43,#43,#43,#43,#43,#43,
+  #43,#43,#43,#35,#95,#124,#124,#34,
+  #97,#66,#71,#112,#83,#111,#117,#116,
+  #70,#79,#87,#100,#56,#102,#101,#110,
+  #61,#43,#62,#60,#124,#124,#47,#126,
+  #111,#46,#46,#118,#110,#50,#35,#32);
+
+Function CP437ToAscii(S: String): String;
+Var I: Integer;
 Begin
- R:='';
  For I:=1 To Length(S) Do
-  If Ord(S[I])<$80 Then R:=R+S[I]
-  Else R:=R+CP437Hi[Ord(S[I])];
- CP437ToUtf8:=R;
+  If Ord(S[I])>=$80 Then S[I]:=CP437Hi[Ord(S[I])];
+ CP437ToAscii:=S;
 End;
 
 Function Local: Boolean;
@@ -207,12 +209,12 @@ End;
 
 Procedure SWrite(S: String);
 Begin
-  Write(CP437ToUtf8(S));
+  Write(CP437ToAscii(S));
 End;
 
 Procedure SWriteLn(S: String);
 Begin
-  WriteLn(CP437ToUtf8(S));
+  WriteLn(CP437ToAscii(S));
 End;
 
 Procedure Remote_Screen(S: String);
