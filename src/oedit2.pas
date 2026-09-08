@@ -2206,8 +2206,7 @@ Begin
     TagError
     Else
     Begin
-      Tmp:=FExpand(ParamStr(0));
-      While Tmp[Length(Tmp)]<>'\' Do Delete(Tmp,Length(Tmp),1);
+      Tmp:=RemoveWildCard(FExpand(ParamStr(0)));
       Config^.TagFileName:=Tmp+Config^.TagFileName;
     End;
     If Not FileExists(Config^.TagFileName) Then TagError;
