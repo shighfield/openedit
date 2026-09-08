@@ -127,6 +127,59 @@ Procedure SRead(Var S: String; Len: Byte; Default: String);
 
 Implementation
 
+{ CP437 -> UTF-8 translation for the box-drawing/line-art bytes ($80-$FF)
+  this codebase writes throughout its screen chrome. The original DOS
+  program wrote these bytes straight to a CP437 text-mode display; a
+  modern terminal expects UTF-8 and renders unmapped high bytes as a
+  replacement-character glyph. CP437Hi[b] holds the UTF-8 encoding of
+  the Unicode codepoint CP437 byte b maps to (generated programmatically
+  from the standard CP437 table - not hand-transcribed, since this file
+  has already lost invisible bytes twice this session to hand-typing). }
+Const
+ CP437Hi: Array[$80..$FF] Of String[3] = (
+  #195#135,#195#188,#195#169,#195#162,
+  #195#164,#195#160,#195#165,#195#167,
+  #195#170,#195#171,#195#168,#195#175,
+  #195#174,#195#172,#195#132,#195#133,
+  #195#137,#195#166,#195#134,#195#180,
+  #195#182,#195#178,#195#187,#195#185,
+  #195#191,#195#150,#195#156,#194#162,
+  #194#163,#194#165,#226#130#167,#198#146,
+  #195#161,#195#173,#195#179,#195#186,
+  #195#177,#195#145,#194#170,#194#186,
+  #194#191,#226#140#144,#194#172,#194#189,
+  #194#188,#194#161,#194#171,#194#187,
+  #226#150#145,#226#150#146,#226#150#147,#226#148#130,
+  #226#148#164,#226#149#161,#226#149#162,#226#149#150,
+  #226#149#149,#226#149#163,#226#149#145,#226#149#151,
+  #226#149#157,#226#149#156,#226#149#155,#226#148#144,
+  #226#148#148,#226#148#180,#226#148#172,#226#148#156,
+  #226#148#128,#226#148#188,#226#149#158,#226#149#159,
+  #226#149#154,#226#149#148,#226#149#169,#226#149#166,
+  #226#149#160,#226#149#144,#226#149#172,#226#149#167,
+  #226#149#168,#226#149#164,#226#149#165,#226#149#153,
+  #226#149#152,#226#149#146,#226#149#147,#226#149#171,
+  #226#149#170,#226#148#152,#226#148#140,#226#150#136,
+  #226#150#132,#226#150#140,#226#150#144,#226#150#128,
+  #206#177,#195#159,#206#147,#207#128,
+  #206#163,#207#131,#194#181,#207#132,
+  #206#166,#206#152,#206#169,#206#180,
+  #226#136#158,#207#134,#206#181,#226#136#169,
+  #226#137#161,#194#177,#226#137#165,#226#137#164,
+  #226#140#160,#226#140#161,#195#183,#226#137#136,
+  #194#176,#226#136#153,#194#183,#226#136#154,
+  #226#129#191,#194#178,#226#150#160,#194#160);
+
+Function CP437ToUtf8(S: String): String;
+Var I: Integer; R: String;
+Begin
+ R:='';
+ For I:=1 To Length(S) Do
+  If Ord(S[I])<$80 Then R:=R+S[I]
+  Else R:=R+CP437Hi[Ord(S[I])];
+ CP437ToUtf8:=R;
+End;
+
 Function Local: Boolean;
 Begin
   Local := True;
@@ -154,12 +207,12 @@ End;
 
 Procedure SWrite(S: String);
 Begin
-  Write(S);
+  Write(CP437ToUtf8(S));
 End;
 
 Procedure SWriteLn(S: String);
 Begin
-  WriteLn(S);
+  WriteLn(CP437ToUtf8(S));
 End;
 
 Procedure Remote_Screen(S: String);

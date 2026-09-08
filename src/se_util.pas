@@ -1006,23 +1006,23 @@ Procedure TagError;
 Begin
 {$IFDEF CompileExtra}
    TextAttr:=$01;
-   WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-   WriteLn('³'+Pad('',72)+'³');
-   Write('³  '); TextAttr:=$0B; Write(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; WriteLn('³');
-   Write('³  '); TextAttr:=$0B; Write(Pad('Tagline Datafile Error',70)); TextAttr:=$01; WriteLn('³');
-   WriteLn('³'+Pad('',72)+'³');
+   SWriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
+   SWriteLn('³'+Pad('',72)+'³');
+   SWrite('³  '); TextAttr:=$0B; SWrite(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; SWriteLn('³');
+   SWrite('³  '); TextAttr:=$0B; SWrite(Pad('Tagline Datafile Error',70)); TextAttr:=$01; SWriteLn('³');
+   SWriteLn('³'+Pad('',72)+'³');
    TextAttr:=$01;
-   Write('³   '); TextAttr:=$09; Write('ş '); TextAttr:=$0F; Write('Open!EDIT cannot locate the tagfile '+
+   SWrite('³   '); TextAttr:=$09; SWrite('ş '); TextAttr:=$0F; SWrite('Open!EDIT cannot locate the tagfile '+
     Pad(Config^.TagFileName,31));
-   TextAttr:=$01; WriteLn('³');
-   Write('³   '); TextAttr:=$09; Write('ş '); TextAttr:=$0F;
-   Write('Please use CESETUP to fix this problem                     ');
-   TextAttr:=$01; WriteLn('        ³');
-   WriteLn('³'+Pad('',72)+'³');
-   WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
-   Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-   WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-   WriteLn('ÀÄÄÄÄÄÄÄÙ');
+   TextAttr:=$01; SWriteLn('³');
+   SWrite('³   '); TextAttr:=$09; SWrite('ş '); TextAttr:=$0F;
+   SWrite('Please use CESETUP to fix this problem                     ');
+   TextAttr:=$01; SWriteLn('        ³');
+   SWriteLn('³'+Pad('',72)+'³');
+   SWriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
+   SWrite('³ '); TextAttr:=$09; SWrite('STS97'); TextAttr:=$01;
+   SWriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
+   SWriteLn('ÀÄÄÄÄÄÄÄÙ');
 {$ENDIF}
    Halt(2);
 End;
@@ -2205,30 +2205,30 @@ Begin
       End;
 {$IFDEF CompileExtra}
    2: Begin
-       TextAttr:=$1B; ClrEol; Write(' F1 ');
-       TextAttr:=$1F; Write('More Help '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F2 ');
-       TextAttr:=$1F; Write('Export '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F3 ');
-       TextAttr:=$1F; Write('Import '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F4 ');
-       TextAttr:=$1F; Write('Exit '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F5 ');
-       TextAttr:=$1F; Write('Beep '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F6 ');
-       TextAttr:=$1F; Write('HangUp ');
+       TextAttr:=$1B; ClrEol; SWrite(' F1 ');
+       TextAttr:=$1F; SWrite('More Help '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F2 ');
+       TextAttr:=$1F; SWrite('Export '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F3 ');
+       TextAttr:=$1F; SWrite('Import '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F4 ');
+       TextAttr:=$1F; SWrite('Exit '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F5 ');
+       TextAttr:=$1F; SWrite('Beep '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F6 ');
+       TextAttr:=$1F; SWrite('HangUp ');
       End;
    3: Begin
-       TextAttr:=$1B; ClrEol; Write(' F1 ');
-       TextAttr:=$1F; Write('Name '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F7 ');
-       TextAttr:=$1F; Write('Time +5 '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F8 ');
-       TextAttr:=$1F; Write('Time -5 '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F9 ');
-       TextAttr:=$1F; Write('Edit User '); TextAttr:=$19; Write('ş ');
-       TextAttr:=$1B; Write('F10 ');
-       TextAttr:=$1F; Write('Shell');
+       TextAttr:=$1B; ClrEol; SWrite(' F1 ');
+       TextAttr:=$1F; SWrite('Name '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F7 ');
+       TextAttr:=$1F; SWrite('Time +5 '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F8 ');
+       TextAttr:=$1F; SWrite('Time -5 '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F9 ');
+       TextAttr:=$1F; SWrite('Edit User '); TextAttr:=$19; SWrite('ş ');
+       TextAttr:=$1B; SWrite('F10 ');
+       TextAttr:=$1F; SWrite('Shell');
       End;
 {$ENDIF}
   End;
