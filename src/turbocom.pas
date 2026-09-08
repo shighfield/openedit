@@ -11,9 +11,19 @@ Unit TurboCOM;
   - FOSSIL/carrier/remote I/O, multi-node file locking, DOS-multitasker
   critical sections, ANSI music - is gone; this editor is local-only now.
 
-  All bodies here are placeholder stubs pending the ncurses/Video-unit
-  port: Local always reports True, the read routines never return input,
-  and the write routines do nothing yet.
+  Local always reports True (no remote BBS caller exists anymore), so the
+  S-prefixed local/remote-echo routines (SWrite/SWriteLn/SClrScr/SClrEol/
+  STextBackground/SGotoXY) and Local_Keypressed now just call the real CRT
+  unit equivalents directly - not the deferred ncurses/Video-unit port,
+  just the obvious local-only mapping. This was a real bug, not a stub
+  waiting on later work: se_util.pas's Get_Key has
+  `Repeat ... Until (Remote_Keypressed) Or (Local_Keypressed);` as its
+  input loop, and with both hardcoded False this was an infinite loop
+  that never read a key - the editor would clear the screen and then
+  hang forever. Remote_Screen/Remote_Keypressed/ReceiveChar correctly
+  stay no-ops; there's no remote party to serve. SRead (line-input with
+  in-place editing) is still a stub returning its Default unchanged -
+  a separate, larger gap than this fix, not addressed here.
 
   The original unit's Interface section wasn't just those 58 routines -
   it also held a ~45-symbol Const/Var block of BBS door-session state
@@ -51,6 +61,8 @@ Unit TurboCOM;
 }
 
 Interface
+
+Uses CRT;
 
 Const
  Security: Word = 65535;
@@ -127,7 +139,7 @@ End;
 
 Function Local_Keypressed: Boolean;
 Begin
-  Local_Keypressed := False;
+  Local_Keypressed := KeyPressed;
 End;
 
 Function SKeypressed: Boolean;
@@ -142,10 +154,12 @@ End;
 
 Procedure SWrite(S: String);
 Begin
+  Write(S);
 End;
 
 Procedure SWriteLn(S: String);
 Begin
+  WriteLn(S);
 End;
 
 Procedure Remote_Screen(S: String);
@@ -154,18 +168,22 @@ End;
 
 Procedure SClrScr;
 Begin
+  ClrScr;
 End;
 
 Procedure SClrEol;
 Begin
+  ClrEol;
 End;
 
 Procedure STextBackground(C: Integer);
 Begin
+  TextBackground(C);
 End;
 
 Procedure SGotoXY(X, Y: Integer);
 Begin
+  GotoXY(X, Y);
 End;
 
 Procedure Disconnect;
