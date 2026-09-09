@@ -85,7 +85,7 @@ Label ReMsgEdit;
 
 Var
  Key            : LongInt;
- EStr           : Array[1..8,1..2] Of ^Str35;
+ EStr           : Array[1..4,1..2] Of ^Str35;
  ExtraExpand    : Array[1..256,1..2] Of ^Str20;
  ExtraExpands   : Word;
  PCnt           : Byte;
@@ -286,17 +286,6 @@ Begin
 End;
 
 Procedure Expand;
-Const
-  ExpandUtils    = 2;
-  ExpandUtil     : Array[1..ExpandUtils,1..2] Of String[10] = (
-                  ('THANG',    'TinysHANG' ),
-                  ('OEDIT',    'Open!EDIT' )
-                                           );
-  ExpandWords    = 2;
-  ExpandWord     : Array[1..ExpandWords,1..2] Of String[35] = (
-                  ('@SMILEY@',             ':) =) :] =] :> :-) |-) =-) =-> };^)'),
-                  ('@TINYSBBS@',           'www.tinysbbs.com')
-                                                                   );
 Var
   Cnt,
   Tmp: Word;
@@ -339,21 +328,6 @@ Begin
     Exit;
    End;
 
-  For Cnt:=1 To ExpandWords Do
-  If KeyPhrase=ExpandWord[Cnt,1] Then
-  Begin
-    Back:=Length(KeyPhrase)+1;
-    If LastWasCR Then Dec(Back);
-    For Tmp:=1 To Back Do
-    Begin
-      Cursor_Left;
-      Delete_Char;
-    End;
-    For Tmp:=1 To Length(ExpandWord[Cnt,2]) Do Insert_Char(ExpandWord[Cnt,2][Tmp]);
-    If (Not LastWasCR) Then Insert_Char(LastChar);
-    Exit;
-   End;
-
   For Cnt:=0 To 9 Do
   If KeyPhrase=User.Expand[Cnt,1] Then
   Begin
@@ -384,22 +358,7 @@ Begin
     Exit;
    End;
 
-  For Cnt:=1 To ExpandUtils Do
-  If KeyPhrase=ExpandUtil[Cnt,1] Then
-  Begin
-    Back:=Length(KeyPhrase)+1;
-    If LastWasCR Then Dec(Back);
-    For Tmp:=1 To Back Do
-    Begin
-      Cursor_Left;
-      Delete_Char;
-    End;
-    For Tmp:=1 To Length(ExpandUtil[Cnt,2]) Do Insert_Char(ExpandUtil[Cnt,2][Tmp]);
-    If (Not LastWasCR) Then Insert_Char(LastChar);
-    Exit;
-   End;
-
-  For Cnt:=1 To 8 Do
+  For Cnt:=1 To 4 Do
   If KeyPhrase=EStr[Cnt,1]^ Then
   Begin
     Back:=Length(KeyPhrase)+1;
@@ -1205,11 +1164,6 @@ Begin
   If Not ReEditing Then
   Begin
     CLine:=LineCnt; CCol:=CurLength+1;
-    If Replying Then
-    Begin
-      CLine:=1;
-      CCol:=1;
-    End;
     TopLine := 1; While (CLine-TopLine)>(Config^.ScrollSiz+3) Do Inc(TopLine,Config^.ScrollSiz);
   End;
   Prepare_Screen;
@@ -1404,7 +1358,7 @@ Begin
     Dispose(ExtraExpand[EE,1]);
     Dispose(ExtraExpand[EE,2]);
   End;
-  For EE:=1 To 8 Do
+  For EE:=1 To 4 Do
   Begin
     Dispose(EStr[EE,1]);
     Dispose(EStr[EE,2]);
@@ -1587,26 +1541,15 @@ Begin
   SClrScr;
   StatusBar;
   SelectLanguage;
-  AreaName:='';
-  FromName:='';
-  ToName:='';
-  MNum:=0;
-  Subject:='';
-  Replying:=False;
-  Str(MNum,MsgNum);
-  For MNum:=1 To 8 Do
+  For MNum:=1 To 4 Do
   Begin
     New(EStr[MNum,1]);
     New(EStr[MNum,2]);
   End;
   EStr[1,1]^:='@DATE@';  EStr[1,2]^:=Copy(UnpackedDT(CurrentDT),1,8);
   EStr[2,1]^:='@TIME@';  EStr[2,2]^:=Copy(UnpackedDT(CurrentDT),10,8);
-  EStr[3,1]^:='@SYSOP@'; EStr[3,2]^:=SysOpName;
-  EStr[4,1]^:='@BBS@';   EStr[4,2]^:=BBSName;
-  EStr[5,1]^:='@TO@';    EStr[5,2]^:=ToName;
-  EStr[6,1]^:='@RE@';    EStr[6,2]^:=Subject;
-  EStr[7,1]^:='@VER@';   EStr[7,2]^:=Ver;
-  EStr[8,1]^:='@FROM@';  EStr[8,2]^:=UserName;
+  EStr[3,1]^:='@VER@';   EStr[3,2]^:=Ver;
+  EStr[4,1]^:='@FROM@';  EStr[4,2]^:=UserName;
   New(PhyLine);
   Max_Msg_Lines:=((MaxAvail div 3)*2) div SizeOf(Str81);
   If Max_Msg_Lines>Config^.AbsMaxMsgLines Then Max_Msg_Lines:=Config^.AbsMaxMsgLines; Dec(Max_Msg_Lines);
@@ -1677,30 +1620,7 @@ Begin
     Close(MsgTmp);
   End;
   Config^.TabStop:=8;
-  If (SysOpName=SysopName) Then
-  Begin
-    If Replying Then
-    Begin
-      If Config^.ForceCtlW Then
-      QuoteOrMenu:=' <^W> '+LS(82)+' '
-    Else
-    QuoteOrMenu:=' <^Q> '+LS(82)+' ';
-End
-   Else
-    QuoteOrMenu:=' <^K> '+LS(83)+' '
-  End
-  Else
-  Begin
-  If Replying Then
-  Begin
-    If Config^.ForceCtlW Then
-    QuoteOrMenu:=' <^W> '+LS(82)+' '
-  Else
-    QuoteOrMenu:=' <^Q> '+LS(82)+' ';
-  End
-  Else
-   QuoteOrMenu:=' <^U> '+LS(84)+' '
- End;
+  QuoteOrMenu:=' <^K> '+LS(83)+' ';
   ReEditing:=False;
   ReMsgEdit:
   Count_Lines;

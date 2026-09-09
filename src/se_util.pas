@@ -140,18 +140,11 @@ Var
  A,N            : Word;
  PhyLine        : ^PhysType;
  ToInitials     : String[2];
- MsgNum         : String[10];
- FromName,
- ToName         : String[60];
- Subject,
- AreaName,
  Par,
  Tmp            : String;
  LastWasCR,
  ForceMenu,
- Replying,
- WasTag,
- PrivMsg        : Boolean;
+ WasTag         : Boolean;
  MText          : Array[1..InternalLineLim] of ^Str81;
  MsgTmp,F       : Text;
  MC             : Char;
