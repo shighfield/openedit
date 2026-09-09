@@ -1608,7 +1608,7 @@ End;
 Procedure Plain_Footer(B: Byte);
 Const
  Default: Array[1..2] Of String[140] = (
-   '|NCÚ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|NC¿',
+   '',
    '|HCÀ|PCÄÄ|BCÄÄ @f@Open!EDIT v@VER@@/f@ -[@f@@TIME@@/f@]-|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ@CT:26,23@');
  Default2: Array[1..2] Of String[140] = (
    '[0;34mÄÄÄÄÄÄÄ[1m[[37m@TIME@[34m][0;34m@TPÄ@Ä[1m[[37m@LEFT@ Mins[34m][0;34mÄÄÄÄÄÄÄÄÄÄÄÄ'+
@@ -1630,7 +1630,7 @@ Begin
    Tmp:=PF_overridepos;
    PF_overridepos:=0;
   End;
- SGotoXY(1,Tmp); If B in [1,3] Then Begin XSFWrite(PlainFooter[1]); SWriteLn(''); End;
+ SGotoXY(1,Tmp); If B in [1,3] Then SClrEol;
  SGotoXY(1,Tmp+1); If B in [2,3] Then Begin XSFWrite(PlainFooter[2]); SWriteLn(''); End;
 End;
 
@@ -1660,12 +1660,7 @@ Begin
  If B in [1,3] Then
   Begin
    DisplayFooterTime;
-   If Not Insert_Mode Then
-    Begin
-     SGotoXY(65-Length(LS(67)),22);
-     SWrite(LS(67));
-    End;
-   SGotoXY(68,22);
+   SGotoXY(74,23);
    XSFWrite('|PC[|NC@P@|PC]|BC');
   End;
  If B in [2,3] Then
