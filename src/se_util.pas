@@ -64,13 +64,11 @@ Function GetLow: Char;
 Function PageNum: String;
 Procedure AbortDisabled;
 Procedure MinLinesNotMet;
-Procedure Display_Header;
 Procedure Prepare_Screen;
 Procedure Display_Message_Header;
 Function LS(Num: Word): String;
 Function LoadS: String;
 Procedure XRename(N1,N2: String);
-Procedure CheckHeaderSize;
 Procedure Cursor_EndLine;
 Procedure Display_Footer(B: Byte);
 Procedure Plain_Footer(B: Byte);
@@ -89,26 +87,11 @@ Type
  LangType       = Array[1..LangCnt] Of String[75];
 
 Const
- HdrCRC: Array [1..6] Of LongInt =
-  (-1938014293,170916343,1767627083,-1550470642,2111400542,1955667813);
-
- HdrCRC2: Array [1..4] Of LongInt =
-  (-886365764,-508716423,1529743693,514535995);
-
- HdrCRCEzy: Array [1..6] Of LongInt =
-  (-1938014293,-1297114302,1773261020,1061275302,2111400542,1955667813);
-
- FtrCRC: Array [1..2] Of LongInt =
-  (122921463,-601668672);
-
- FtrCRC2: Array[1..2] Of LongInt =
-  (180023732,940903434);
-
  InternalLineLim = 4000;
  DelimiterChars = [#32..#47,#91..#96,#123..#255];
- TopScreen      : Word = 7;              { First screen line for text entry }
- ScrLines       : Word = 15;        { Number of screen lines for text entry }
- PageUpDnSiz    : Word = 15;   { Number of lines to scroll by during PgUp/Dn }
+ TopScreen      : Word = 1;              { First screen line for text entry }
+ ScrLines       : Word = 21;        { Number of screen lines for text entry }
+ PageUpDnSiz    : Word = 21;   { Number of lines to scroll by during PgUp/Dn }
  Max_Msg_Lines  : Word = InternalLineLim;
  Insert_Mode    : Boolean = True;
  Only2MinMsg    : Boolean = False;
@@ -1489,156 +1472,6 @@ Begin
  Reposition;
 End;
 
-Procedure Display_Header;
-Const
- Default: Array[1..6] Of String[127] = (
-  '|NCÚ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿',
-  '|HC³|FZÛ²±° |FCF|FLrom|FS: @FROM...................@       |FCM|FLsg|FCD|FLate|FS: @DATE.............@    |FZ°|BC³',
-  '|PC³|FZ²±°  |FCT|FLo  |FS: @TO.....................@       |FCM|FLsg|FCN|FLum|FS : @MSG..@ |FCP|FLriv|FS: @P..@   '+
-  '|FZ°±|BC³',
-  '|BC³|FZ±°   |FCA|FLrea|FS: @AREA...................@                                     |FZ°±²|PC³',
-  '|BC³|FZ°    |FCS|FLubj|FS: @SUBJ......................................................@ |FZ°±²Û|HC³',
-  '|BCÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ');
- Default2: Array[1..4] Of String[127] = (
-  '[0;37;44m[K From:@FROM...................@[0;37;44m   Date:@DATE.............@[0;37;44m         Msg#:@MSG..@[0;37;44m',
-  '[0;37;44m[K To  :@TO.....................@[0;37;44m   Area:@AREA...................@[0;37;44m   Priv:@P..@[0;37;44m',
-  '[0;37;44m[K Subj:@SUBJ......................................................@[0;37;44m',
-  '[0;34mÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ');
-
-Var
- O,S,Sj: String;
- F: Text;
- OI,I: Byte;
- Cmd: String;
- ANSILen,
- Len: Byte;
- HdrSize,
- LineNo: Byte;
- NoFile: Boolean;
- IOR: Integer;
-
- Function CW(C: Byte; Seed: ShortInt): Byte; Var I: LongInt; Begin I:=C+Seed;
- If (Seed>0) Then Begin If I<=255 Then C:=I Else Begin While I>255 Do Dec(I,256); C:=I; End; End
- Else Begin If I>=0 Then C:=I Else Begin While I<0 Do Inc(I,256); C:=I; End; End; CW:=C; End;
-
- Procedure HdrCRCError;
- Begin
-  ClrScr;
-  WriteLn('Header CRC error');
-  Halt(2);
-  ProgName[0]:=#255;
-  TimeLeft:=0.0;
-  SysOpName[0]:=#255;
-  Username[0]:=#255;
-  FromName[0]:=#0;
- End;
-
-Begin
- For LineNo:=1 To 6 Do
-  If (CCRC32(Default[LineNo])<>HdrCRC[LineNo]) And
-     (CCRC32(Default[LineNo])<>HdrCRCEzy[LineNo]) Then HdrCRCError;
-
- For LineNo:=1 To 4 Do
-  If (CCRC32(Default2[LineNo])<>HdrCRC2[LineNo]) Then HdrCRCError;
-
- NoFile:=False;
- SGotoXY(1,1);
- Assign(F,CfgPath+'HEADER.CTL');
- {$I-} Reset(F); {$I-}
- IOR:=IOResult;
- If IOR<>0 Then
-  Begin
-   NoFile:=True;
-   If IOR=2 Then
-    Begin
-     ReWrite(F); WriteLn(F,'% Header missing'); Close(F); Reset(F);
-    End;
-  End;
- LineNo:=0;
- While Not Eof(F) Do
-  Begin
-   ReadLn(F,S);
-   If (S='') Then Continue;
-   If (S[1]='%') Then Break;
-   If (S[1]=';') Then Break;
-   Inc(LineNo); Break;
-  End;
- If LineNo=0 Then NoFile:=True;
- Close(F);
- Reset(F);
- LineNo:=0;
- While Not Eof(F) Do
-  Begin
-   If (DecryptKey=SysOpName) And (Not NoFile) Then
-    ReadLn(F,S)
-   Else
-    Begin
-     If LineNo=6 Then Break;
-     S:=Default[LineNo+1];
-    End;
-   If S[1]=';' Then Continue;
-   If S='' Then Continue;
-   If S[1]='%' Then Break;
-   Inc(LineNo);
-   If LineNo=11 Then Break;
-   While Pos(#255,S)>0 Do S[Pos(#255,S)]:=#32;
-   While Pos(#27'[',S)>0 Do
-    Begin
-     I:=Pos(#27'[',S)+2;
-     OI:=I-2;
-     ANSILen:=2;
-     While (Not (S[I] in ['A','B','C','D','H','J','K','m','R','s','u'])) And (I<=Length(S)) Do
-      Begin Inc(I); Inc(ANSILen); End;
-     If Not (S[I] in ['A','B','H','J','R']) Then S[OI]:=#255 Else Delete(S,OI,ANSILen+1);
-    End;
-   While Pos(#255,S)>0 Do S[Pos(#255,S)]:=#27;
-   While Pos('@',S)>0 Do
-    Begin
-     I:=Pos('@',S);
-     XSWrite(Copy(S,1,I-1));
-     Delete(S,1,I);
-     Cmd:='';
-     Cmd:=Copy(S,1,Pos('@',S)-1);
-     Delete(S,1,Pos('@',S));
-     Len:=Length(Cmd)+2;
-     Delete(Cmd,Pos('.',Cmd),255); Cmd:=UCase(Cmd);
-     If Cmd='FROM' Then XSWrite(Encode(FromName,Len)) Else
-     If Cmd='TO'   Then XSWrite(Encode(ToName,Len)) Else
-     If Cmd='DATE' Then XSWrite(Encode(GetTimeDate,Len)) Else
-     If Cmd='MSG'  Then XSWrite('|IC'+Pad(' '+Zero(LIntVal(MsgNum),5)+' ',Len)+'[0m') Else
-     If Cmd='P'    Then XSWrite(Pad(YN[PrivMsg],Len)) Else
-     If Cmd='AREA' Then Begin XSWrite(Encode(AreaName,Len));{ XSWrite(Pad('',Len-Length(NoPipe(AreaName))));} End Else
-     If Cmd='SUBJ' Then
-      Begin
-       O:=Subject;
-       Subject:=Encode(Subject,Len);
-       Sj:='';
-       While (Subject<>'') Do
-        Begin
-         While (Length(Sj)<20) And (Subject<>'') Do
-          Begin
-           If (Pos('|',Subject)>0) Then
-            Begin
-             Sj:=Sj+Copy(Subject,1,Pos('|',Subject)+2);
-             Delete(Subject,1,Pos('|',Subject)+2);
-            End
-            Else
-            Begin
-             Sj:=Sj+Subject;
-             Subject:='';
-            End;
-          End;
-         XSWrite(Sj);
-         Sj:='';
-        End;
-       Subject:=O;
-      End;
-    End;
-   XSWriteLn(S);
-  End;
- {$I-} Close(F); {$I+} If IOResult<>0 Then ;
-End;
-
 Procedure Prepare_Screen;
 Var I: Integer;
 Begin
@@ -1712,49 +1545,6 @@ Begin
  Close(F1);
  Erase(F1);
  Close(F2);
-End;
-
-Procedure CheckHeaderSize;
-Var
- S: String;
- F: Text;
- HdrSize,
- LineNo: Byte;
- NoFile: Boolean;
-Begin
-
- NoFile:=False;
- Assign(F,CfgPath+'HEADER.CTL');
- {$I-} Reset(F); {$I-}
- If IOResult<>0 Then NoFile:=True;
- LineNo:=0;
- If Not NoFile Then
-  Begin
-   While Not Eof(F) Do
-    Begin
-     ReadLn(F,S); S:=Rtrim(LTrim(S));
-     If (S='') Then Continue;
-     If (S[1]=';') Then Continue;
-     If (S[1]='%') Then Break;
-     Inc(LineNo);
-    End;
-  End;
- HdrSize:=LineNo;
- If LineNo=0 Then Begin NoFile:=True; HdrSize:=6; End;
- Close(F);
- If (DecryptKey<>SysOpName) Then HdrSize:=6;
-
- TopScreen:=HdrSize+1;
- ScrLines:=22-TopScreen;
- PageUpDnSiz:=ScrLines;
-
-{
- WriteLn('Header file: ',CfgPath+'HEADER.CTL');
- WriteLn('Header size: ',HdrSize);
- WriteLn('Top Screen : ',TopScreen);
- WriteLn('Scr Lines  : ',ScrLines);
- ReadKey;
-}
 End;
 
 Procedure Cursor_EndLine;

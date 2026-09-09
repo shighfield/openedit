@@ -735,7 +735,6 @@ Begin
   SigSetup;
   SWrite('[0m[2J');
   StatusBar;
-  Display_Header;
   Display_Footer(3);
   Prepare_Screen; Reposition;
   FileMode:=66; Reset(UserFile); FileMode:=2; Seek(UserFile,UIDX); Write(UserFile,User); Close(UserFile);
@@ -925,7 +924,6 @@ Begin
   IS:=ANSICode[User.IS]+ANSICode[40+User.FieldColor];
   SWrite('[0m[2J');
   StatusBar;
-  Display_Header;
   Display_Footer(3);
   Prepare_Screen;
   Reposition;
@@ -1201,7 +1199,6 @@ Var
 Var
   OIM: Boolean;
 Begin
-  Display_Header;
   Display_Footer(3);
   StatusBar;
   SaveMsg:=False; AbortMsg:=False;
@@ -1680,7 +1677,6 @@ Begin
     Close(MsgTmp);
   End;
   Config^.TabStop:=8;
-  CheckHeaderSize;
   If (SysOpName=SysopName) Then
   Begin
     If Replying Then
