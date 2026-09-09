@@ -1401,7 +1401,7 @@ Begin
  X:=WhereX; Y:=WhereY;
  A:=TextAttr;
  GotoXY(1,25);
- If StatBar=4 Then StatBar:=1;
+ If StatBar=3 Then StatBar:=1;
  Case StatBar Of
    1: Begin
        TextAttr:=$1F; ClrEol;
@@ -1410,26 +1410,8 @@ Begin
    2: Begin
        TextAttr:=$1B; ClrEol; SWrite(' F1 ');
        TextAttr:=$1F; SWrite('More Help '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F2 ');
-       TextAttr:=$1F; SWrite('Export '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F3 ');
-       TextAttr:=$1F; SWrite('Import '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F4 ');
-       TextAttr:=$1F; SWrite('Exit '); TextAttr:=$19; SWrite('þ ');
        TextAttr:=$1B; SWrite('F5 ');
        TextAttr:=$1F; SWrite('Beep '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F6 ');
-       TextAttr:=$1F; SWrite('HangUp ');
-      End;
-   3: Begin
-       TextAttr:=$1B; ClrEol; SWrite(' F1 ');
-       TextAttr:=$1F; SWrite('Name '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F7 ');
-       TextAttr:=$1F; SWrite('Time +5 '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F8 ');
-       TextAttr:=$1F; SWrite('Time -5 '); TextAttr:=$19; SWrite('þ ');
-       TextAttr:=$1B; SWrite('F9 ');
-       TextAttr:=$1F; SWrite('Edit User '); TextAttr:=$19; SWrite('þ ');
        TextAttr:=$1B; SWrite('F10 ');
        TextAttr:=$1F; SWrite('Shell');
       End;

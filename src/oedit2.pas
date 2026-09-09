@@ -1564,7 +1564,7 @@ Begin
      Assign(F,SysPath+'AUTOSAVE.SE!');
      {$I-}Erase(F);{$I+}
      If IOResult<>0 Then ;
-     WriteLn('Message aborted');
+     WriteLn('File not saved');
      Halt(1);
    End;
   Count_Lines;
@@ -1582,7 +1582,7 @@ Begin
   End;
   CDelay(1000); {1000}
   FancyClear;
-  WriteLn('Message saved');
+  WriteLn('File saved');
   Assign(F,SysPath+'AUTOSAVE.SE!');
   {$I-}Erase(F);{$I+}
   If IOResult<>0 Then ;
