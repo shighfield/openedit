@@ -1169,6 +1169,7 @@ Begin
       'r': Key:=^R;  { PgUp }
       'q': Key:=^C;  { PgDn }
       'n': Key:=^V;  { Ins }
+      'P': Begin Inc(StatBar); StatusBar; Continue; End; { F1, ESC O P }
       #00: key:=#27; { Timeout - escape key }
       #27: Begin key:=^Z; ForceMenu:=True; End;
      End;

@@ -1608,54 +1608,21 @@ End;
 Procedure Plain_Footer(B: Byte);
 Const
  Default: Array[1..2] Of String[140] = (
-   '|NCÚ|HCÄÄ|PCÄÄ|BCÄÄ|PC[@F@@TIME@@/F@|PC]|BC@TPÄ@Ä|PC[@F@@LEFT@ Mins@/F@|PC]|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ'+
-     'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄ¿',
-   '|HCÀÄ|PCÄÄ|BCÄÄ @f@Open!EDIT v@VER@@/F@ |BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|P'+
-     'CÄÄ|HCÄÄ|NCÙ@CT:09,22@@UT:18,22@');
+   '|NCÚ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|NC¿',
+   '|HCÀ|PCÄÄ|BCÄÄ @f@Open!EDIT v@VER@@/f@ -[@f@@TIME@@/f@]-|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ@CT:27,23@');
  Default2: Array[1..2] Of String[140] = (
    '[0;34mÄÄÄÄÄÄÄ[1m[[37m@TIME@[34m][0;34m@TPÄ@Ä[1m[[37m@LEFT@ Mins[34m][0;34mÄÄÄÄÄÄÄÄÄÄÄÄ'+
    'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ',
    '[1;33m[K Open!EDIT v@VER@@CT:09,22@@UT:18,22@');
 
 Var
- ANSILen,
- LineNo,
  Tmp: Byte;
- FF: Text;
- S: String;
- OI,I: Byte;
 
 Begin
  If (PlainFooter[1]='') And (PlainFooter[2]='') Then
   Begin
-   If (Not FileExists('FOOTER.CTL')) {Or (DecryptKey<>SysOpName)} Then
-    Begin
-     PlainFooter[1]:=Default[1];
-     PlainFooter[2]:=Default[2];
-    End
-    Else
-    Begin
-     Assign(FF,'FOOTER.CTL');
-     Reset(FF);
-     For Tmp:=1 To 2 Do
-      Begin
-       ReadLn(FF,PlainFooter[Tmp]);
-       S:=PlainFooter[Tmp];
-       While Pos(#255,S)>0 Do S[Pos(#255,S)]:=#32;
-       While Pos(#27'[',S)>0 Do
-        Begin
-         I:=Pos(#27'[',S)+2;
-         OI:=I-2;
-         ANSILen:=2;
-         While (Not (S[I] in ['A','B','C','D','H','J','K','m','R','s','u'])) And (I<=Length(S)) Do
-          Begin Inc(I); Inc(ANSILen); End;
-         If Not (S[I] in ['A','B','H','J','R']) Then S[OI]:=#255 Else Delete(S,OI,ANSILen+1);
-        End;
-       While Pos(#255,S)>0 Do S[Pos(#255,S)]:=#27;
-       PlainFooter[Tmp]:=S;
-      End;
-     Close(FF);
-    End;
+   PlainFooter[1]:=Default[1];
+   PlainFooter[2]:=Default[2];
   End;
  Tmp:=22;
  If PF_overridepos <> 0 Then
@@ -1680,7 +1647,6 @@ Begin
  T:=Utilpack.FormatTime(Timer);
  Delete(T,6,3);
  SGotoXY(CurrTimeX,CurrTimeY); FunkyWrite(T);
- SGotoXY(UserTimeX,UserTimeY); FunkyWrite(Zero(Trunc(Nsl/60),3));
  SGotoXY(X,Y);
 End;
 

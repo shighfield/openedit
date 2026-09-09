@@ -21,9 +21,10 @@ Unit TurboCOM;
   input loop, and with both hardcoded False this was an infinite loop
   that never read a key - the editor would clear the screen and then
   hang forever. Remote_Screen/Remote_Keypressed/ReceiveChar correctly
-  stay no-ops; there's no remote party to serve. SRead (line-input with
-  in-place editing) is still a stub returning its Default unchanged -
-  a separate, larger gap than this fix, not addressed here.
+  stay no-ops; there's no remote party to serve. SRead (line-input used
+  by signature/tagline-keyword/expand-shortcut editing) used to be a
+  stub returning its Default unchanged, silently making those fields
+  read-only - now a real ReadKey loop (see its body below).
 
   The original unit's Interface section wasn't just those 58 routines -
   it also held a ~45-symbol Const/Var block of BBS door-session state
@@ -256,8 +257,35 @@ Begin
 End;
 
 Procedure SRead(Var S: String; Len: Byte; Default: String);
+Var
+  Ch: Char;
+  StartX, Y: Integer;
 Begin
+  StartX := WhereX;
+  Y := WhereY;
   S := Default;
+  Write(S);
+  Repeat
+    Ch := ReadKey;
+    If Ch = #0 Then
+      ReadKey { extended key - discard the scancode byte, no cursor movement support here }
+    Else If (Ch = #8) Or (Ch = #127) Then
+    Begin
+      If Length(S) > 0 Then
+      Begin
+        Delete(S, Length(S), 1);
+        GotoXY(StartX, Y);
+        Write(S, ' ');
+        GotoXY(StartX + Length(S), Y);
+      End;
+    End
+    Else If (Ch >= #32) And (Ch <= #126) And (Length(S) < Len) Then
+    Begin
+      S := S + Ch;
+      Write(Ch);
+    End;
+  Until Ch in [#13, #27];
+  If Ch = #27 Then S := Default;
 End;
 
 End.
