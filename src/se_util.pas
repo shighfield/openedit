@@ -503,17 +503,10 @@ End;
 
 Function Get_Key: Char;
 Var
- SecondTicker,
- StartTimer  : Real;
- Beeped      : Boolean;
- X,Y         : Byte;
  Ch1         : Char;
  OrigUF      : Boolean;
 Begin
  OrigUF:=OKUpdateFooter;
- Beeped:=False;
- StartTimer:=Timer;
- SecondTicker:=Timer;
  Repeat
   If (TimeUpdated) And (OKUpdateFooter) Then
    Begin
@@ -537,66 +530,8 @@ Begin
     LastAutoSave:=Timer;
    End;
   If (LastSlice+Slicing<=Timer) Then ReleaseSlice;
-  If (Timer>=StartTimer+TimeoutDelay) And (TimeCheck) Then
-   Begin
-    If Not Beeped Then
-     Begin
-      X:=WhereX; Y:=WhereY;
-      Plain_Footer(1);
-      If OKUpdateFooter Then
-       Begin SGotoXY(7,22); XSWrite(' [1;31m'+LS(85)+' '+^G); End
-      Else
-       Begin SGotoXY(1,1); XSWrite('[1;37;44m[K '+LS(85)+' '+^G); End;
-      OKUpdateFooter:=False;
-      SGotoXY(X,Y);
-     End;
-    Beeped:=True;
-   End;
-  If (Nsl<=120) And (Nsl>=61) And (TimeCheck) Then
-   Begin
-    If Not Only2MinMsg Then
-     Begin
-      X:=WhereX; Y:=WhereY;
-      Plain_Footer(1);
-      If OKUpdateFooter Then
-       Begin SGotoXY(7,22); XSWriteLn('[1;31m '+LS(29)+' '+LS(86)+' '+^G); End
-      Else
-       Begin SGotoXY(1,1); XSWrite('[1;37;44m[K '+LS(29)+' '+LS(86)+' '+^G); End;
-      OKUpdateFooter:=False;
-      SGotoXY(X,Y);
-     End;
-    Only2MinMsg:=True;
-   End;
-  If (Nsl<=60) And (TimeCheck) Then
-   Begin
-    If Not Only1MinMsg Then
-     Begin
-      X:=WhereX; Y:=WhereY;
-      Plain_Footer(1);
-      If OKUpdateFooter Then
-       Begin SGotoXY(7,22); XSWriteLn('[1;31m '+LS(29)+' '+LS(87)+' '+^G); End
-      Else
-       Begin SGotoXY(1,1); XSWrite('[1;37;44m[K '+LS(29)+' '+LS(87)+' '+^G); End;
-      OKUpdateFooter:=False;
-      SGotoXY(X,Y);
-     End;
-    Only1MinMsg:=True;
-   End;
-  If (Timer>=StartTimer+TimeoutDelay+20) And (TimeCheck) Then
-   Begin
-    Plain_Footer(1);
-    SGotoXY(7,22); OKUpdateFooter:=False;
-    XSWriteLn('[1;31m '+LS(88)+' ');
-    Disconnect;
-    Halt(2);
-   End;
  Until (Remote_Keypressed) Or (Local_Keypressed);
  OKUpdateFooter:=OrigUF;
- If Beeped Then
-  Begin
-   Display_Footer(1);
-   SGotoXY(CCol,CLine-TopLine+Topscreen);
-  End;
  If Remote_Keypressed Then
   Begin Ch1:=ReceiveChar(ComPort-1); Get_Key:=Ch1; LocalKeypress:=False; End
  Else
@@ -854,13 +789,6 @@ Begin
  Assign(UserFile,CfgPath+'OEDITUSR.CFG');
  UIDX:=-1;
  ResetUser;
-{---Shawn:
-  If ((DecryptKey<>SysOpname) And (Julian(Copy(UnpackedDT(CurrentDT),1,8))-Config^.StartDate>30)) Then}
-  If (Julian(Copy(UnpackedDT(CurrentDT),1,8))-Config^.StartDate>30) Then
-  Begin
-   UIDX:=0;
-   Exit;
-  End;
  {$I-} Reset(UserFile); {$I+}
  If IOResult<>0 Then
   Begin
@@ -1618,8 +1546,6 @@ Begin
    1: Begin
        TextAttr:=$1F; ClrEol;
         Write(' ',Pad(UserName,55)+'[F1] Help');
-
-       Write('   Time: '+Copy(FormatTime(Nsl),1,5))
       End;
    2: Begin
        TextAttr:=$1B; ClrEol; SWrite(' F1 ');
@@ -2136,7 +2062,7 @@ End;
 
 Function Expired: Boolean;
 Begin
- Expired:=((DecryptKey<>SysOpname) And (Julian(Copy(UnpackedDT(CurrentDT),1,8))-Config^.StartDate>30));
+ Expired:=False;
 End;
 
 End.
