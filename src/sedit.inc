@@ -15,12 +15,7 @@ Type
 
    DataUEC: LongInt;
 
-   TearLine: Byte;
-
    RegName: String[40];                                         { SysOpname }
-
-   MaxQuotePct: Real;
-   ForceLessQuote: Boolean;
 
    AbsMaxMsgLines: LongInt;
 

@@ -143,8 +143,7 @@ Var
  Par,
  Tmp            : String;
  LastWasCR,
- ForceMenu,
- WasTag         : Boolean;
+ ForceMenu      : Boolean;
  MText          : Array[1..InternalLineLim] of ^Str81;
  MsgTmp,F       : Text;
  MC             : Char;

@@ -894,72 +894,11 @@ Begin
   Close(UserFile);
 End;
 
-Function CheckQuoteRatio: Boolean;
+Function AppendSignature: Boolean;
 Var
-  Quotes,NonQuotes,Tmp: LongInt;
-  QuotePct: Real;
-  S: String[80];
   C: Char;
 Begin
-  CheckQuoteRatio:=True;
-  Quotes:=0; NonQuotes:=0;
-  For Tmp:=1 To LineCnt Do
-  Begin
-    If (Pos('>',MText[Tmp]^) in [1..5]) Then
-    Inc(Quotes)
-  Else
-    If MText[Tmp]^<>'' Then Inc(NonQuotes);
-  End;
-  If (Quotes+NonQuotes=0) Then
-  Begin
-    Plain_Footer(2);
-    SGotoXY(71-Length(LS(28)),23);
-    FunkyWrite(' '+LS(28)+' ');
-    CheckQuoteRatio:=False;
-    CDelay(1000);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If (Keypressed Or SKeypressed) Then GetLow;
-    Display_Footer(3);
-    Reposition;
-   Exit;
-  End;
-  QuotePct:=Quotes*100/(Quotes+NonQuotes);
-  S:=LeadingZero(Round(Int(QuotePct)))+'.'+StrVal(Round(Frac(QuotePct))*10)+'%';
-  If (QuotePct>Config^.MaxQuotePct) And (Config^.MaxQuotePct>1) Then
-  Begin
-    Plain_Footer(3);
-    SGotoXY(64-Length(LS(29)+LS(30)),22);
-    SWrite(' ');
-    FunkyWrite(LS(29)+' '+S+' '+LS(30)); SWrite(' ');
-    If Config^.ForceLessQuote Then
-    Begin
-      SGotoXY(71-Length(LS(31)),23);
-      FunkyWrite(' '+LS(31)+' ');
-      CheckQuoteRatio:=False;
-      CDelay(1000);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If (Keypressed Or SKeypressed) Then GetLow;
-     End
-     Else
-     Begin
-       SGotoXY(65-Length(LS(32)),23);
-       FunkyWrite(' '+LS(32)+' (Y/n) ');
-       Repeat C:=UpCase(GetLow);
-         If C in [#13,#27] Then C:='Y';
-       Until C in ['Y','N'];
-      CheckQuoteRatio:=Not (C='Y');
-     End;
-   Display_Footer(3);
-   Reposition;
-  End
-  Else
-  Begin
+  AppendSignature:=True;
    If User.SigPtr<>0 Then
     Begin
       Assign(SigFile,CfgPath+'OEDIT.SIG');
@@ -981,7 +920,7 @@ Begin
           Display_Footer(2);
           If C=#27 Then
           Begin
-            CheckQuoteRatio:=False;
+            AppendSignature:=False;
             Reposition;
             Exit;
           End;
@@ -1003,7 +942,6 @@ Begin
       End;
     End;
   End;
-End;
 
 Procedure Insert_Str(S: String);
 Var
@@ -1319,7 +1257,7 @@ Then
       SaveMsg:=False;
     End
     Else
-    SaveMsg:=(CheckQuoteRatio And SpellCheck);
+    SaveMsg:=(AppendSignature And SpellCheck);
     End;
     If (AbortMsg) And (Force) Then Begin AbortDisabled; AbortMsg:=False; End;
   Until (SaveMsg) Or (AbortMsg);
@@ -1392,7 +1330,6 @@ End;
 
 Var
   OKHeadFoot: Boolean;
-  Subval: BYte;
 Begin
   OKHeadFoot:=True;
   Danger:=0;
@@ -1428,10 +1365,7 @@ Begin
       FieldColor:=$01;
       TabStop:=8;
       DataUEC:=0;
-      TearLine:=1;
       RegName:='';
-      MaxQuotePct:=75.0;
-      ForceLessQuote:=False;
       AbsMaxMsgLines:=4000;
       DOSSwap:=0;
       SpellCheck:=2;
@@ -1637,19 +1571,13 @@ Begin
   Randomize;
   ReEditing:=False;
   Inc(LineCnt); MText[LineCnt]^:='';
-  WasTag:=False;
   If ReEditing Then Goto ReMsgEdit;
  If LineCnt<>0 Then
  Begin
    Count_Lines;
    Assign(F,MsgTxtFile);
    ReWrite(F);
-
-   If (Config^.TearLine=2) Then SubVal:=1 Else SubVal:=0;
-   If WasTag Then Inc(SubVal);
-   For A:=1 To LineCnt-SubVal Do WriteLn(F,MText[A]^);
-
-   For A:=LineCnt-SubVal+1 To LineCnt Do WriteLn(F,MText[A]^);
+   For A:=1 To LineCnt Do WriteLn(F,MText[A]^);
    Close(F);
   End;
   CDelay(1000); {1000}
