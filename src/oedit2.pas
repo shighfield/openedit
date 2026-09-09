@@ -1631,14 +1631,11 @@ Begin
       IC:=$0B; ID:=$0B; IL:=$0F; IS:=$09;
       FieldColor:=$01;
       TabStop:=8;
-      CensorChar:='*';
       DataUEC:=0;
       TearLine:=1;
       RegName:='';
       MaxQuotePct:=75.0;
       ForceLessQuote:=False;
-      VowelCensorOnly:=False;
-      RandomSymbolCensor:=False;
       AbsMaxMsgLines:=4000;
       DOSSwap:=0;
       SpellCheck:=2;
@@ -1647,7 +1644,6 @@ Begin
       ExportSecurity:=999999;
       ScrollSiz:=8;
       UseExpand:=True;
-      Censor:=False;
       DateFormat:=0;
       TimeFormat:=0;
       RepStr:=' * In a message';
@@ -1880,8 +1876,6 @@ End
    End;
   Count_Lines;
   Randomize;
-  If Config^.Censor Then For A:=1 To LineCnt Do MText[a]^:=Censor(MText[a]^);
-  If Config^.UseFilter Then FilterText;
   ReEditing:=False;
   Inc(LineCnt); MText[LineCnt]^:='';
   WasTag:=False;

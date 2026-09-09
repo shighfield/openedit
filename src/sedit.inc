@@ -12,7 +12,6 @@ Type
    ExpandWord: Array[0..9,1..2] Of String[25];
    NC,HC,BC,PC,FZ,FC,FL,FS,FD,IC,ID,IL,IS: Byte;
    TabStop: Byte;
-   CensorChar: Char;
 
    DataUEC: LongInt;
 
@@ -22,9 +21,6 @@ Type
 
    MaxQuotePct: Real;
    ForceLessQuote: Boolean;
-
-   VowelCensorOnly,
-   RandomSymbolCensor: Boolean;
 
    AbsMaxMsgLines: LongInt;
 
@@ -41,16 +37,11 @@ Type
    ExportSecurity: LongInt;
 
    ScrollSiz: Byte;
-
-   CensorWords: Array[1..15] Of String[10];
-
    TimeOutDelay: Byte;
    ExtendedChars: Byte;
 
    UseExpand,
-   Censor,
-   UseSigs,
-   UseFilter: Boolean;
+   UseSigs: Boolean;
 
    DateFormat: Byte;   { 0=DD-Mmm-YY 1=DD-MM-YY 2=MM-DD-YY }
    TimeFormat: Byte;   { 0=01:00pm 1=13:00 }

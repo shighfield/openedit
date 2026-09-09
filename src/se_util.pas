@@ -14,8 +14,6 @@ Function NoPipe(S: String): String;
 Function Encode(S: String; Wid: Byte): String;
 Procedure FunkyWrite(S: String);
 Procedure KeyDelay(D: Word);
-Function Censor(S: String): String;
-Procedure FilterText;
 Function LongRandom(Max: LongInt): LongInt;
 Function GetCurrDate: String;
 Procedure LocalSetColor(Atr: Byte);
@@ -342,91 +340,6 @@ Var CTime: Real;
 Begin
  CTime:=Timer+(D / 1000);
  Repeat Until (Timer>=CTime) Or (Local_Keypressed Or Remote_Keypressed)
-End;
-
-Function Censor(S: String): String;
-Const
- CensorMask: Array[0..5] Of Char = '      ';
- CensorDefault: Array[0..5] Of Char = '!@#$%*';
-Var
- Cen,
- Tmp: Byte;
- P: Byte;
- C: Char;
- CenPtr: Byte;
-Begin
- If Expired Then Exit;
- FillChar(CensorMask,SizeOf(CensorMask),#32);
- CenPtr:=0;
- Repeat
-  Repeat C:=CensorDefault[Random(6)]; Until Pos(C,CensorMask)=0;
-  CensorMask[CenPtr]:=C;
-  Inc(CenPtr);
- Until CenPtr=6;
- CenPtr:=Random(6);
- If Config^.Censor Then
-  For Tmp:=1 To 15 Do
-   While Pos(UCase(Config^.CensorWords[Tmp]),UCase(S))>0 Do
-    Begin
-     P:=Pos(UCase(Config^.CensorWords[Tmp]),Ucase(S));
-     For Cen:=P To P+Length(Config^.CensorWords[Tmp])-1 Do
-      Begin
-       C:=S[Cen];
-       If ((Config^.VowelCensorOnly) And (UpCase(C) in ['A','E','I','O','U'])) Or (Not Config^.VowelCensorOnly) Then
-        Begin
-         If Config^.RandomSymbolCensor Then
-          Begin
-           C:=CensorMask[CenPtr];
-           Inc(CenPtr);
-           If CenPtr=6 Then CenPtr:=0;
-          End
-         Else
-          C:=Config^.CensorChar;
-        End;
-       S[Cen]:=C;
-      End;
-    End;
- Censor:=S;
-End;
-
-Procedure FilterText;
-Var
- Tmp: Byte;
- Table: Array[128..255] Of Char;
- A: Word;
- F: Text;
- S: String;
- C: Char;
-Begin
- If Expired Then Exit;
- For Tmp:=128 to 255 Do Table[Tmp]:=Chr(Tmp-128);
- Assign(F,CfgPath+'FILTER.CTL');
- {$I-} Reset(F); {$I+}
- If IOResult=0 Then
-  Begin
-   While Not Eof(F) Do
-    Begin
-     ReadLn(F,S);
-     Delete(S,Pos(';',S),255); S:=RTrim(LTrim(S)); If S='' Then Continue;
-     If S[1] in ['0'..'9'] Then
-      Begin
-       C:=Chr(IntVal(Copy(S,Pos(' ',S)+1,255)));
-       Delete(S,Pos(' ',S),255);
-       Table[IntVal(S)]:=C;
-      End Else
-     If S[1] in [#128..#255] Then
-      Begin
-       Table[Ord(S[1])]:=S[3];
-      End
-    End;
-   Close(F);
-  End;
- For A:=1 To LineCnt Do
-  Begin
-   For Tmp:=1 To Length(MText[a]^) Do
-    If MText[a]^[Tmp]>#127 Then
-     MText[a]^[Tmp]:=Table[Ord(MText[a]^[Tmp])];
-  End;
 End;
 
 Function LongRandom(Max: LongInt): LongInt;
