@@ -1211,156 +1211,6 @@ begin
   Reposition;
 End;
 
-Procedure ProcessStars(Var P: String);
-Var
-  DropMsgData: Boolean;
-  MTmp: Word;
-  FN,
-  N: String;
-  I: Byte;
-  FromFirst,FromLast,
-  ToFirst,ToLast,
-  St: String;
-  PretendSomethingsThere: Boolean;
-Begin
-  If Pos(' ',FromName)>0 Then FromFirst:=Copy(FromName,1,Pos(' ',FromName)-1) Else FromFirst:=FromName;
-  If Pos(' ',FromName)>0 Then FromLast:=Copy(FromName,Pos(' ',FromName)+1,255) Else FromLast:='';
-  If Pos(' ',ToName)>0 Then ToFirst:=Copy(ToName,1,Pos(' ',ToName)-1) Else ToFirst:=ToName;
-  If Pos(' ',ToName)>0 Then ToLast:=Copy(ToName,Pos(' ',ToName)+1,255) Else ToLast:='';
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:=#32;
-  While Pos('*',P)>0 Do
-  Begin
-    PretendSomethingsThere:=False;
-    I:=Pos('*',P);
-    St:='';
-  Case UpCase(P[I+1]) Of
-     'B': Begin St:=StrVal(BaudRate); PretendSomethingsThere:=True; End;
-     'F': Begin St:=NoPipe(FromFirst); PretendSomethingsThere:=True; End;
-     'I': Begin St:=NoPipe(FromLast); PretendSomethingsThere:=True; End;
-     'N': Begin St:=StrVal(NodeNum); PretendSomethingsThere:=True; End;
-     'P': Begin St:=StrVal(ComPort); PretendSomethingsThere:=True; End;
-     'S': Begin St:=NoPipe(Subject); PretendSomethingsThere:=True; End;
-     'T': Begin St:=NoPipe(ToFirst); PretendSomethingsThere:=True; End;
-     'O': Begin St:=NoPipe(ToLast); PretendSomethingsThere:=True; End;
-  End;
-  If (St<>'') Or (PretendSomethingsThere) Then
-  Begin
-    Delete(P,I,2);
-    Insert(St,P,I);
-  End
-  Else
-  Begin
-     P[I]:=#255;
-  End;
-  End;
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:='*';
-End;
-
-Procedure RunProg(P: String);
-Var
-  DropMsgData: Boolean;
-  MTmp: Word;
-  FN,
-  N: String;
-  I: Byte;
-  St: String;
-  F: Text;
-  Ex: Boolean;
-  ExportBefore: String;
-  ImportAfter: Boolean;
-Begin
-  ExportBefore:='';
-  ImportAfter:=False;
-  DropMsgData:=False;
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:=#32;
-  ProcessStars(P);
-  While Pos('*',P)>0 Do
-  Begin
-    I:=Pos('*',P);
-    St:='';
-    Ex:=False;
-    Case UpCase(P[I+1]) Of
-      '$': Begin
-             DropMsgData:=True;
-             Assign(F,'MSGDATA.TXT');
-             ReWrite(F);
-             For MTmp:=1 To LineCnt Do
-             WriteLn(F,MText[MTmp]^);
-             Close(F);
-             Delete(P,I,2);
-             Ex:=True;
-           End;
-       'X': Begin
-              Delete(P,I,2);
-              FN:='';
-              While P[I]<>' ' Do
-              Begin
-                FN:=FN+P[I];
-                Delete(P,I,1);
-              End;
-              Assign(F,FN);
-              ReWrite(F);
-              For MTmp:=1 To LineCnt Do
-              WriteLn(F,MText[MTmp]^);
-              Close(F);
-              Ex:=True;
-            End;
-     'Y': ImportAfter:=True;
-     'C': St:=GetEnv('COMSPEC');
-    End;
-    If St<>'' Then
-    Begin
-      Delete(P,I,2);
-      Insert(St,P,I);
-    End
-    Else
-    Begin
-      If Not Ex Then P[I]:=#255;
-    End;
-  End;
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:='*';
-  P:=P+' ';
-  N:=Copy(P,1,Pos(' ',P)-1);
-  Delete(P,1,Pos(' ',P));
-  If (DropMsgData) Or (ImportAfter And (ExportBefore<>'')) Then
-  Begin
-    If DropMsgData Then ExportBefore:='MSGDATA.TXT';
-    LineCnt:=1;
-    For MTmp:=1 To Max_Msg_Lines-1 Do MText[MTmp]^:='';
-    Assign(F,ExportBefore);
-    FileMode:=66; {$I-} Reset(F); {$I+} FileMode:=2;
-    If IOResult<>0 Then Exit;
-    Repeat
-      ReadLn(F,MText[LineCnt]^);
-      Inc(LineCnt);
-    Until Eof(F);
-    Close(F);
-   If DropMsgData Then Erase(F);
-  End;
-End;
-
-Procedure RunMacro(Num: Byte);
-Var
-  F: Text;
-  S: String;
-Begin
-  Case Config^.AltF1To10[Num].CmdType Of
-    0: RunProg(Config^.AltF1to10[Num].CmdData);
-    1: Begin
-         S:=Config^.AltF1to10[Num].CmdData;
-         ProcessStars(S);
-       While Pos('|',S)>0 Do
-       Begin
-         Insert_Str_No_Newline(Copy(S,1,Pos('|',S)-1));
-         Delete(S,1,Pos('|',S));
-         Cursor_Newline;
-       End;
-       Insert_Str_No_Newline(S);
-       End;
-   2: DoImport(Config^.AltF1to10[Num].CmdData);
-  End;
-End;
-
 Function Msg_Edit: Boolean;
 Var
   Key: Char;
@@ -1524,26 +1374,17 @@ Begin
            End;
       '<': If (LocalKeypress) And (Not Expired) Then Begin ExportFile; Continue; End;
       '=': If (LocalKeypress) And (Not Expired) Then Begin ImportFile; Cleanup; Continue; End;
-      '>': If (LocalKeypress) And (Not Expired) Then Begin ForceExit; Continue; End;
       '?': If (LocalKeypress) And (Not Expired) Then
            Begin
              Sound(500); Delay(20); Sound(1000); Delay(20); Sound(500); Delay(20); NoSound;
              Remote_Screen(^G);
              Continue;
            End;
-      '@': If (LocalKeypress) And (Not Expired) Then Begin HangUpUser; Continue; End;
-      'A': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft+(5*60); Continue; End;
-      'B': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft-(5*60); Continue; End;
       'D': If (LocalKeypress) And (Not Expired) Then
            Begin
              Drop2DOS;
              Continue;
            End;
-      'h'..'q': If (LocalKeypress) And (Not Expired) Then
-                Begin
-                  RunMacro(Ord(Key)-Ord('h')+1);
-                  Continue;
-                End;
       'G': Key:=^L; { Home }
       'H': Key:=^E; { UpArrow }
       'I': Key:=^R; { PgUp }

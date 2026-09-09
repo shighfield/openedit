@@ -7,11 +7,6 @@ Const
  LangCnt           = 103;
 
 Type
- ExternalRec    = Record
-   CmdData: String[59];
-   CmdType: Byte;
-  End;
-
  ConfigRec      = Record
    CfgHeader: String[35];
    ExpandWord: Array[0..9,1..2] Of String[25];
@@ -41,8 +36,6 @@ Type
    DictionaryPath: String[60];
 
    RA250: Boolean;                                                {VersionID}
-
-   AltF1to10: Array[1..10] Of ExternalRec;
 
    ImportSecurity,
    ExportSecurity: LongInt;

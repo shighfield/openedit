@@ -36,8 +36,6 @@ Procedure FancyClear;
 Procedure FixChainsaw;
 Procedure ResetUser;
 Procedure LoadUser;
-Procedure ForceExit;
-Procedure HangUpUser;
 Function SpellCheck: Boolean;
 Procedure Scroll_Screen(Lines: Integer);
 Procedure Refresh_Screen;
@@ -834,32 +832,6 @@ Begin
  Close(UserFile);
 End;
 
-Procedure ForceExit;
-Begin
- SaveScreen(1);
- GotoXY(1,25);
- TextAttr:=$1F;
- ClrEol;
- Write(' Press F4 again to return user to BBS or any other key to cancel...');
- Case ReadKey Of
-   #0: If ReadKey='>' Then Halt(1); End;
- While Keypressed Do ReadKey;
- GotoXY(1,25); TextAttr:=$0F; ClrEol;
- RestoreScreen(1);
-End;
-
-Procedure HangUpUser;
-Begin
- SaveScreen(1);
- GotoXY(1,25);
- TextAttr:=$1F;
- ClrEol;
- Write(' Press F6 again to disconnect user or any other key to cancel...');
- Case ReadKey Of #0: If ReadKey='@' Then Begin Disconnect; Halt(1); End; End;
- While Keypressed Do ReadKey;
- GotoXY(1,25); TextAttr:=$0F; ClrEol;
- RestoreScreen(1);
-End;
 
 Procedure Remove_Trailing;
 Begin
