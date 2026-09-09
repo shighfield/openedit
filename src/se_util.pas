@@ -14,7 +14,6 @@ Function NoPipe(S: String): String;
 Function Encode(S: String; Wid: Byte): String;
 Procedure FunkyWrite(S: String);
 Procedure KeyDelay(D: Word);
-Function TagExpand(S: String): String;
 Function Censor(S: String): String;
 Procedure FilterText;
 Function LongRandom(Max: LongInt): LongInt;
@@ -35,11 +34,8 @@ Procedure GetAttrChar(Var SAttr: Integer; Var SChar: Char);
 Function HackPrevent(S: String): String;
 Procedure FancyClear;
 Procedure FixChainsaw;
-Procedure LoadQuoteData;
-Function TagLine: Boolean;
 Procedure ResetUser;
 Procedure LoadUser;
-Procedure TagError;
 Procedure ForceExit;
 Procedure HangUpUser;
 Function SpellCheck: Boolean;
@@ -70,7 +66,6 @@ Procedure StatTimeUpdate;
 Procedure StatusBar;
 Function GetLow: Char;
 Function PageNum: String;
-Procedure Unquote_Screen;
 Procedure AbortDisabled;
 Procedure MinLinesNotMet;
 Procedure Display_Header;
@@ -162,9 +157,6 @@ Var
  CLine,
  CCol           : Integer;
  MNum,
- QuoteHil,
- QuoteLineNum,
- QuoteLineCnt,
  Linenum,LineCnt,
  A,N            : Word;
  PhyLine        : ^PhysType;
@@ -182,8 +174,6 @@ Var
  WasTag,
  PrivMsg        : Boolean;
  MText          : Array[1..InternalLineLim] of ^Str81;
- Qfile          : File Of Str81;
- Qtext          : Str81;
  MsgTmp,F       : Text;
  MC             : Char;
  MsgAreaPos,
@@ -354,46 +344,6 @@ Var CTime: Real;
 Begin
  CTime:=Timer+(D / 1000);
  Repeat Until (Timer>=CTime) Or (Local_Keypressed Or Remote_Keypressed)
-End;
-
-Function TagExpand(S: String): String;
-Const
- Month: Array[1..12] Of String[3] = ('Jan','Feb','Mar','Apr','May','Jun',
-                                     'Jul','Aug','Sep','Oct','Nov','Dec');
-Var
- X: Byte;
- DT: DateTime;
- N,LN,FN: String[35];
- D,DD,DM,DY,T: String[30];
-Begin
- N:=ToName;
- If Pos(' ',N)>0 Then FN:=Copy(N,1,Pos(' ',N)-1) Else FN:=N;
- If Pos(' ',N)>0 Then LN:=Copy(N,Pos(' ',N)+1,255) Else LN:=N;
- GetDate(DT.Year,DT.Month,DT.Day,DT.Hour);
- D:=LeadingZero(DT.Day)+' '+Month[DT.Month]+' '+LeadingZero(DT.Year-1900);
- DD:=Copy(D,1,2);
- DM:=Copy(D,4,3);
- DY:=Copy(D,8,2);
- T:=FormatTime(Timer);
- While Pos('@N@',UCase(S))>0 Do Begin X:=Pos('@N@',UCase(S)); Delete(S,X,3); Insert(N,S,X); End;
- While Pos('@FN@',UCase(S))>0 Do Begin X:=Pos('@FN@',UCase(S)); Delete(S,X,4); Insert(FN,S,X); End;
- While Pos('@LN@',UCase(S))>0 Do Begin X:=Pos('@LN@',UCase(S)); Delete(S,X,4); Insert(LN,S,X); End;
- While Pos('@D@',UCase(S))>0 Do Begin X:=Pos('@D@',UCase(S)); Delete(S,X,3); Insert(D,S,X); End;
- While Pos('@DD@',UCase(S))>0 Do Begin X:=Pos('@DD@',UCase(S)); Delete(S,X,4); Insert(DD,S,X); End;
- While Pos('@DM@',UCase(S))>0 Do Begin X:=Pos('@DM@',UCase(S)); Delete(S,X,4); Insert(DM,S,X); End;
- While Pos('@DY@',UCase(S))>0 Do Begin X:=Pos('@DY@',UCase(S)); Delete(S,X,4); Insert(DY,S,X); End;
- While Pos('@T@',UCase(S))>0 Do Begin X:=Pos('@T@',UCase(S)); Delete(S,X,3); Insert(T,S,X); End;
- While Pos('@TONAME@',UCase(S))>0 Do Begin X:=Pos('@TONAME@',UCase(S)); Delete(S,X,8); Insert(N,S,X); End;
- While Pos('@TO@',UCase(S))>0 Do Begin X:=Pos('@TO@',UCase(S)); Delete(S,X,5); Insert(N,S,X); End;
- While Pos('@TOFIRST@',UCase(S))>0 Do Begin X:=Pos('@TOFIRST@',UCase(S)); Delete(S,X,9); Insert(FN,S,X); End;
- While Pos('@TOLAST@',UCase(S))>0 Do Begin X:=Pos('@TOLAST@',UCase(S)); Delete(S,X,8); Insert(LN,S,X); End;
- While Pos('@BBSID@',UCase(S))>0 Do Begin X:=Pos('@BBSID@',UCase(S)); Delete(S,X,7); Insert(BBSName,S,X); End;
- While Pos('@SUBJECT@',UCase(S))>0 Do Begin X:=Pos('@SUBJECT@',UCase(S)); Delete(S,X,9); Insert(BBSName,S,X); End;
- While Pos('@DATE@',UCase(S))>0 Do Begin X:=Pos('@DATE@',UCase(S)); Delete(S,X,6); Insert(D,S,X); End;
- While Pos('@YEAR@',UCase(S))>0 Do Begin X:=Pos('@YEAR@',UCase(S)); Delete(S,X,6); Insert(DY,S,X); End;
- While Pos('@MONTH@',UCase(S))>0 Do Begin X:=Pos('@MONTH@',UCase(S)); Delete(S,X,7); Insert(DM,S,X); End;
- While Pos('@DAY@',UCase(S))>0 Do Begin X:=Pos('@DAY@',UCase(S)); Delete(S,X,5); Insert(DD,S,X); End;
- TagExpand:=S;
 End;
 
 Function Censor(S: String): String;
@@ -867,34 +817,6 @@ Begin
  XRename(CfgPath+'$OEDITMP.$~$',MsgTxtFile);
 End;
 
-Procedure LoadQuoteData;
-Var
- Hold: String;
- Tmp: String;
- CurrLine: String;
-Begin
- Assign(QFile,SysPath+'OEDIT.QUO');
- ReWrite(QFile);
- Assign(MsgTmp,MsgTxtFile);
- Reset(MsgTmp);
- QuoteLineCnt:=0;
- CurrLine:=''; Tmp:=''; Hold:='';
- While Not Eof(MsgTmp) Do
-  Begin
-   ReadLn(MsgTmp,Tmp); Tmp:=RTrim(LTrim(Tmp));
-   Tmp:=RTrim(Ltrim(Tmp));
-   If (Pos('>',Tmp) in [1..5]) Then Delete(Tmp,1,Pos('>',Tmp));
-   Tmp:=RTrim(LTrim(Tmp));
-   QText:=RTrim(LTrim(Tmp));
-   Write(QFile,QText);
-   Inc(QuoteLineCnt);
-  End;
- Inc(QuoteLineCnt);
- Close(MsgTmp);
- Erase(MsgTmp);
- Close(QFile);
-End;
-
 Procedure ResetUser;
 Begin
  FillChar(User,SizeOf(User),#0);
@@ -982,29 +904,6 @@ Begin
   End;
  If UIDX=-1 Then Begin UIDX:=FileSize(UserFile); ResetUser; End;
  Close(UserFile);
-End;
-
-Procedure TagError;
-Begin
-   TextAttr:=$01;
-   SWriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-   SWriteLn('³'+Pad('',72)+'³');
-   SWrite('³  '); TextAttr:=$0B; SWrite(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; SWriteLn('³');
-   SWrite('³  '); TextAttr:=$0B; SWrite(Pad('Tagline Datafile Error',70)); TextAttr:=$01; SWriteLn('³');
-   SWriteLn('³'+Pad('',72)+'³');
-   TextAttr:=$01;
-   SWrite('³   '); TextAttr:=$09; SWrite('ş '); TextAttr:=$0F; SWrite('Open!EDIT cannot locate the tagfile '+
-    Pad(Config^.TagFileName,31));
-   TextAttr:=$01; SWriteLn('³');
-   SWrite('³   '); TextAttr:=$09; SWrite('ş '); TextAttr:=$0F;
-   SWrite('Please use CESETUP to fix this problem                     ');
-   TextAttr:=$01; SWriteLn('        ³');
-   SWriteLn('³'+Pad('',72)+'³');
-   SWriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
-   SWrite('³ '); TextAttr:=$09; SWrite('STS97'); TextAttr:=$01;
-   SWriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-   SWriteLn('ÀÄÄÄÄÄÄÄÙ');
-   Halt(2);
 End;
 
 Procedure ForceExit;
@@ -1689,457 +1588,6 @@ Begin
  SGotoXY(CCol,CLine-TopLine+Topscreen);
 End;
 
-Function TagLine: Boolean;
-Var
- OldKwd: Array[1..4] Of String[10];
- OldFSz: LongInt;
- MFile: Text;
- IntelliTag,
- DejaVu: Boolean;
- F: Text;
- S: String;
- SoFar,
- FSz: LongInt;
- ChekSize: File;
- ThisPct,
- LastPct: String[30];
- PickedPtr: Array[1..10] Of LongInt;
- Picked: Array[1..10] Of String[127];
- B,B2: Byte;
- C: Char;
- Tag: String;
- Matches: LongInt;
- UserKeyword: String;
- Cnt: Byte;
- NR: Word;
- BinCnt: Byte;
- BinMode: File;
- Buf: Array[1..200] Of Byte;
- xTag: Byte;
- Noun: Array[1..20] Of String[15];
- Nouns: Byte;
-
-Procedure AddNoun(Var S: String);
-Begin
- If S[Length(S)]='S' Then S[0]:=Chr(Ord(S[0])-1);
- If S[0]>=#5 Then Begin Inc(Nouns); Noun[Nouns]:=S; End;
- S:='';
-End;
-
-Procedure SearchNouns(S: String);
-Type ASType=Record NounNum: Byte; Len: Byte; End;
-Var
- Tmp,Tmp2: Byte;
- Hold: String;
- AHold: ASType;
- A: Array[1..20] Of ASType;
-Begin
- Hold:='';
- Nouns:=0;
- FillChar(Noun,SizeOf(Noun),#0);
- S:=UCase(S)+'.';
- For Tmp:=1 To Length(S) Do
-  Begin
-   If S[Tmp] in ['A'..'Z','-'] Then Hold:=Hold+S[Tmp] Else AddNoun(Hold);
-  End;
- For Tmp:=1 To 20 Do Begin A[Tmp].NounNum:=Tmp; A[Tmp].Len:=Ord(Noun[Tmp][0]); End;
- For Tmp:=1 To 20 Do
-  For Tmp2:=1 To 20 Do
-   If A[Tmp].Len>A[Tmp2].Len Then Begin AHold:=A[Tmp]; A[Tmp]:=A[Tmp2]; A[Tmp2]:=AHold; End;
- For Tmp:=1 To 4 Do
-  User.TagKeyword[Tmp]:=Noun[A[Tmp].NounNum];
-End;
-
-Label GetPick,GetKey,PickTags,SkipTag,FindKeyword,NoMatch;
-Var Abort: Boolean;
-    CapS: String;
-Begin
- If Expired Then Exit;
- Randomize;
- FillChar(Picked,SizeOf(Picked),#0);
- TagLine:=False;
- SClrScr;
- StatusBar;
- UserKeyword:='';
- Tag:='';
- DejaVu:=False;
- Matches:=0;
- Abort:=False;
- Assign(ChekSize,Config^.TagFileName);
- {$I-} Reset(ChekSize,1); {$I+}
- If IOResult<>0 Then Abort:=True;
- IntelliTag:=False;
- If (DecryptKey=SysOpName) And (Not User.UseTaglines) Then Abort:=True;
- If Not Config^.UseTaglines Then Abort:=True;
- If Abort Then
-  Begin
-   SGotoXY(1,1); SWrite(BC+IL+Pad(' Open!EDIT v'+Ver+', Copyright (C) 2011,by Shawn Highfield',78));
-   SWrite('[0m');
-   SGotoXY(1,2);
-   Goto SkipTag;
-  End;
- FSz:=FileSize(ChekSize); Close(ChekSize);
-
- If User.AutoTagline Then Goto PickTags;
-
- If Config^.NumTaglines<5 Then Config^.NumTaglines:=5;
-{ SWriteLn(BC+IL+Pad(' '+LS(89),40)+FPad('Open!EDIT' + DecryptKey,37));}
- SWriteLn(BC+IL+Pad(' '+LS(89),40)+FPad('Open!EDIT ' + Ver,37));
- XSWrite('|BCÚÄ '); FunkyWrite(LS(50));
- XSWriteLn(' |BC'+MakeStr(69-Length(LS(50)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
- XSWriteLn('|BC³                                                                            |HC³');
- XSWriteLn('|BC³                                                                            |PC³');
- For xTag:=5 To Config^.NumTaglines Do
-  XSWriteLn('|BC³                                                                            |BC³');
- XSWriteLn('|PC³                                                                            |BC³');
- XSWriteLn('|HC³                                                                            |BC³');
- XSWriteLn('|NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ |FCC|FLheep|FOEDIT |FLv|FD'+Ver[1]+'|FS'+
- Ver[2]+'|FD'+Ver[3]+Ver[4]+'|FL'+Ver[5]+' |BCÄÙ');
-
- FindKeyword:
-
- Abort:=False;
-
- If (DecryptKey=SysOpName) And (Not User.UseKeywords) And (Not IntelliTag) Then Abort:=True;
- If (Not Config^.UseKeywords) And (Not IntelliTag) Then Abort:=True;
- If (DecryptKey<>SysOpName) And (Not IntelliTag) Then Abort:=True;
- If ((User.TagKeyword[1]='') And (User.TagKeyword[2]='') And
-     (User.TagKeyword[3]='') And (User.TagKeyword[4]='') And
-     (UserKeyword='')) Then Abort:=True;
-
- If (Not Abort) And
-    ((User.TagKeyword[1]<>'') Or (User.TagKeyword[2]<>'') Or
-     (User.TagKeyword[3]<>'') Or (User.TagKeyword[4]<>'')) Or
-     (UserKeyword<>'') Then
-  Begin
-   Matches:=0;
-   SaveWin(28,11,24,3);
-   SGotoXY(28,11); XSWrite('|BCÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-   SGotoXY(28,12); XSWrite('|BC³ |PC°°°°°°°°°°°°°°° |HC000|PC% |BC³');
-   SGotoXY(28,13); XSWrite('|BCÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-   SGotoXY(1,1);
-   If UserKeyword<>'' Then
-    SWrite(BC+IL+Pad(' '+LS(90),78))
-   Else
-    Begin
-     If IntelliTag Then
-      SWrite(BC+IL+Pad(' '+LS(91),78))
-     Else
-      SWrite(BC+IL+Pad(' '+LS(92),78));
-    End;
-   SWrite('[0m');
-   ThisPct:='';
-   LastPct:='               ';
-   SoFar:=0;
-
-   Assign(ChekSize,Config^.TagFileName);
-   {$I-} Reset(ChekSize,1); {$I+}
-   If IOResult<>0 Then Exit;
-   FSz:=FileSize(ChekSize); Close(ChekSize);
-
-   Assign(MFile,CfgPath+'$MATCHES.$%$');
-   ReWrite(MFile);
-   Assign(F,Config^.TagFileName);
-   {$I-} Reset(F); {$I+} If IOresult<>0 Then Exit;
-
-   User.TagKeyword[1]:=UCase(User.TagKeyword[1]);
-   User.TagKeyword[2]:=UCase(User.TagKeyword[2]);
-   User.TagKeyword[3]:=UCase(User.TagKeyword[3]);
-   User.TagKeyword[4]:=UCase(User.TagKeyword[4]);
-   UserKeyword:=UCase(UserKeyword);
-   While Not Eof(F) Do
-    Begin
-     ReadLn(F,S); CapS:=UCase(S);
-     If UserKeyword<>'' Then
-      Begin
-       If (Pos(UserKeyword,CapS)>0) Then
-        Begin Inc(Matches); WriteLn(MFile,S); End;
-      End
-      Else
-      Begin
-       If (Pos(User.TagKeyword[1],CapS)>0) Or
-          (Pos(User.TagKeyword[2],CapS)>0) Or
-          (Pos(User.TagKeyword[3],CapS)>0) Or
-          (Pos(User.TagKeyword[4],CapS)>0) Then
-           Begin Inc(Matches); WriteLn(MFile,S); End;
-      End;
-     SoFar:=SoFar+Length(S)+2;
-     ThisPct:=MakeStr(SoFar * 15 Div FSz,#178);
-     If ThisPct<>LastPct Then
-      Begin
-       If (SKeypressed Or Keypressed) Then
-        If GetLow=#27 Then
-         Begin
-          For B:=2 To 13 Do
-           Begin
-            SGotoXY(1,B);
-            SClrEol;
-           End;
-          SGotoXY(1,2);
-          Goto SkipTag;
-         End;
-       B:=1;
-       While ThisPct[B]=LastPct[B] Do Inc(B);
-       SGotoXY(30+B-1,12); XSWrite('|PC'+Copy(ThisPct,B,255));
-       LastPct:=ThisPct;
-       SGotoXY(46,12); XSWrite('|HC'+Zero(SoFar * 100 Div FSz,3));
-      End;
-    End;
-   Close(F);
-   If (Matches>0) And (Matches<Config^.NumTaglines) Then
-    Begin
-     Reset(F);
-     Repeat
-      ReadLn(F,S);
-      WriteLn(MFile,S);
-      Inc(Matches);
-     Until Matches>=Config^.NumTaglines;
-     Close(F);
-    End;
-   Close(MFile);
-   LoadWin(28,11,24,3);
-   Assign(ChekSize,CfgPath+'$MATCHES.$%$');
-   {$I-} Reset(ChekSize,1); {$I+} If IOResult<>0 Then Exit;
-   OldFSz:=FSz;
-   FSz:=FileSize(ChekSize); Close(ChekSize);
-   SGotoXY(1,2);
-   Move(OldKwd,User.TagKeyword,SizeOf(User.TagKeyword));
-   If Matches<Config^.NumTaglines Then
-    Begin
-     FSz:=OldFSz;
-     Matches:=0;
-     If Picked[1]='' Then
-      Begin
-       For B:=2 To 13 Do
-        Begin
-         SGotoXY(1,B);
-         SClrEol;
-        End;
-      End;
-     SGotoXY(1,1);
-     If UserKeyword<>'' Then
-      SWrite(BC+IL+Pad(' '+LS(93),78))
-     Else
-      Begin
-       If IntelliTag Then
-        SWrite(BC+IL+Pad(' '+LS(94),78))
-       Else
-        SWrite(BC+IL+Pad(' '+LS(95),78));
-      End;
-     SWrite('[0m'); SWriteLn('');
-     IntelliTag:=False;
-     If Picked[1]='' Then
-      Goto SkipTag
-     Else
-      Goto NoMatch;
-    End;
-  End;
-
- PickTags:
-
- SGotoXY(1,1); SWrite(BC+IL+Pad(' '+LS(96),78));
- XSWrite('[0m|PC');
- ThisPct:='';
- LastPct:='               ';
- SoFar:=0;
- For B:=1 To Config^.NumTaglines Do
-  Begin
-   GetPick:
-   PickedPtr[B]:=LongRandom(FSz);
-   For B2:=1 To B Do
-    If (PickedPtr[B]=PickedPtr[B2]) And (B<>B2) Then Goto GetPick;
-  End;
- Abort:=False;
- If ((DecryptKey=SysOpname) And (Not User.UseKeywords)) Then Abort:=True;
- If Not Config^.UseKeywords Then Abort:=True;
- If (DecryptKey<>SysOpName) Then Abort:=True;
- If (UserKeyword<>'') Or (IntelliTag) Then Abort:=False;
- If Matches=0 Then Abort:=True;
- If Not Abort Then
-  Assign(BinMode,CfgPath+'$MATCHES.$%$')
- Else
-  Assign(BinMode,Config^.TagFileName);
- {$I-} Reset(BinMode,1); {$I+} If IOResult<>0 Then Exit;
-
- IntelliTag:=False;
-
- For Cnt:=1 To Config^.NumTaglines Do
-  Begin
-   If PickedPtr[Cnt]>100 Then Dec(PickedPtr[Cnt],100);
-   Seek(BinMode,PickedPtr[Cnt]);
-   BlockRead(BinMode,Buf,SizeOf(Buf),NR);
-   BinCnt:=1;
-   Repeat Inc(BinCnt); Until Buf[BinCnt]=13;
-   While Buf[BinCnt] in [13,10] Do Inc(BinCnt);
-   Move(Buf[BinCnt],Picked[Cnt][1],SizeOf(Picked[Cnt]));
-   Picked[Cnt][0]:=#255;
-   Delete(Picked[Cnt],Pos(#13,Picked[Cnt]),255);
-   Picked[Cnt]:=RTrim(LTrim(Picked[Cnt]));
-   If Picked[Cnt][0]>#74 Then Picked[Cnt][0]:=#74;
-  End;
- Close(BinMode);
-
- For B:=1 To Config^.NumTaglines Do
-  Picked[B]:=TagExpand(Picked[B]);
-
- If User.AutoTagline Then
-  Begin
-   Tag:=Picked[Random(Config^.NumTaglines)+1];
-   SWrite('[0m');
-   SGotoXY(1,1); SWrite('[K'+BC+IL+Pad(' '+LS(97),78));
-   SGotoXY(1,2);
-   Goto SkipTag;
-  End;
-
-
- SGotoXY(1,1); SWrite(BC+IL+Pad(' '+LS(98),78));
- NoMatch:
- SWrite('[0m');
-
- For B:=1 To Config^.NumTaglines Do
-  Begin
-   SGotoXY(3,2+B);
-   If DejaVu Then
-    FunkyWrite(Pad(Picked[B],75))
-   Else
-    FunkyWrite(Picked[B]);
-  End;
-
- DejaVu:=True;
- XSWrite('[0m|PC');
- SGotoXY(1,4+Config^.NumTaglines);
- XSWrite('|BCÚÄ'); FunkyWrite(' '+LS(51)+' ');
- XSWriteLn('|BC'+MakeStr(69-Length(LS(51)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
- XSWrite('|BC³ |BC[|PCUp/Dn|BC] '); FunkyWrite(Pad(LS(52),18)); XSWrite(' |BC[|PCI|BC] '); FunkyWrite(Pad(LS(53),18));
- XSWrite(' |BC[|PCR|BC]   '); FunkyWrite(Pad(LS(54),18)); XSWriteLn(' |HC³');
- XSWrite('|PC³ |BC[|PCEnter|BC] '); FunkyWrite(Pad(LS(57),18)); XSWrite(' |BC[|PCE|BC] '); FunkyWrite(Pad(LS(58),18));
- XSWrite(' |BC[|PCC|BC]   '); FunkyWrite(Pad(LS(56),18)); XSWriteLn(' |PC³');
- XSWrite('|HC³ |BC[|PCK|BC]     '); FunkyWrite(Pad(LS(55),18)); XSWrite(' |BC[|PCN|BC] '); FunkyWrite(Pad(LS(59),18));
- XSWrite(' |BC[|PCEsc|BC] '); FunkyWrite(Pad(LS(60),18)); XSWriteLn(' |BC³');
- XSWriteLn('|NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
- B:=1;
- Repeat
-  SGotoXY(2,2+B); XSWrite('|IL'); SWrite(' '+Pad(Picked[B],75)+'[0m');
-  C:=Get_Key;
-  SGotoXY(2,2+B); FunkyWrite(' '+Pad(Picked[B],75));
-  Case UpCase(C) Of
-    'C': Begin
-          ReEditing:=True;
-          SWrite('[0m[2J'); Exit;
-	 End;
-    'K': Begin
-          SGotoXY(1,4+Config^.NumTaglines);
-          XSWrite('|BCÚÄ'); FunkyWrite(' '+LS(61)+' '); XSWriteLn('|BC'+MakeStr(69-Length(LS(61)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
-          XSWrite('|PC³ '); FunkyWrite(Pad(LS(62),74));
-          XSWriteLn(' |HC³');
-          XSWriteLn('|HC³ |IL                                                                          [0m |PC³');
-          XSWriteLn('|NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-          XSWrite('[K');
-          SGotoXY(3,4+Config^.NumTaglines+2); SRead(UserKeyword,74,''); C:=#13;
-          SWrite('[0m');
-          SGotoXY(1,4+Config^.NumTaglines); SClrEol;
-          SGotoXY(1,4+Config^.NumTaglines+1); SClrEol;
-          SGotoXY(1,4+Config^.NumTaglines+2); SClrEol;
-          SGotoXY(1,4+Config^.NumTaglines+3); SClrEol;
-          Goto FindKeyword;
-         End;
-    'R': Begin
-          B:=Random(Config^.NumTaglines)+1;
-          SGotoXY(2,2+B); XSWrite('|IL');
-          SWrite('[5m'); TextAttr:=TextAttr+128;
-          SWrite(' '+Pad(Picked[B],75)+'[0m');
-          CDelay(2000);
-          SGotoXY(2,2+B); XSWrite('|IL'); SWrite(' '+Pad(Picked[B],75)+'[0m');
-          Tag:=Picked[B];
-          Break;
-         End;
-    'E': Begin
-          SGotoXY(1,4+Config^.NumTaglines);
-          XSWrite('|BCÚÄ'); FunkyWrite(' '+LS(63)+' '); XSWriteLn('|BC'+MakeStr(69-Length(LS(63)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
-          XSWrite('|PC³ '); FunkyWrite(Pad(LS(64),74));
-          XSWriteLn(' |HC³');
-          XSWriteLn('|HC³ |IL                                                                          [0m |PC³');
-          XSWriteLn('|NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-          XSWrite('[K');
-          SGotoXY(3,4+Config^.NumTaglines+2); SRead(S,74,''); Tag:=S; C:=#13;
-         End;
-    'N': Begin
-         SGotoXY(1,4+Config^.NumTaglines); SClrEol;
-         SGotoXY(1,4+Config^.NumTaglines+1); SClrEol;
-         SGotoXY(1,4+Config^.NumTaglines+2); SClrEol;
-         SGotoXY(1,4+Config^.NumTaglines+3); SClrEol;
-         Goto PickTags;
-        End;
-    'I': Begin
-          IntelliTag:=True;
-          Move(User.TagKeyword,OldKwd,SizeOf(User.TagKeyword));
-          SearchNouns(Subject);
-          Goto FindKeyword;
-         End;
-    #13: Tag:=Picked[B];
-    #00: Begin
-          Case Get_Key Of
-            'H': If B<>1 Then Dec(B);
-            'P': If B<>Config^.NumTaglines Then Inc(B);
-           End;
-          C:=#255;
-         End;
-    #27: Begin
-          If Not (SKeypressed Or Keypressed) Then KeyDelay(250);
-          If (SKeypressed Or Keypressed) Then
-           Begin
-            GetKey:
-            Case Get_Key Of
-             '[': Goto GetKey;
-             'A': If B<>1 Then Dec(B);
-             'B': If B<>Config^.NumTaglines Then Inc(B);
-            End;
-            C:=#255;
-           End
-           Else
-            Tag:='';
-         End;
-    '8': If B<>1 Then Dec(B);
-    '2': If B<>Config^.NumTaglines Then Inc(B);
-   End;
- Until (C=#27) Or (C=#13);
- SGotoXY(1,1); SWrite(BC+IL+Pad(' Open!EDIT v'+Ver+', Copyright (C) 2011,by Shawn Highfield',78));
- SWrite('[0m');
- SGotoXY(1,5+Config^.NumTaglines+4);
- SkipTag:
- S:=Tag; If S='' Then S:='None.';
- if S[0]>#65 Then Begin S[0]:=#64; S:=S+'¯'; End;
- SWrite('[0m');
- XSWrite('|BCÚÄ'); FunkyWrite(' '+LS(6)+' ');
- XSWriteLn('|BC'+MakeStr(69-Length(LS(6)),#196)+'|PCÄÄ|HCÄÄ|NC¿');
- XSWrite('|PC³ '); FunkyWrite(LS(65)+': '+Pad(S,72-Length(LS(65)))); XSWriteLn(' |HC³');
- XSWrite('|HC³ '); FunkyWrite(LS(66));
-{ FunkyWrite(FPad('Open!EDIT'+DecryptKey,74-Length(LS(66)))); }
- FunkyWrite(FPAD('Open!EDIT ' + Ver,74-length(LS(66))));
- XSWriteLn(' |PC³');
- XSWriteLn('|NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
- If FileExists('$MATCHES.$%$') Then
-  Begin
-   Assign(F,CfgPath+'$MATCHES.$%$');
-   Erase(F);
-  End;
- If (Tag<>'') Then
-  Begin
-   IF Config^.Censor Then Tag:=Censor(Tag);
-   TagLine:=True;
-   Inc(LineCnt); MText[LineCnt]^:='... '+Tag;
-   If (Config^.TearLine=1) Then
-    Begin
-     If (DecryptKey=SysOpname) Then
-(*      Insert(HackPrevent('`XJb0'{ [SE+] })+' ',MText[LineCnt]^,5)}*)
-       Insert('[CE+]' + ' ',MText[LineCnt]^,5)
-     Else
-(*      Insert(HackPrevent('_WIa' { [SE]  })+' ',MText[LineCnt]^,5);*)
-       Insert('[CE]' + ' ',MText[LineCnt]^,5);
-    End;
-  End;
-End;
-
 Function PageNum: String;
 Begin
  If CLine Mod ScrLines = 0 Then
@@ -2209,16 +1657,6 @@ Var C: Char;
 Begin
  Repeat C:=Get_Key; Until C in [#13,#27,#32..#126];
  GetLow:=C;
-End;
-
-Procedure Unquote_Screen;
-Var I: Integer;
-Begin
- SGotoXY(1,7);
- For I:=1 to ScrLines Do                   { Physical lines are now invalid }
-  Begin PhyLine^[I]:=''; SWriteLn(''); SClrEol; End;
- Scroll_Screen(0);                                       { Causes redisplay }
- Display_Footer(2);
 End;
 
 Procedure MinLinesNotMet;

@@ -285,33 +285,6 @@ Begin
   SWrite('[0m[1;30m'+GetChar+'[1;34;44m');
 End;
 
-Function GetQuoteLine(I: LongInt): String;
-Var
-  S: String;
-Begin
-  GetQuoteLine:='';
-  Assign(Qfile,SysPath+'OEDIT.QUO');
-  Reset(Qfile);
-  If I>FileSize(Qfile) Then
-  Begin
-    Close(Qfile);
-    Exit;
-  End;
-  Seek(Qfile,I-1);
-  Read(Qfile,Qtext);
-  Close(QFile);
-  S:=Ltrim(QText);
-  If Copy(S,1,15)=Config^.RepStr Then
-  QText:=' '+S
-  Else
-  Begin
-    QText:=' '+ToInitials+'> '+S;
-    If QText=' '+ToInitials+'> ' Then QText:='';
-  End;
-  If Config^.Censor Then QText:=Censor(QText);
-  GetQuoteLine:=Qtext;
-End;
-
 Procedure Expand;
 Const
   ExpandUtils    = 2;
@@ -440,149 +413,6 @@ Begin
     If (Not LastWasCR) Then Insert_Char(LastChar);
     Exit;
    End;
-End;
-
-Procedure QuoteWindow;
-Var
-  xSx: String;
-  LeftStr: String[80];
-  Key: Char;
-  Tmp: Byte;
-  OrigLines: Word;
-
-  Procedure UpdateWin;
-  Var
-    Tmp: Word;
-  Begin
-    For Tmp:=1 To Config^.QuoteWinSize Do
-    Begin
-      SGotoXY(1,23-Config^.QuoteWinSize+Tmp-1); SClrEol; FunkyWrite(' '+GetQuoteLine(QuoteLineNum+Tmp-1));
-    End;
-  End;
-
-Begin
-  If QuoteLineCnt=0 Then Exit;
-  OrigLines:=ScrLines;
-  ScrLines:=ScrLines-Config^.QuoteWinSize;
-  xSx:=LS(1);
-  PF_overridepos:=23-Config^.QuoteWinSize-1; Plain_Footer(1);
-  Plain_Footer(2);
-  SGotoXY(39-(Length(' '+xSx+' ') Div 2),23-Config^.QuoteWinSize-1);
-  FunkyWrite(' '+xSx+' ');
-  For Tmp:=23-Config^.QuoteWinSize To 22 Do
-  SWrite('['+StrVal(Tmp)+';1H[K');
-  SGotoXY(57-Length(LS(2)+LS(3)),23);
-  XSWrite(' |FS<|FCE|FLnter|FS> ');
-  FunkyWrite(LS(2));
-  XSWrite('  |FS<|FCE|FLsc|FS> ');
-  FunkyWrite(LS(3)+' ');
-  If QuoteHil<1 Then QuoteHil:=1;
-  If QuoteLineNum<1 Then QuoteLineNum:=1;
-  If QuoteLineNum>QuoteLineCnt Then QuoteLineNum:=QuoteLineCnt;
-  UpdateWin;
-  OKPageNum:=False;
-  Repeat
-    If QuoteHil<1 Then QuoteHil:=1;
-    If QuoteLineNum<1 Then QuoteLineNum:=1;
-    If QuoteLineNum>QuoteLineCnt Then QuoteLineNum:=QuoteLineCnt;
-    If (QuoteHil=1) And (QuoteLineNum=0) Then QuoteLineNum:=1;
-    If QuoteLineNum+QuoteHil-1>QuoteLineCnt Then QuoteLineNum:=(QuoteLineCnt-QuoteHil+1);
-    SGotoXY(1,23-Config^.QuoteWinSize+QuoteHil-1); {SClrEol;}
-    SWrite(ANSICode[User.NC]+' '+ANSICode[40+User.FieldColor]+GetQuoteLine(QuoteLineNum+QuoteHil-1)+'[K[0m');
-    SGotoXY(79,23-Config^.QuoteWinSize+QuoteHil-1); SClrEol;
-    Repeat
-      Key:=Get_Key;
-    Until Key in [^[,#0,'8','2','9','3','7','1',#13,^Q,^W,^E,^X,^R,^C];
-    SGotoXY(1,23-Config^.QuoteWinSize+QuoteHil-1); {SClrEol;}
-    FunkyWrite(' '+GetQuoteLine(QuoteLineNum+QuoteHil-1)); SWrite('[K');
-    If (Key=#0) Then
-    Begin
-      Key:=Get_Key;
-      Case Key Of
-      'H': Key := ^E;     {UpArrow}
-      'P': Key := ^X;     {DownArrow}
-      'I': Key := ^R;     {PgUp}
-      'Q': Key := ^C;     {PgDn}
-      'G': Key := ^L;     {Home}
-      'O': Key := ^P;     {End}
-      Else Key := #0;
-     End;
-   End;
-  If (Key=#27) Then
-  Begin
-    If Not (Keypressed or SKeypressed) Then KeyDelay(250);
-    If (Keypressed Or SKeypressed) Then
-    Begin
-      Key:=Get_Key;
-      If Key='[' Then Key:=Get_Key;
-      If Key='O' Then Key:=Get_Key;
-      Case Key Of
-        'A': Key:=^E;     {UpArrow}
-        'B': Key:=^X;     {DownArrow}
-        'r': Key:=^R;     {PgUp}
-        'q': Key:=^C;     {PgDn}
-        'H': Key:=^L;     {Home}
-        'K',              {End - PROCOMM+}
-        'R': Key:=^P;     {End - GT}
-        #27: Key:=^Q;
-       End;
-     End Else Key:=^Q;
-   End;
-  If Key=#13 Then
-   Begin
-     Insert_Line(GetQuoteLine(QuoteLineNum+QuoteHil-1));
-     refresh_Screen;
-     Key:='2';
-     Cursor_Down(True);
-   end;
-   If Key in [^E,'8'] Then
-   If Not ((QuoteLineNum=1) And (QuoteHil=1)) Then
-   Begin
-     Dec(QuoteHil);
-     If QuoteHil=0 Then
-     Begin
-       QuoteHil:=1;
-       Dec(QuoteLineNum);
-       UpdateWin;
-     End;
-   End;
-   If Key in [^X,'2'] Then
-   If Not ((QuoteHil+QuoteLineNum-1)=QuoteLineCnt) Then
-   Begin
-     Inc(QuoteHil);
-     If QuoteHil=Config^.QuoteWinSize+1 Then
-     Begin
-       QuoteHil:=Config^.QuoteWinSize;
-       Inc(QuoteLineNum);
-       UpdateWin;
-     End;
-   End;
-   If Key in [^R,'9'] Then
-   If QuoteLineNum>Config^.QuoteWinSize Then { Don't go TOO far up }
-   Begin
-     Dec(QuoteLineNum,Config^.QuoteWinSize);
-     UpdateWin;
-   End
-   Else
-     Key:='7';
-   If Key in [^C,'3'] Then
-   If QuoteLineNum+QuoteHil-1+Config^.QuoteWinSize<=QuoteLineCnt Then
-   Begin
-     Inc(QuoteLineNum,Config^.QuoteWinSize);
-     UpdateWin;
-   End Else
-   Key:='1';
-   If Key in [^L,'7'] Then Begin QuoteLineNum:=1; UpdateWin; End;
-   If Key in [^P,'1'] Then
-   Begin
-     While QuoteLineNum+Config^.QuoteWinSize<QuoteLineCnt Do Inc(QuoteLineNum,Config^.QuoteWinSize);
-     UpdateWin;
-   End;
-  Until (Key=^Q) Or (Key=^W);
-  ScrLines:=OrigLines;
-  OKPageNum:=True;
-  Unquote_Screen;
-  Reposition;
 End;
 
 Function ConfirmAbort: Boolean;
@@ -1628,13 +1458,11 @@ Var
               6: Key:='E';
              End;
       End;
-    Until Key in ['A','S','R','Q','I','E'];
+    Until Key in ['A','S','R','I','E'];
     If Key='A' Then AbortMsg:=True;
     If Key='S' Then SaveMsg:=True;
     If Key='I' Then ImportMsg:=True;
     If Key='E' Then ExportMsg:=True;
-    If Key='R' Then Key:=#0;
-    If Key='Q' Then QuoteWindow;
     If Key<>'S' Then
      Begin
       Display_Footer(3);
@@ -1786,12 +1614,10 @@ Begin
         End;
     ^O: Redisplay;
     ^P: Cursor_EndLine;
-    ^Q: QuoteWindow;
     ^R: Page_Up;
     ^S: Cursor_Left;
     ^T: Delete_Wordright;
     ^V: Begin Insert_Mode:=Not Insert_Mode; Display_Footer(1); Reposition; End;
-    ^W: QuoteWindow;
     ^X: Cursor_Down(False);
     ^Y: Msg_Delete_Line;
     ^Z: DoMenu;
@@ -1814,14 +1640,10 @@ Begin
                  If Not (Key in ['0'..'9','A'..'Z','a'..'z']) Then Expand;
                End;
    End;
-If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','Q','C','I','E']) And (CCol=3)) And (Not Expired)
+If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','C','I','E']) And (CCol=3)) And (Not Expired)
 Then
    Begin
     Case UpCase(MText[CLine]^[2]) Of { 'S' or 'A' + 1 }
-      'Q': Begin
-             Msg_Delete_Line;
-             QuoteWindow;
-           End;
       'C': Begin
              Msg_Delete_Line;
              UserConfig;
@@ -1882,12 +1704,12 @@ End;
 Var
   n: Integer;
   EE: Word;
+  TmpF: File;
 Begin
   If ErrorAddr=Nil Then
   Begin
-    If FileExists(CfgPath+'MATCHES.$%$') Then Begin Assign(QFile,CfgPath+'MATCHES.$%$'); Erase(QFile); End;
-    If FileExists(SysPath+'OEDIT.QUO') Then Begin Assign(QFile,SysPath+'OEDIT.QUO'); Erase(QFile); End;
-    If FileExists(CfgPath+'$OEDITMP.$~$') Then Begin Assign(QFile,CfgPath+'$OEDITMP.$~$'); Erase(QFile); End;
+    If FileExists(CfgPath+'MATCHES.$%$') Then Begin Assign(TmpF,CfgPath+'MATCHES.$%$'); Erase(TmpF); End;
+    If FileExists(CfgPath+'$OEDITMP.$~$') Then Begin Assign(TmpF,CfgPath+'$OEDITMP.$~$'); Erase(TmpF); End;
   End;
   For n:=1 to Max_Msg_Lines Do
   Dispose(MText[n]);
@@ -1934,7 +1756,6 @@ End;
 Var
   OKHeadFoot: Boolean;
   Subval: BYte;
-  GotConfig: Boolean;
 Begin
   OKHeadFoot:=True;
   Danger:=0;
@@ -1952,64 +1773,24 @@ Begin
   Ver[0]:=#5;
   New(Config);
  { -------------- Configuration block -------------- }
- { * Check for a OEDIT environment variable          }
-  CfgPath:=GetEnv('OEDIT');
-  If CfgPath[Length(CfgPath)]<>'\' Then CfgPath:=CfgPath+'\';
   CfgPath:=RemoveWildCard(ParamStr(0));
-  Assign(ConfigFile,CfgPath+'oedit.cfg');
-  FileMode:=66;
-  {$I-}Reset(ConfigFile);{$I+}
-  FileMode:=2;
-  { * Check in current directory                      }
-  If IOResult<>0 Then
+  { oedit.cfg (a Turbo Pascal binary record written by the original DOS
+    OESetup.EXE) is never read - its binary layout does not reliably
+    match FPC's ConfigRec even before accounting for how much this
+    struct keeps shrinking as the BBS-feature-removal pass proceeds, and
+    the shipped file is just OESetup's stock installer defaults, not
+    anything user-customized. Config^ is always built from the same
+    factory defaults legacy/sesetup4.pas writes for a brand-new install. }
+  FillChar(Config^,SizeOf(Config^),0);
+  With Config^ Do
   Begin
-    CfgPath:='';
-    Assign(ConfigFile,CfgPath+'oedit.cfg');
-    FileMode:=66;
-    {$I-}Reset(ConfigFile);{$I+}
-    FileMode:=2;
-  End;
- { * Check in execution path                         }
-  If IOResult<>0 Then
-  Begin
-    CfgPath:=RemoveWildCard(ParamStr(0));
-    Assign(ConfigFile,CfgPath+'oedit.cfg');
-    FileMode:=66;
-    {$I-}Reset(ConfigFile);{$I+}
-    FileMode:=2;
-  End;
-  { * Read it if we found it, but don't trust it blindly - oedit.cfg is a
-    Turbo Pascal binary record (written by the original DOS OESetup.EXE),
-    and FPC's in-memory layout for ConfigRec doesn't reliably match TP's
-    (Real is 8 bytes here vs TP's 6, plus other alignment differences that
-    didn't resolve with the obvious fixes - not chased further since this
-    shipped file is just OESetup's stock installer defaults, not anything
-    user-customized). A size/layout mismatch makes Read fail rather than
-    silently misread, so check it instead of trusting an unguarded Read. }
-  GotConfig:=False;
-  If IOResult=0 Then
-  Begin
-    {$I-}Read(ConfigFile,Config^);{$I+}
-    GotConfig:=(IOResult=0);
-    Close(ConfigFile);
-  End;
-  If Not GotConfig Then
-  Begin
-    { Same factory defaults legacy/sesetup4.pas writes for a brand-new
-      install, minus the BBS-door/registration fields this port dropped. }
-    FillChar(Config^,SizeOf(Config^),0);
-    With Config^ Do
-    Begin
       CfgHeader:='Open!EDIT v'+Ver+' Configuration File';
       NC:=$0F; HC:=$0B; BC:=$01; PC:=$09; FZ:=9;
       FC:=$0F; FL:=$07; FS:=$09; FD:=$0B;
       IC:=$0B; ID:=$0B; IL:=$0F; IS:=$09;
       FieldColor:=$01;
-      TagFileName:='TAGLINES.TAG';
       TabStop:=8;
       CensorChar:='*';
-      BBSPath:='';
-      BBSProg:=bbs_XX;
       DataUEC:=0;
       TearLine:=1;
       RegName:='';
@@ -2021,18 +1802,11 @@ Begin
       DOSSwap:=0;
       SpellCheck:=2;
       DictionaryPath:='';
-      QuoteWinSize:=5;
       ImportSecurity:=999999;
       ExportSecurity:=999999;
       ScrollSiz:=8;
-      UseTaglines:=False;
       UseExpand:=True;
-      UseKeywords:=True;
       Censor:=False;
-      FillChar(OKTagArea,SizeOf(OKTagArea),True);
-      FillChar(OKExpandArea,SizeOf(OKExpandArea),True);
-      FillChar(OKKeywordArea,SizeOf(OKKeywordArea),True);
-      FillChar(OKCensorArea,SizeOf(OKCensorArea),False);
       DateFormat:=0;
       TimeFormat:=0;
       RepStr:=' * In a message';
@@ -2043,8 +1817,6 @@ Begin
       StartDate:=Julian(Copy(UnpackedDT(CurrentDT),1,8));
       CfgVer:=Ver;
     End;
-  End;
-  (*ConfigDecrypt;*)
 
   If Config^.LanguageFile='' Then Config^.LanguageFile:='ENGLISH';
   If Not FileExists(CfgPath+Config^.LanguageFile+'.LNG') Then
@@ -2070,7 +1842,6 @@ Begin
      MsgTxtFile:=ParamStr(PCnt);
   End;
 
-  If Config^.QuoteWinSize<2 Then Config^.QuoteWinSize:=5;
   SingleLineStat:=True;
   Detailed:=True;
   HelpScrPrgName:='Open!EDIT';
@@ -2159,18 +1930,6 @@ Begin
   EStr[6,1]^:='@RE@';    EStr[6,2]^:=Subject;
   EStr[7,1]^:='@VER@';   EStr[7,2]^:=Ver;
   EStr[8,1]^:='@FROM@';  EStr[8,2]^:=UserName;
-{---Shawn: Taglines starting here}
-  If (Pos('\',Config^.TagFileName)=0) And (Config^.UseTaglines) Then
-  Begin
-    If (Config^.TagFileName='') Then
-    TagError
-    Else
-    Begin
-      Tmp:=RemoveWildCard(FExpand(ParamStr(0)));
-      Config^.TagFileName:=Tmp+Config^.TagFileName;
-    End;
-    If Not FileExists(Config^.TagFileName) Then TagError;
-  End;
   New(PhyLine);
   Max_Msg_Lines:=((MaxAvail div 3)*2) div SizeOf(Str81);
   If Max_Msg_Lines>Config^.AbsMaxMsgLines Then Max_Msg_Lines:=Config^.AbsMaxMsgLines; Dec(Max_Msg_Lines);
@@ -2228,9 +1987,6 @@ Begin
     LoadS;
   End;
   N:=0;
-  QuoteLineNum:=0;
-  QuoteLineCnt:=0;
-  QuoteHil:=0;
   If FileExists(MsgTxtFile) Then
   Begin
     Assign(MsgTmp,MsgTxtFile);
