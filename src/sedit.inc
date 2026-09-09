@@ -31,11 +31,6 @@ Type
    SpellCheck: Byte; {0=No, 1=Yes, 2=Ask}
    DictionaryPath: String[60];
 
-   RA250: Boolean;                                                {VersionID}
-
-   ImportSecurity,
-   ExportSecurity: LongInt;
-
    ScrollSiz: Byte;
    TimeOutDelay: Byte;
    ExtendedChars: Byte;

@@ -1063,127 +1063,6 @@ Begin
   For Tmp:=1 To Length(S) Do Insert_Char(S[Tmp]);
 End;
 
-Procedure DoImport(FN: String);
-Var
-  F: Text;
-  S: String[80];
-  LineNo: Word;
-  OrigLines: Word;
-Begin
-  If FN='' Then Exit;
-  Cursor_NewLine;
-  Assign(F,FN);
-  FileMode:=66; {$I-} Reset(F); {$I+} FileMode:=2;
-  If IOResult<>0 Then
-  Begin
-    Insert_Str('[Open!EDIT: File not found]');
-    Exit;
-  End;
-  Count_Lines;
-  LineNo:=0;
-  SGotoXY(7,22);
-  FunkyWrite(' (0000) ');
-  OrigLines:=LineCnt;
-  While Not Eof(F) Do
-  Begin
-    ReadLn(F,S); If S[0]>Chr(WWrap) Then S[0]:=Chr(WWrap);
-    While Pos(#27,S)>0 Do
-      Delete(S,Pos(#27,S),1);
-      Insert_Line(S);
-      Inc(CLine);
-      Inc(LineNo);
-    If LineNo Mod 15 = 0 Then
-    Begin
-      SGotoXY(9,22); FunkyWrite(Zero(LineNo,4));
-    End;
-    If LineCnt>=Max_Msg_Lines-5 Then
-    Begin
-      Insert_Str('[Open!EDIT: Too many lines, truncating]');
-      CLine:=1; CCol:=1; TopLine:=1;
-      Scroll_Screen(0);
-      Close(F);
-      Exit;
-    End;
-  End;
- Close(F);
- Plain_Footer(1);
- Redisplay;
-End;
-
-Procedure ImportFile;
-Var
-  FN: String[80];
-Begin
-  Box(60,2,True);
-  SGotoXY(40-30-1+2-1,12-1);
-  SWrite(PC); SWrite(' '+LS(71)+' ');
-  SGotoXY(40-30-1+2-1,12-1+1);
-  SWrite(NC); SWrite(LS(72));
-  SGotoXY(40-30-1+2+60-18+16-Length(LS(73))-1,12-1+3);
-  SWrite(PC);
-  SWrite(' '+LS(73)+' ');
-  SGotoXY(40-30-1+2-1,12-1+2);
-  SWrite(IL); SRead(FN,60,'');
-  SWrite('[0m');
-  SGotoXY(1,11);
-  SClrEol;
-  SGotoXY(1,12);
-  SClrEol;
-  SGotoXY(1,13);
-  SClrEol;
-  SGotoXY(1,14);
-  SClrEol;
-  SGotoXY(1,15);
-  SClrEol;
-  Scroll_Screen(0);
-  DoImport(FN);
-End;
-
-Procedure DoExport(FN: String);
-Var
-  F: Text;
-  S: String[80];
-  LineNo: Word;
-Begin
-  If FN='' Then Exit;
-  Assign(F,FN);
-  ReWrite(F);
-  For LineNo:=1 To LineCnt Do
-   WriteLn(F,MText[LineNo]^);
-  Close(F);
-End;
-
-Procedure ExportFile;
-Var
-  FN: String[80];
-Begin
-  Box(60,2,True);
-  SGotoXY(40-30-1+2-1,12-1);
-  SWrite(PC);
-  SWrite(' '+LS(74)+' ');
-  SGotoXY(40-30-1+2-1,12-1+1);
-  SWrite(NC); SWrite(LS(75));
-  SGotoXY(40-30-1+2+60-18+16-Length(LS(73))-1,12-1+3);
-  SWrite(PC);
-  SWrite(LS(73));
-  SGotoXY(40-30-1+2-1,12-1+2);
-  SWrite(IL);
-  SRead(FN,60,'');
-  SWrite('[0m');
-  SGotoXY(1,11);
-  SClrEol;
-  SGotoXY(1,12);
-  SClrEol;
-  SGotoXY(1,13);
-  SClrEol;
-  SGotoXY(1,14);
-  SClrEol;
-  SGotoXY(1,15);
-  SClrEol;
-  Scroll_Screen(0);
-  DoExport(FN);
-End;
-
 Procedure Drop2DOS;
 { Was ExecSwap: swap the resident program out of DOS conventional memory
   (EMS/XMS/disk), exec COMSPEC, swap back in on return. That whole problem
@@ -1217,8 +1096,6 @@ Var
   I: Integer;
   SaveMsg,
   AbortMsg: Boolean;
-  ImportMsg,
-  ExportMsg: Boolean;
   A: Byte;
 
   Procedure DoMenu;
@@ -1304,15 +1181,11 @@ Var
               2: Key:='A';
               3: Key:='R';
               4: Key:='H';
-              5: Key:='I';
-              6: Key:='E';
              End;
       End;
-    Until Key in ['A','S','R','I','E'];
+    Until Key in ['A','S','R'];
     If Key='A' Then AbortMsg:=True;
     If Key='S' Then SaveMsg:=True;
-    If Key='I' Then ImportMsg:=True;
-    If Key='E' Then ExportMsg:=True;
     If Key<>'S' Then
      Begin
       Display_Footer(3);
@@ -1324,21 +1197,6 @@ Var
     SaveMsg:=True;
    End;
   End;
-  Procedure CleanUp;
-  Var
-    I: Byte;
-  Begin
-    SGotoXY(1,7);
-    For I:=1 to ScrLines Do                   { Physical lines are now invalid }
-    Begin
-      PhyLine^[I]:='';
-      SWriteLn('');
-      SClrEol;
-    End;
-    Scroll_Screen(0);                                       { Causes redisplay }
-    Display_Footer(3);
-    Reposition;
-  End;
 
 Var
   OIM: Boolean;
@@ -1346,7 +1204,7 @@ Begin
   Display_Header;
   Display_Footer(3);
   StatusBar;
-  SaveMsg:=False; AbortMsg:=False; ImportMsg:=False; ExportMsg:=False;
+  SaveMsg:=False; AbortMsg:=False;
   If Not ReEditing Then
   Begin
     CLine:=LineCnt; CCol:=CurLength+1;
@@ -1372,8 +1230,6 @@ Begin
              StatusBar;
              Continue;
            End;
-      '<': If (LocalKeypress) And (Not Expired) Then Begin ExportFile; Continue; End;
-      '=': If (LocalKeypress) And (Not Expired) Then Begin ImportFile; Cleanup; Continue; End;
       '?': If (LocalKeypress) And (Not Expired) Then
            Begin
              Sound(500); Delay(20); Sound(1000); Delay(20); Sound(500); Delay(20); NoSound;
@@ -1481,7 +1337,7 @@ Begin
                  If Not (Key in ['0'..'9','A'..'Z','a'..'z']) Then Expand;
                End;
    End;
-If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','C','I','E']) And (CCol=3)) And (Not Expired)
+If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','C']) And (CCol=3)) And (Not Expired)
 Then
    Begin
     Case UpCase(MText[CLine]^[2]) Of { 'S' or 'A' + 1 }
@@ -1489,17 +1345,6 @@ Then
              Msg_Delete_Line;
              UserConfig;
             End;
-      'I': If TurboCOM.Security>=Config^.ImportSecurity Then
-           Begin
-             ImportFile;
-             Cleanup;
-             Msg_Delete_Line;
-           End;
-      'E': If TurboCOM.Security>=Config^.ExportSecurity Then
-           begin
-             ExportFile;
-             Msg_Delete_Line;
-           end;
       'A': Begin
              If ConfirmAbort Then
              AbortMsg:=True
@@ -1640,8 +1485,6 @@ Begin
       DOSSwap:=0;
       SpellCheck:=2;
       DictionaryPath:='';
-      ImportSecurity:=999999;
-      ExportSecurity:=999999;
       ScrollSiz:=8;
       UseExpand:=True;
       DateFormat:=0;

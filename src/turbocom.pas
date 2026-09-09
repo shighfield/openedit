@@ -33,16 +33,10 @@ Unit TurboCOM;
   identifiers (latent - nothing here has been compiled yet). Below are
   just the survivors: symbols still referenced now that the BBS
   message-base and MSGINF drop-file code is gone. Everything here
-  defaults to zero/empty (Pascal zero-inits statics) except Security,
-  which needs a non-zero default and so is a typed Const, not a Var -
-  Turbo Pascal doesn't allow inline initializers on plain Var
-  declarations, which was itself a latent syntax error in the previous
-  version of this line.
-
-  Security was the caller's BBS security level, read from the door drop
-  file in the original unit. oedit2.pas gates Import/Export on it
-  (TurboCOM.Security>=Config^.ImportSecurity/ExportSecurity); defaulted
-  high so a local single-user run is never blocked by it.
+  defaults to zero/empty (Pascal zero-inits statics). Security (the
+  caller's BBS security level, used to typed-Const-default high so
+  Import/Export were never blocked by it) was removed along with
+  Import/Export themselves once that whole feature came out.
 
   SysOpName/BBSName default to empty since nothing populates them
   anymore (the LOCAL.DEF-reading code that used to set them was
@@ -65,7 +59,6 @@ Interface
 Uses CRT;
 
 Const
- Security: Word = 65535;
  AnsiCode      : Array[0..47] Of String[7] =    {  ANSI codes, 40+ = BG attr }
         ('[0m',    '[0;34m', '[0;32m',
          '[0;36m', '[0;31m', '[0;35m',
