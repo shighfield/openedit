@@ -950,54 +950,21 @@ Begin
    End;
 End;
 
-Function PersonalDicName: String;
-Var
- Nom: String;
- Tmp: Byte;
- Ext: String[3];
-Begin
-{$IFDEF SpellChecker}
- Nom:='';
- For Tmp:=1 To Length(UserLast) Do
-  If UpCase(UserLast[Tmp]) in ['A'..'Z'] Then Nom:=Nom+UpCase(UserLast[Tmp]);
- If Nom[0]>#8 Then Nom[0]:=#8; Nom:=Nom+'.';
- Ext:='';
- For Tmp:=1 To Length(UserFirst) Do
-  Begin
-   If UpCase(UserFirst[Tmp]) in ['A'..'Z'] Then Ext:=Ext+UpCase(UserFirst[Tmp]);
-   If Length(Ext)=3 Then Break;
-  End;
- Nom:=Nom+Ext;
- If Nom[0]>#12 Then Nom[0]:=#12;
- PersonalDicName:=Nom;
-{$ENDIF}
-End;
-
-{$IFDEF SpellChecker}
 Function SpellCheck: Boolean;
+Const
+ SpellLang = 'en_CA';
+ MaxMisspell = 2000;
 Var
- TmpL: Word;
- AtoZ: Boolean;
- X,Y: Byte;
- NewWord,
- OrigWord,
- SearchWord: String[50];
- OrigS: String;
- Tmp,
- SpcPos,
- PtrPos,
- SepCnt: Byte;
- F: Text;
- NR: Word;
+ Tmp, SpcPos, PtrPos: Word;
+ AToZ: Boolean;
+ Ct: Word;
+ NewWord, OrigWord, SearchWord: String[50];
+ OrigS, S: String;
  C: Char;
- Idx: LongInt;
- IdxFile: File Of LongInt;
- DatFile: File;
- PersonalDic: File;
- IdxFS: LongInt;        {Idx [F]ile [S]earch?? }
- S: String;
- StartTime: Real;
- First2: Array[1..3] Of Char;
+ ShellCmd, InFile, OutFile, DicFile: String;
+ F: Text;
+ Misspelled: Array[1..MaxMisspell] Of String[50];
+ MisspelledCnt: Word;
  SkipWord: Array[1..99] Of String[20];
  SkipWords: Byte;
  SkipTmp: Byte;
@@ -1005,154 +972,95 @@ Var
  OIM: Boolean;
  FirstLine: Boolean;
  OldCLine: Word;
- HasPersonal: Boolean;
 
 Label LemmeOut;
 
-Function LookUp(SearchWord: String): Boolean;
-Var
- Compare,
- S: String;
- ShouldBePos: LongInt;
- LenByte: Char;
- MiscWordStart: LongInt;
- CheckWord: String[35];
+ Function IsMisspelled(W: String): Boolean;
+ Var I: Word; UW: String[50];
+ Begin
+  UW:=UCase(W);
+  IsMisspelled:=False;
+  For I:=1 To MisspelledCnt Do
+   If Misspelled[I]=UW Then Begin IsMisspelled:=True; Exit; End;
+ End;
 
-Label SmallOne;
-Begin                            {Do not check capitalized words}
-{ If (OrigS[1]=UpCase(OrigS[1])) Then Begin LookUp:=True; Exit; End;}
-{ If SearchWord[0]<#3 Then Goto SmallOne;}
- CheckWord:=SearchWord;
- While Length(CheckWord)<3 Do CheckWord:=CheckWord+'A';
- Move(Mem[Seg(CheckWord):Ofs(CheckWord)+1],First2,3);
- Move(Mem[Seg(CheckWord):Ofs(CheckWord)],Compare,4); Compare[0]:=#3;
+ Procedure AddWord(W: String);
+ Var PF: Text;
+ Begin
+  Assign(PF,DicFile);
+  {$I-} Append(PF); {$I+}
+  If IOResult<>0 Then ReWrite(PF);
+  WriteLn(PF,W);
+  Close(PF);
+  Inc(SkipWords);
+  If SkipWords<=99 Then SkipWord[SkipWords]:=W;
+ End;
 
- If HasPersonal Then
+Begin
+ SpellCheck:=True;
+ {Ask Spellchk? is stored inverted on User.UseSpellChk - False means "ask me"}
+ If User.UseSpellChk Then Exit;
+ Plain_Footer(2);
+ SGotoXY(65-Length(LS(42)),23);
+ FunkyWrite(' '+LS(42)+' (y/N) ');
+ Repeat C:=UpCase(GetLow); If C=#13 Then C:='N'; Until C in ['Y','N',#27];
+ If C=#27 Then
   Begin
-   Seek(PersonalDic,0);
-   Repeat
-    BlockRead(PersonalDic,S[0],1,NR);
-    BlockRead(PersonalDic,Mem[Seg(S):Ofs(S)+1],Ord(S[0]),NR);
-    If Copy(S,1,5)='*PDF*' Then Continue;
-    If SearchWord=S Then Begin LookUp:=True; Exit; End;
-   Until (NR=0);
-  End;
-
- ShouldBePos:=((ord(First2[1])-Ord('A'))*26*26)+((ord(First2[2])-Ord('A'))*26)+(ord(First2[3])-Ord('A'));
- If (ShouldBePos>=IdxFS) Then
-  Begin
-   LookUp:=False;
+   Display_Footer(2);
+   Reposition;
+   SpellCheck:=False;
    Exit;
   End;
- If (ShouldBePos<0) then Goto SmallOne;
- Seek(IdxFile,ShouldBePos);
- Read(IdxFile,Idx);
- If Idx<>-1 Then
-  Begin
-   Seek(DatFile,Idx+256);
-   Repeat
-    BlockRead(DatFile,S[0],1,NR);
-    BlockRead(DatFile,Mem[Seg(S):Ofs(S)+1],Ord(S[0]),NR);
-    If SearchWord=S Then Begin LookUp:=True; Exit; End;
-   Until S[1]+S[2]+S[3]<>Compare;
-  End;
+ If C='N' Then Exit;
 
-{ >-------------------------------------------------------------------< }
- SmallOne: { <--- Not nececssarily a small one -- just an unsorted one }
- If SearchWord[0]=#1 Then Begin LookUp:=True; Exit; End;
- Seek(DatFile,252);
- BlockRead(DatFile,MiscWordStart,SizeOf(MiscWordStart),NR);
- If MiscWordStart=$1A0A0D73 Then MiscWordStart:=440061; { Old Dict Style }
- If MiscWordStart<>0 Then
-  Begin
-   Seek(DatFile,MiscWordStart+256);
-   Repeat
-    BlockRead(DatFile,S[0],1,NR);
-    BlockRead(DatFile,Mem[Seg(S):Ofs(S)+1],Ord(S[0]),NR);
-    If SearchWord=S Then Begin LookUp:=True; Exit; End;
-   Until (NR=0);
-  End;
- LookUp:=False;
-End;
+ DicFile:=CfgPath+'oedit.dic';
+ InFile:=CfgPath+'oedit_spell.in';
+ OutFile:=CfgPath+'oedit_spell.out';
 
-Procedure idxPersonal(S: String);
-Var
- F: File Of Str35;
- S35: Str35;
-Begin
- S35:=S;
- Assign(F,CfgPath+'CEUSRDIC.IDX');
- {$I-} Reset(F); {$I+} If IOResult<>0 Then ReWrite(F);
- Seek(F,FileSize(F));
- Write(F,S35);
+ SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(44));
+
+ Assign(F,InFile); Rewrite(F);
+ For Ct:=1 To LineCnt Do
+  Begin
+   S:=MText[Ct]^;
+   If Not ((S='') Or (Pos('>',S) in [1..5])) Then WriteLn(F,S);
+  End;
  Close(F);
-End;
 
-Procedure AddWord(S: String);
-Var Hdr: String[45];
-Begin
- If HasPersonal Then
-  Seek(PersonalDic,FileSize(PersonalDic))
- Else
+ ShellCmd:=GetEnv('SHELL');
+ If ShellCmd='' Then ShellCmd:='/bin/sh';
+ Exec(ShellCmd,'-c "hunspell -l -d '+SpellLang+' -p '+DicFile+' <'+InFile+' >'+OutFile+' 2>/dev/null"');
+
+ MisspelledCnt:=0;
+ If (DosError<>0) Or (DosExitCode<>0) Then
   Begin
-   Hdr:='*PDF*/'+UserName;
-   ReWrite(PersonalDic,1); idxPersonal(Username);
-   BlockWrite(PersonalDic,Hdr,Length(Hdr)+1);
-   HasPersonal:=True;
+   SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  ');
+   FunkyWrite('Spellcheck unavailable - hunspell not found');
+   CDelay(1200);
+   Display_Footer(2);
+   Reposition;
+   Exit;
   End;
- BlockWrite(PersonalDic,S,Length(S)+1);
-End;
 
-Begin
- If Config^.DictionaryPath[Length(Config^.DictionaryPath)]<>'\' Then
-  Config^.DictionaryPath:=Config^.DictionaryPath+'\';
- SpellCheck:=True;
- If (Not FileExists(Config^.DictionaryPath+'CE_DIC.IDX')) Or
-    (Not FileExists(Config^.DictionaryPath+'CE_DIC.DAT')) Then Exit;
- If Expired Then Exit;
-
- Case Config^.SpellCheck Of
-   0: Exit;
-   1: ;
-   2: If Not User.UseSpellChk Then  {Had to invert it... just live with it}
-       Begin
-        Plain_Footer(2);
-        SGotoXY(65-Length(LS(42)),23);
-        FunkyWrite(' '+LS(42)+' (y/N) ');
-        Repeat C:=UpCase(GetLow); If C=#13 Then C:='N'; Until C in ['Y','N',#27];
-        If C=#27 Then
-         Begin
-          Display_Footer(2);
-          Reposition;
-          SpellCheck:=False;
-          Exit;
-         End;
-        If C='N' Then Exit;
-       End
-       Else
-        Exit;
+ {$I-} Assign(F,OutFile); Reset(F); {$I+}
+ If IOResult=0 Then
+  Begin
+   While Not Eof(F) Do
+    Begin
+     ReadLn(F,S);
+     If (S<>'') And (MisspelledCnt<MaxMisspell) Then
+      Begin
+       Inc(MisspelledCnt);
+       Misspelled[MisspelledCnt]:=UCase(S);
+      End;
+    End;
+   Close(F);
   End;
- ScrLines:=ScrLines-2;
- PF_overridepos:=20;
- Plain_Footer(1);
- SGotoXY(39-(Length(' '+LS(43)+' ') Div 2),20); FunkyWrite(' '+LS(43)+' ');
- SWrite('[21;1H[K');
- SWrite('[22;1H[K');
- Plain_Footer(2);
- SGotoXY(1,21); SWrite('  '); FunkyWrite(LS(44));
- Assign(IdxFile,Config^.DictionaryPath+'CE_DIC.IDX');
- Reset(IdxFile);
- IdxFS:=FileSize(IdxFile);
- Assign(DatFile,Config^.DictionaryPath+'CE_DIC.DAT');
- Reset(DatFile,1);
- HasPersonal:=False;
-{ WriteLn('Personal dic name: ',Config^.DictionaryPath+PersonalDicName);}
- Assign(PersonalDic,Config^.DictionaryPath+PersonalDicName);
- {$I-} Reset(PersonalDic,1); {$I+} If IOResult=0 Then HasPersonal:=True;
+
+ SkipWords:=0;
  CLine:=1;
  Scroll_Screen(0);
  CLine:=1;
- SkipWords:=0;
  FirstLine:=True;
  While (CLine<>LineCnt) Or ((CLine=1) And (LineCnt=1)) Do
   Begin
@@ -1194,76 +1102,65 @@ Begin
        If Not (SearchWord[Tmp] in [#39,#45,#32]) Then AToZ:=True;
       End;
      While Pos(#32,SearchWord)>0 Do Delete(SearchWord,Pos(#32,SearchWord),1);
-
-{     If (SearchWord='') Or (Not AToZ) Then Continue;}
-    {Changed this to reflect no testing for words 2 chars in length or less}
-     If (SearchWord='') Or (length(SearchWord) <= 2) Or (Not AToZ) Then Continue;
+     If (SearchWord='') Or (Length(SearchWord)<=2) Or (Not AToZ) Then Continue;
 
      SkipIt:=False;
      For SkipTmp:=1 To SkipWords Do
       If SkipWord[SkipTmp]=OrigWord Then SkipIt:=True;
-     If (Not SkipIt) And (Not Lookup(SearchWord)) Then
+     If (Not SkipIt) And (IsMisspelled(SearchWord)) Then
       Begin
-       SGotoXY(PtrPos-Length(OrigWord)+1,CLine-TopLine+Topscreen);
+       SGotoXY(PtrPos-Length(OrigWord)+1,CLine-TopLine+TopScreen);
        XSWrite('|IC'+OrigWord);
-       SGotoXY(1,21); XSWrite('[0m[K  '); FunkyWrite(LS(45)+' '); XSWrite('|IC'+OrigWord);
-       SGotoXY(1,22); XSWrite('[0m[K  '); FunkyWrite(LS(46));
-      NewWord:=OrigWord;
-      Case UpCase(GetLow) Of
-         'C': Begin
-               SGotoXY(1,22);
-               XSWrite('[0m[K  '); FunkyWrite(LS(47)+' ');
-               SRead(NewWord,Length(OrigWord)+5,OrigWord);
-               SGotoXY(1,22); SWrite('[0m[K');
-               CCol:=PtrPos-Length(OrigWord)+1;
-               OIM:=Insert_Mode;
-               Reposition;
-               OldCLine:=CLine;
-               For SkipTmp:=1 To Length(NewWord) Do
-                Begin
-                 If SkipTmp<=Length(OrigWord) Then Insert_Mode:=False Else Insert_Mode:=True;
-                 Insert_Char(NewWord[SkipTmp]);
-                End;
-               Insert_Mode:=True;
-               If Length(NewWord)<Length(OrigWord) Then
-                For SkipTmp:=1 To (Length(OrigWord)-Length(NewWord)) Do Delete_Char;
-               Insert_Mode:=OIM;
-               CLine:=OldCLine;
-               PtrPos:=CCol-1;
-              End;
-         'A': Begin
-               Inc(SkipWords);
-               SkipWord[SkipWords]:=OrigWord;
-              End;
-         'S': ;
-         'D': AddWord(UCase(RTrim(LTrim(SearchWord))));
-         'Q': Goto LemmeOut;
-        End;
+       SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(46));
+       NewWord:=OrigWord;
+       Case UpCase(GetLow) Of
+          'C': Begin
+                SGotoXY(1,23);
+                XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(47)+' ');
+                SRead(NewWord,Length(OrigWord)+5,OrigWord);
+                SGotoXY(1,23); SWrite(#27+'[0m'+#27+'[K');
+                CCol:=PtrPos-Length(OrigWord)+1;
+                OIM:=Insert_Mode;
+                Reposition;
+                OldCLine:=CLine;
+                For SkipTmp:=1 To Length(NewWord) Do
+                 Begin
+                  If SkipTmp<=Length(OrigWord) Then Insert_Mode:=False Else Insert_Mode:=True;
+                  Insert_Char(NewWord[SkipTmp]);
+                 End;
+                Insert_Mode:=True;
+                If Length(NewWord)<Length(OrigWord) Then
+                 For SkipTmp:=1 To (Length(OrigWord)-Length(NewWord)) Do Delete_Char;
+                Insert_Mode:=OIM;
+                CLine:=OldCLine;
+                PtrPos:=CCol-1;
+               End;
+          'A': Begin
+                Inc(SkipWords);
+                If SkipWords<=99 Then SkipWord[SkipWords]:=OrigWord;
+               End;
+          'S': ;
+          'D': AddWord(OrigWord);
+          'Q': Goto LemmeOut;
+         End;
        If NewWord=OrigWord Then
         Begin
-         SGotoXY(PtrPos-Length(OrigWord)+1,CLine-TopLine+Topscreen);
+         SGotoXY(PtrPos-Length(OrigWord)+1,CLine-TopLine+TopScreen);
          FunkyWrite(OrigWord);
         End;
-       SGotoXY(1,21); XSWrite('[0m[K  '); FunkyWrite(LS(44));
-       SGotoXY(1,22); SClrEol;
       End;
      If S=' ' Then S:='';
     End;
   End;
 
  LemmeOut:
- Close(DatFile);
- Close(IdxFile);
- If HasPersonal Then Close(PersonalDic);
 
- SGotoXY(1,21); XSWrite('[0m[K  '); FunkyWrite(LS(48));
- SGotoXY(1,22); XSWrite('[0m[K  '); FunkyWrite(LS(49));
+ SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(48));
  Repeat C:=GetLow; Until C in [#13,#27];
  If C=#27 Then
   Begin
-   SWrite('[0m[2J');
+   SWrite(#27+'[0m'+#27+'[2J');
    StatusBar;
-   Display_Header;
    Display_Footer(3);
    Prepare_Screen;
    Reposition;
@@ -1271,9 +1168,6 @@ Begin
  SpellCheck:=(C=#13);
  While (SKeypressed) Or (Keypressed) Do GetLow;
 End;
-{$ELSE}
-Function SpellCheck: Boolean; Begin SpellCheck:=True; End;
-{$ENDIF}
 
 Procedure Set_PhyLine;
 Begin
