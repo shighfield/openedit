@@ -6,7 +6,7 @@ Unit TurboCOM;
   Library (by Steve Blinch & Michael Helliker) - see src/legacy/turbocom.pas
   for the full FOSSIL/modem-door original.
 
-  Only the 18 routines the real OpenEdit build (oedit2.pas, se_util.pas,
+  Only the 18 routines the real Tie-EDIT build (tie-edit.pas, se_util.pas,
   seusered.pas) actually calls are kept. Everything else that unit exported
   - FOSSIL/carrier/remote I/O, multi-node file locking, DOS-multitasker
   critical sections, ANSI music - is gone; this editor is local-only now.
@@ -30,7 +30,7 @@ Unit TurboCOM;
   it also held a ~45-symbol Const/Var block of BBS door-session state
   (caller identity, security level, baud rate, time limits, etc). The
   first stub pass only ported the functions and missed that block
-  entirely, leaving oedit2.pas/se_util.pas referencing undeclared
+  entirely, leaving tie-edit.pas/se_util.pas referencing undeclared
   identifiers (latent - nothing here has been compiled yet). Below are
   just the survivors: symbols still referenced now that the BBS
   message-base and MSGINF drop-file code is gone. Everything here
@@ -43,8 +43,8 @@ Unit TurboCOM;
   anymore (the LOCAL.DEF-reading code that used to set them was
   BBS-door-session setup, removed with the MSGINF rewrite). SysOpName
   gets a real value from Config^.RegName right after InitTurboCOMM runs
-  (see oedit2.pas); UserName/UserFirst/UserLast default to the OS
-  username (also set in oedit2.pas's main flow) - se_util.pas's
+  (see tie-edit.pas); UserName/UserFirst/UserLast default to the OS
+  username (also set in tie-edit.pas's main flow) - se_util.pas's
   LoadUser (per-user color prefs) and PersonalDicName (spell-check
   personal dictionary filename) both key off them.
 

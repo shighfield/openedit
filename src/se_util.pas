@@ -381,7 +381,7 @@ Begin
  If Expired Then Exit;
  Assign(F,SysPath+'AUTOSAVE.SE!');
  ReWrite(F);
- WriteLn(F,'Message text preserved by Open!EDIT AutoSave '+UnpackedDT(CurrentDT));
+ WriteLn(F,'Message text preserved by Tie-EDIT AutoSave '+UnpackedDT(CurrentDT));
  WriteLn(F,'');
  For A:=1 To LineCnt Do WriteLn(F,MText[A]^);
  Close(F);
@@ -582,7 +582,7 @@ Begin
  Hold:='';
  Assign(InF,MsgTxtFile);
  Reset(InF);
- Assign(OutF,CfgPath+'$OEDITMP.$~$');
+ Assign(OutF,CfgPath+'$TIE-EDITMP.$~$');
  ReWrite(OutF);
  Repeat
   If S='' Then
@@ -635,7 +635,7 @@ Begin
  Close(InF);
  Close(OutF);
  Erase(InF);
- XRename(CfgPath+'$OEDITMP.$~$',MsgTxtFile);
+ XRename(CfgPath+'$TIE-EDITMP.$~$',MsgTxtFile);
 End;
 
 Procedure ResetUser;
@@ -672,7 +672,7 @@ Procedure LoadUser;
 Var UCRC: LongInt;
 Begin
  UCRC:=CCRC32(UCase(UserName));
- Assign(UserFile,CfgPath+'OEDITUSR.CFG');
+ Assign(UserFile,CfgPath+'TIE-EDITUSR.CFG');
  UIDX:=-1;
  ResetUser;
  {$I-} Reset(UserFile); {$I+}
@@ -1013,9 +1013,9 @@ Begin
   End;
  If C='N' Then Exit;
 
- DicFile:=CfgPath+'oedit.dic';
- InFile:=CfgPath+'oedit_spell.in';
- OutFile:=CfgPath+'oedit_spell.out';
+ DicFile:=CfgPath+'tie-edit.dic';
+ InFile:=CfgPath+'tie-edit_spell.in';
+ OutFile:=CfgPath+'tie-edit_spell.out';
 
  SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(44));
 
@@ -1503,11 +1503,11 @@ Procedure Plain_Footer(B: Byte);
 Const
  Default: Array[1..2] Of String[140] = (
    '',
-   '|HCÀ|PCÄÄ|BCÄÄ @f@Open!EDIT v@VER@@/f@ -[@f@@TIME@@/f@]-|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ@CT:26,23@');
+   '|HCÀ|PCÄÄ|BCÄÄ @f@Tie-EDIT v@VER@@/f@ -[@f@@TIME@@/f@]-|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ@CT:23,23@');
  Default2: Array[1..2] Of String[140] = (
    '[0;34mÄÄÄÄÄÄÄ[1m[[37m@TIME@[34m][0;34m@TPÄ@Ä[1m[[37m@LEFT@ Mins[34m][0;34mÄÄÄÄÄÄÄÄÄÄÄÄ'+
    'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ',
-   '[1;33m[K Open!EDIT v@VER@@CT:09,22@@UT:18,22@');
+   '[1;33m[K Tie-EDIT v@VER@@CT:09,22@@UT:18,22@');
 
 Var
  Tmp: Byte;

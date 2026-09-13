@@ -1,11 +1,11 @@
 {$DEFINE CompileExtra}
 
-Program OpenEDIT;
+Program TieEdit;
 {$M 40000,0,360000}
 {$I DEFINES.INC}
 
 (*
-        Open!EDIT by Shawn Highfield
+        Tie-EDIT by Shawn Highfield
         Last Modify date: April 11, 2011 / May 15 2013 (2 small changes)
 
 Todo:
@@ -56,7 +56,7 @@ this list of conditions and the following disclaimer.
 Redistributions in binary form must reproduce the above copyright notice,
 this list of conditions and the following disclaimer in the documentation
 and/or other materials provided with the distribution.
-Neither the name of the Open!Edit nor the names of its contributors may be
+Neither the name of the Tie-EDIT nor the names of its contributors may be
 used to endorse or promote products derived from this software without
 specific prior written permission.
 
@@ -398,7 +398,7 @@ Var
 Begin
   If User.SigPtr<>0 Then
   Begin
-    Assign(SigFile,CfgPath+'OEDIT.SIG');
+    Assign(SigFile,CfgPath+'TIE-EDIT.SIG');
     FileMode:=66; Reset(SigFile); FileMode:=2;
     Seek(SigFile,User.SigPtr-1);
     Read(SigFile,Sig);
@@ -489,7 +489,7 @@ Begin
       End;
       End;
       Until (Key=#27) Or (UpCase(Key)='Q');
-      Assign(SigFile,CfgPath+'OEDIT.SIG');
+      Assign(SigFile,CfgPath+'TIE-EDIT.SIG');
       FileMode:=66;
       {$I-}Reset(SigFile);{$I+}
       FileMode:=2;
@@ -581,7 +581,7 @@ Begin
     LanguageFile:=Copy(LFile[1],1,Pos('.',LFile[1])-1);
     Exit;
   End;
-  Center('|NC'+LS(99)+' Open!EDIT v'+Ver+'!',9);
+  Center('|NC'+LS(99)+' Tie-EDIT v'+Ver+'!',9);
   SGotoXY(25,10); XSWrite('|NCÚ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
   SGotoXY(25,11); XSWrite('|HC³|FZÛ²±°                       |FZ°|BC³');
   SGotoXY(25,12); XSWrite('|PC³|FZ²±°                       |FZ°±|BC³');
@@ -660,7 +660,7 @@ Begin
           LanguageFile:=Copy(LFile[Top+Hil],1,Pos('.',LFile[Top+Hil])-1);
           SClrScr; StatusBar;
           User.LangFile:=LanguageFile;
-          Assign(UserFile,CfgPath+'OEDITUSR.CFG');
+          Assign(UserFile,CfgPath+'TIE-EDITUSR.CFG');
           Reset(UserFile);
           Seek(UserFile,UIDX);
           Write(UserFile,User);
@@ -901,7 +901,7 @@ Begin
   AppendSignature:=True;
    If User.SigPtr<>0 Then
     Begin
-      Assign(SigFile,CfgPath+'OEDIT.SIG');
+      Assign(SigFile,CfgPath+'TIE-EDIT.SIG');
       FileMode:=66; Reset(SigFile); FileMode:=2;
       Seek(SigFile,User.SigPtr-1);
       Read(SigFile,Sig);
@@ -1285,7 +1285,7 @@ Begin
   If ErrorAddr=Nil Then
   Begin
     If FileExists(CfgPath+'MATCHES.$%$') Then Begin Assign(TmpF,CfgPath+'MATCHES.$%$'); Erase(TmpF); End;
-    If FileExists(CfgPath+'$OEDITMP.$~$') Then Begin Assign(TmpF,CfgPath+'$OEDITMP.$~$'); Erase(TmpF); End;
+    If FileExists(CfgPath+'$TIE-EDITMP.$~$') Then Begin Assign(TmpF,CfgPath+'$TIE-EDITMP.$~$'); Erase(TmpF); End;
   End;
   For n:=1 to Max_Msg_Lines Do
   Dispose(MText[n]);
@@ -1345,11 +1345,11 @@ Begin
     WriteLn;
     Halt(2);
   End;
-  Ver[0]:=#5;
+  Ver:=RTrim(Ver);
   New(Config);
  { -------------- Configuration block -------------- }
   CfgPath:=RemoveWildCard(ParamStr(0));
-  { oedit.cfg (a Turbo Pascal binary record written by the original DOS
+  { tie-edit.cfg (a Turbo Pascal binary record written by the original DOS
     OESetup.EXE) is never read - its binary layout does not reliably
     match FPC's ConfigRec even before accounting for how much this
     struct keeps shrinking as the BBS-feature-removal pass proceeds, and
@@ -1359,7 +1359,7 @@ Begin
   FillChar(Config^,SizeOf(Config^),0);
   With Config^ Do
   Begin
-      CfgHeader:='Open!EDIT v'+Ver+' Configuration File';
+      CfgHeader:='Tie-EDIT v'+Ver+' Configuration File';
       NC:=$0F; HC:=$0B; BC:=$01; PC:=$09; FZ:=9;
       FC:=$0F; FL:=$07; FS:=$09; FD:=$0B;
       IC:=$0B; ID:=$0B; IL:=$0F; IS:=$09;
@@ -1410,7 +1410,7 @@ Begin
 
   SingleLineStat:=True;
   Detailed:=True;
-  HelpScrPrgName:='Open!EDIT';
+  HelpScrPrgName:='Tie-EDIT';
   LastAutoSave:=Timer;
 
   ExitCode:=2;
@@ -1418,7 +1418,7 @@ Begin
   HookErrorHandler:=True;
   LimitExceeded:='[23;7H[0;1;31m '+LS(81)+' '+^G;
   ProhibitStatus:=True;
-  ProgName:='Open!EDIT v'+Ver;
+  ProgName:='Tie-EDIT v'+Ver;
   UpdateStatus(True);
   ForceMenu:=False;
   LocalANSIKeys:=True;
@@ -1492,7 +1492,7 @@ Begin
   If Config^.AbsMaxMsgLines<50 Then
   Begin
     ClrScr;
-    WriteLn('Insufficient number of available message text lines to load Open!EDIT');
+    WriteLn('Insufficient number of available message text lines to load Tie-EDIT');
     WriteLn;
     WriteLn('Minimum required lines : 50 lines');
     WriteLn('Lines allocated        : ',Config^.AbsMaxMsgLines,' lines');

@@ -2,7 +2,7 @@ Const
  BlaBla: String[8] = '+++BLAHT';
 { EncVer: String[8] = 'Í<ÅºG'#236'z±'; {v1.72a  }
 { EncVer: String[8] = '0.99a        ';}
- Ver   : String[8] =  '0.99k        ';
+ Ver   : String[8] =  '0.1     ';
  KeyVer: array[1..8] of Char = '§®NS†ç§ä';
  LangCnt           = 103;
 
