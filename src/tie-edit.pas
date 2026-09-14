@@ -75,7 +75,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 Uses
-  CRT,
+  ScreenIO,
   TurboCOM,
   SE_Util,
   Utilpack,
@@ -1565,7 +1565,7 @@ Begin
      Assign(F,SysPath+'AUTOSAVE.SE!');
      {$I-}Erase(F);{$I+}
      If IOResult<>0 Then ;
-     WriteLn('File not saved');
+     DoneScreen; WriteLn('File not saved');
      Halt(1);
    End;
   Count_Lines;
@@ -1583,7 +1583,7 @@ Begin
   End;
   CDelay(1000); {1000}
   FancyClear;
-  WriteLn('File saved');
+  DoneScreen; WriteLn('File saved');
   Assign(F,SysPath+'AUTOSAVE.SE!');
   {$I-}Erase(F);{$I+}
   If IOResult<>0 Then ;

@@ -13,9 +13,9 @@ Unit TurboCOM;
 
   Local always reports True (no remote BBS caller exists anymore), so the
   S-prefixed local/remote-echo routines (SWrite/SWriteLn/SClrScr/SClrEol/
-  STextBackground/SGotoXY) and Local_Keypressed now just call the real CRT
-  unit equivalents directly - not the deferred ncurses/Video-unit port,
-  just the obvious local-only mapping. This was a real bug, not a stub
+  STextBackground/SGotoXY) and Local_Keypressed are now thin wrappers over
+  ScreenIO (the Video + Keyboard RTL units). Fixing the input loop was a
+  real bug, not a stub
   waiting on later work: se_util.pas's Get_Key has
   `Repeat ... Until (Remote_Keypressed) Or (Local_Keypressed);` as its
   input loop, and with both hardcoded False this was an infinite loop
@@ -57,7 +57,7 @@ Unit TurboCOM;
 
 Interface
 
-Uses CRT;
+Uses ScreenIO;
 
 Const
  AnsiCode      : Array[0..47] Of String[7] =    {  ANSI codes, 40+ = BG attr }
@@ -121,60 +121,10 @@ Procedure SRead(Var S: String; Len: Byte; Default: String);
 
 Implementation
 
-{ CP437 -> single-byte ASCII approximation for the box-drawing/line-art
-  bytes ($80-$FF) this codebase writes throughout its screen chrome. The
-  original DOS program wrote these bytes straight to a CP437 text-mode
-  display; a modern terminal expects UTF-8 and renders unmapped high
-  bytes as a replacement-character glyph.
-
-  A true CP437->UTF-8 translation was tried first (each high byte mapped
-  to the 2-3 byte UTF-8 encoding of its real Unicode codepoint) and was
-  reverted: FPC's Unix CRT unit tracks cursor column position and
-  auto-wrap by counting output *bytes*, one byte assumed to be one
-  column - true for CP437, false for multi-byte UTF-8. A full-width
-  80-column border line expands to ~240 bytes after UTF-8 translation,
-  so CRT wraps at the 80-byte mark (a third of the way through), often
-  splitting a multi-byte character in half and sending genuinely invalid
-  UTF-8 - which is why the replacement-character glyph showed up even
-  after that first translation. Worse, CRT's internal screen-shadow
-  buffer (used to redraw scrolled regions) stores exactly one byte per
-  cell, so there's no way to make multi-byte characters round-trip
-  through it correctly without replacing CRT entirely (the deferred
-  ncurses/Video-unit port, not a small fix).
-
-  CP437Hi[b] instead holds a single ASCII character that approximates
-  byte b - box-drawing lines become -/|/+, shading blocks become
-  ./:/#, so byte count still equals column count and none of CRT's
-  column math breaks. Less pretty (ASCII art instead of true Unicode
-  line-drawing) but correct. Generated programmatically, not
-  hand-transcribed, matching this session's established practice for
-  this file. }
-Const
- CP437Hi: Array[$80..$FF] Of Char = (
-  #67,#117,#101,#97,#97,#97,#97,#99,
-  #101,#101,#101,#105,#105,#105,#65,#65,
-  #69,#97,#65,#111,#111,#111,#117,#117,
-  #121,#79,#85,#99,#76,#89,#80,#102,
-  #97,#105,#111,#117,#110,#78,#97,#111,
-  #63,#33,#33,#50,#52,#33,#60,#62,
-  #46,#58,#35,#124,#43,#43,#43,#43,
-  #43,#43,#124,#43,#43,#43,#43,#43,
-  #43,#43,#43,#43,#45,#43,#43,#43,
-  #43,#43,#43,#43,#43,#61,#43,#43,
-  #43,#43,#43,#43,#43,#43,#43,#43,
-  #43,#43,#43,#35,#95,#124,#124,#34,
-  #97,#66,#71,#112,#83,#111,#117,#116,
-  #70,#79,#87,#100,#56,#102,#101,#110,
-  #61,#43,#62,#60,#124,#124,#47,#126,
-  #111,#46,#46,#118,#110,#50,#35,#32);
-
-Function CP437ToAscii(S: String): String;
-Var I: Integer;
-Begin
- For I:=1 To Length(S) Do
-  If Ord(S[I])>=$80 Then S[I]:=CP437Hi[Ord(S[I])];
- CP437ToAscii:=S;
-End;
+{ Screen output/input now goes through ScreenIO (Video + Keyboard units).
+  The CP437->ASCII approximation table and the ANSI-escape interpreter
+  that used to live here moved into ScreenIO's WriteAnsi; the S-routines
+  below are thin wrappers over it. }
 
 Function Local: Boolean;
 Begin
@@ -187,8 +137,14 @@ Begin
 End;
 
 Function Local_Keypressed: Boolean;
+Var Pressed: Boolean;
 Begin
-  Local_Keypressed := KeyPressed;
+  { Get_Key polls this every idle cycle; flush pending draws to the terminal
+    here so the screen is always current before we wait for a key. }
+  FlushScreen;
+  Pressed := KeyPressed;
+  Local_Keypressed := Pressed;
+  If Not Pressed Then PollDelay;   { use the local, not the function name (which would recurse) }
 End;
 
 Function SKeypressed: Boolean;
@@ -203,12 +159,12 @@ End;
 
 Procedure SWrite(S: String);
 Begin
-  Write(CP437ToAscii(S));
+  WriteAnsi(S);
 End;
 
 Procedure SWriteLn(S: String);
 Begin
-  WriteLn(CP437ToAscii(S));
+  WriteAnsi(S + #13 + #10);
 End;
 
 Procedure Remote_Screen(S: String);
@@ -254,6 +210,7 @@ End;
 
 Procedure InitTurboCOMM;
 Begin
+  InitScreen;
 End;
 
 Procedure SRead(Var S: String; Len: Byte; Default: String);
@@ -264,25 +221,26 @@ Begin
   StartX := WhereX;
   Y := WhereY;
   S := Default;
-  Write(S);
+  WriteAnsi(S);
   Repeat
+    FlushScreen;
     Ch := ReadKey;
-    If Ch = #0 Then
-      ReadKey { extended key - discard the scancode byte, no cursor movement support here }
-    Else If (Ch = #8) Or (Ch = #127) Then
+    { navigation keys arrive as control chars now (Up=^E etc); line input
+      ignores anything that is not backspace or a printable character }
+    If (Ch = #8) Or (Ch = #127) Then
     Begin
       If Length(S) > 0 Then
       Begin
         Delete(S, Length(S), 1);
         GotoXY(StartX, Y);
-        Write(S, ' ');
+        WriteAnsi(S + ' ');
         GotoXY(StartX + Length(S), Y);
       End;
     End
     Else If (Ch >= #32) And (Ch <= #126) And (Length(S) < Len) Then
     Begin
       S := S + Ch;
-      Write(Ch);
+      WriteAnsi(Ch);
     End;
   Until Ch in [#13, #27];
   If Ch = #27 Then S := Default;

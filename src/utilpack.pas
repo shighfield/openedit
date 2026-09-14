@@ -66,7 +66,7 @@ Const
 {컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴}
 
 
-Uses Crt;
+Uses ScreenIO;
 
 Procedure SaveScreen(Idx: Byte);
 { No direct video memory on this target - captures cursor position and
@@ -85,8 +85,6 @@ Begin
    X:=WhereX;
    Y:=WhereY;
    TxtAttr:=TextAttr;
-   WndMin:=WindMin;
-   WndMax:=WindMax;
   End;
 End;
 
@@ -101,8 +99,6 @@ Begin
   End;
  With Saved[Idx]^ Do
   Begin
-   WindMin:=WndMin;
-   WindMax:=WndMax;
    GotoXY(X,Y);
    TextAttr:=TxtAttr;
   End;

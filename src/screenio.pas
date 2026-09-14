@@ -34,7 +34,7 @@ Unit ScreenIO;
 
 Interface
 
-Uses Video, Keyboard, SysUtils;
+Uses Video, SysUtils {$IFDEF UNIX}, baseunix, termio {$ELSE}, Keyboard {$ENDIF};
 
 Var
   TextAttr: Byte;           { current attribute, DOS encoding: lo nibble fg
@@ -43,6 +43,7 @@ Var
 Procedure InitScreen;
 Procedure DoneScreen;
 Procedure FlushScreen;
+Procedure PollDelay;
 
 Procedure GotoXY(X, Y: Byte);
 Function  WhereX: Byte;
@@ -97,6 +98,8 @@ Var
   CurX, CurY: Word;                  { 1-based cursor, absolute screen coords }
   WinX1, WinY1, WinX2, WinY2: Word;  { 1-based active window (CRT semantics) }
   Started: Boolean;
+  Dirty: Boolean;                    { true when the buffer/cursor changed since the last flush }
+  OldExitProc: Pointer;              { chained exit handler, so any Halt restores the terminal }
 
 Function ScreenCols: Byte;
 Begin
@@ -114,7 +117,10 @@ Begin
   If (X < 1) Or (Y < 1) Or (X > ScreenWidth) Or (Y > ScreenHeight) Then Exit;
   Idx := (Y - 1) * ScreenWidth + (X - 1);
   If (Idx >= 0) And (Idx < VideoBufSize Div 2) Then
+   Begin
     VideoBuf^[Idx] := Ord(C) Or (Word(TextAttr) Shl 8);
+    Dirty := True;
+   End;
 End;
 
 Procedure ClampCursor;
@@ -144,6 +150,7 @@ Begin
   CurX := WinX1 - 1 + X;
   CurY := WinY1 - 1 + Y;
   ClampCursor;
+  Dirty := True;
 End;
 
 Function WhereX: Byte;
@@ -285,11 +292,34 @@ Begin
    End;
 End;
 
-{ ---- keyboard ---- }
+{ ---- keyboard ----
+  Unix: read raw bytes straight from stdin in raw mode - the proven model the
+  old CRT build used. Every control byte reaches the editor as data (^Z=#26
+  Save, Esc=#27 Menu, ^S/^D/^E/^X movement), and arrow/function keys arrive as
+  their VT escape sequences (ESC [ A ...), which the editor's own VT-translation
+  Case blocks turn into WordStar keys. This sidesteps the FPC Keyboard unit,
+  which mis-translates exactly the special keys the editor depends on (Ctrl-Z,
+  lone Esc). Non-Unix (Windows console) still uses the Keyboard unit. }
+
+{$IFDEF UNIX}
+Function KeyPressed: Boolean;
+Var fds: TFDSet; tv: TimeVal;
+Begin
+  fpFD_ZERO(fds);
+  fpFD_SET(0, fds);
+  tv.tv_sec := 0;
+  tv.tv_usec := 0;
+  KeyPressed := fpSelect(1, @fds, Nil, Nil, @tv) > 0;
+End;
+
+Function ReadKey: Char;
+Var c: Char;
+Begin
+  If fpRead(0, c, 1) = 1 Then ReadKey := c Else ReadKey := #0;
+End;
+{$ELSE}
 Function MapFnKey(Code: Word): Char;
 Begin
-  { function/navigation key -> WordStar control char the editor dispatches on.
-    F-keys return #0 for now; Stage 4 wires their editor-level actions. }
   Case Code Of
     kbdUp:     MapFnKey := ^E;
     kbdDown:   MapFnKey := ^X;
@@ -312,42 +342,90 @@ Begin
 End;
 
 Function ReadKey: Char;
-Var
-  K: TKeyEvent;
-  Flags: Byte;
-  Ch: Char;
+Var K: TKeyEvent; Flags: Byte; Ch: Char;
 Begin
   Repeat
     K := TranslateKeyEvent(GetKeyEvent);
     Flags := GetKeyEventFlags(K);
-    If (Flags And kbReleased) <> 0 Then Continue;   { ignore key-release events }
+    If (Flags And kbReleased) <> 0 Then Continue;
     Case (Flags And $03) Of
       kbASCII, kbUniCode:
-        Begin
-          Ch := GetKeyEventChar(K);
-          If Ch <> #0 Then Begin ReadKey := Ch; Exit; End;
-        End;
+        Begin Ch := GetKeyEventChar(K); If Ch <> #0 Then Begin ReadKey := Ch; Exit; End; End;
       kbFnKey:
-        Begin
-          Ch := MapFnKey(GetKeyEventCode(K));
-          If Ch <> #0 Then Begin ReadKey := Ch; Exit; End;
-        End;
+        Begin Ch := MapFnKey(GetKeyEventCode(K)); If Ch <> #0 Then Begin ReadKey := Ch; Exit; End; End;
     End;
   Until False;
 End;
+{$ENDIF}
 
 Procedure FlushScreen;
 Begin
+  If Not Dirty Then Exit;
   ClampCursor;
   SetCursorPos(CurX - 1, CurY - 1);
   UpdateScreen(False);
+  Dirty := False;
+End;
+
+Procedure PollDelay;
+Begin
+  { keep the Get_Key poll loop from pegging a CPU core while idle }
+  SysUtils.Sleep(2);
+End;
+
+{$IFDEF UNIX}
+Var
+  OrigTermios: Termios;
+  TermSaved: Boolean;
+
+Procedure InputRawOn;
+{ Put stdin into full raw mode so every byte (control chars, Esc) is delivered
+  to us verbatim; save the original settings to restore on exit. }
+Var t: Termios;
+Begin
+  TermSaved := False;
+  If TCGetAttr(0, OrigTermios) = 0 Then
+  Begin
+    t := OrigTermios;
+    CFMakeRaw(t);
+    TCSetAttr(0, TCSANOW, t);
+    TermSaved := True;
+  End;
+End;
+
+Procedure InputRawOff;
+Begin
+  If TermSaved Then TCSetAttr(0, TCSANOW, OrigTermios);
+End;
+{$ENDIF}
+
+Procedure DoneScreen;
+Begin
+  If Not Started Then Exit;
+  FlushScreen;
+  {$IFDEF UNIX} InputRawOff; {$ELSE} DoneKeyboard; {$ENDIF}
+  DoneVideo;
+  Started := False;
+End;
+
+{ Safety net: if the program Halts (a fatal startup/OOM path) without an
+  explicit DoneScreen, restore the terminal on the way out so it is not
+  left in raw/alternate-screen mode. }
+{$F+}
+Procedure ScreenExitHandler;
+{$F-}
+Begin
+  ExitProc := OldExitProc;
+  If Started Then DoneScreen;
 End;
 
 Procedure InitScreen;
 Begin
   If Started Then Exit;
+  OldExitProc := ExitProc;
+  ExitProc := @ScreenExitHandler;
   InitVideo;
-  InitKeyboard;
+  {$IFDEF UNIX} InputRawOn; {$ELSE} InitKeyboard; {$ENDIF}
   TextAttr := $07;
   WinX1 := 1; WinY1 := 1;
   WinX2 := ScreenCols; WinY2 := ScreenRows;
@@ -355,15 +433,6 @@ Begin
   ClrScr;
   FlushScreen;
   Started := True;
-End;
-
-Procedure DoneScreen;
-Begin
-  If Not Started Then Exit;
-  FlushScreen;
-  DoneKeyboard;
-  DoneVideo;
-  Started := False;
 End;
 
 Begin

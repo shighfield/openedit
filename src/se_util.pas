@@ -165,7 +165,7 @@ Var
  XtraS          : String[127];
 Implementation
 
-Uses Utilpack,TurboCOM,Crt,RCRC32;
+Uses Utilpack,TurboCOM,ScreenIO,RCRC32;
 
 Function Timer: Real;
 Var H,M,S,S100: Word;
@@ -362,7 +362,7 @@ Begin
  For Ct:=1 To Length(S) Do
   Begin
    If (LastSlice+Slicing<=Timer) Then ReleaseSlice;
-   LocalSetColor(Ord(S[Ct])); Write(S[Ct]);
+   LocalSetColor(Ord(S[Ct])); SWrite(S[Ct]);
   End;
 End;
 
@@ -534,7 +534,7 @@ Begin
    If Remote Then
     Begin SWrite(GetChar); SWrite(GetChar); End
    Else
-    Begin Write(GetChar); Write(GetChar); End;
+    Begin SWrite(GetChar); SWrite(GetChar); End;
    If Remote Then SWrite(BC) Else TextAttr:=Config^.BC;
   End;
  If Remote Then SGotoXY(40-(Wid Div 2)-1-1,12-(Len Div 2)+Len+1) Else GotoXY(40-(Wid Div 2)-1-1,12-(Len Div 2)+Len+1);
@@ -543,12 +543,12 @@ Begin
  If Remote Then
   Begin SWrite(GetChar); SWrite(GetChar); End
  Else
-  Begin Write(GetChar); Write(GetChar); End;
+  Begin SWrite(GetChar); SWrite(GetChar); End;
  If Remote Then SGotoXY(40-(Wid Div 2)-1+2-1,12-(Len Div 2)+Len+2) Else GotoXY(40-(Wid Div 2)-1+2-1,12-(Len Div 2)+Len+2);
  If Remote Then
   For Tmp:=1 To Wid+4 Do SWrite(GetChar)
  Else
-  For Tmp:=1 To Wid+4 Do Write(GetChar);
+  For Tmp:=1 To Wid+4 Do SWrite(GetChar);
 End;
 
 Function Initials(S: String): String;
@@ -1284,7 +1284,7 @@ Begin
  X:=WhereX; Y:=WhereY;
  A:=TextAttr;
  TextAttr:=$1F;
- GotoXY(75,25); Write(Copy(FormatTime(Nsl),1,5));
+ GotoXY(75,25); SWrite(Copy(FormatTime(Nsl),1,5));
  GotoXY(X,Y);
  TextAttr:=A;
 End;
@@ -1299,7 +1299,7 @@ Begin
  Case StatBar Of
    1: Begin
        TextAttr:=$1F; ClrEol;
-        Write(' ',Pad(UserName,55)+'[F1] Help');
+        SWrite(' '+Pad(UserName,55)+'[F1] Help');
       End;
    2: Begin
        TextAttr:=$1B; ClrEol; SWrite(' F1 ');
