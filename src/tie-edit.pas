@@ -1567,11 +1567,10 @@ Begin
   Count_Lines;
   If Not Msg_Edit Then
    Begin
-     FancyClear;
      Assign(F,SysPath+'AUTOSAVE.SE!');
      {$I-}Erase(F);{$I+}
      If IOResult<>0 Then ;
-     DoneScreen; WriteLn('File not saved');
+     DoneScreen; Write(#27'[999;1H'); WriteLn('File not saved');
      Halt(1);
    End;
   Count_Lines;
@@ -1588,8 +1587,7 @@ Begin
    Close(F);
   End;
   CDelay(1000); {1000}
-  FancyClear;
-  DoneScreen; WriteLn('File saved');
+  DoneScreen; Write(#27'[999;1H'); WriteLn('File saved');
   Assign(F,SysPath+'AUTOSAVE.SE!');
   {$I-}Erase(F);{$I+}
   If IOResult<>0 Then ;
