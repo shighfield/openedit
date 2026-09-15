@@ -707,40 +707,40 @@ Begin
   XSWriteLn('                    |PC³');
   XSWriteLn(' |BC³    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                    |BC³');
   XSWrite(' |BC³ |FD1|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDA|FS. '); FunkyWrite(Pad(LS(12),13)); XSWriteLn(' |FC'+YN[User.UseTaglines]+' |BC³');
+            '[0m |FDA|FS. '); FunkyWrite(Pad(LS(13),13)); XSWriteLn(' |FC'+YN[User.UseExpand]+' |BC³');
   XSWrite(' |BC³ |FD2|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDB|FS. '); FunkyWrite(Pad(LS(13),13)); XSWriteLn(' |FC'+YN[User.UseExpand]+' |BC³');
+            '[0m |FDB|FS. '); FunkyWrite(Pad(LS(15),13)); XSWriteLn(' |FC'+YN[Not User.UseSpellchk]+' |BC³');
   XSWrite(' |BC³ |FD3|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDC|FS. '); FunkyWrite(Pad(LS(14),13)); XSWriteLn(' |FC'+YN[User.UseKeywords]+' |BC³');
+            '[0m |FDC|FS. '); FunkyWrite(Pad(LS(17),13)); XSWriteLn(' |FC'+YN[User.AutoSigs]+' |BC³');
   XSWrite(' |BC³ |FD4|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDD|FS. '); FunkyWrite(Pad(LS(15),13)); XSWriteLn(' |FC'+YN[Not User.UseSpellchk]+' |BC³');
-  XSWrite(' |BC³ |FD5|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDE|FS. '); FunkyWrite(Pad(LS(16),13)); XSWriteLn(' |FC'+YN[User.AutoTagline]+' |BC³');
-  XSWrite(' |BC³ |FD6|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDF|FS. '); FunkyWrite(Pad(LS(17),13)); XSWriteLn(' |FC'+YN[User.AutoSigs]+' |BC³');
-  XSWrite(' |BC³ |FD7|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDG|FS. '); FunkyWrite(Pad(LS(102),15)); XSWriteLn(' |BC³');
-  XSWrite(' |BC³ |FD8|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDH|FS. ');
+            '[0m |FDD|FS. '); FunkyWrite(Pad(LS(102),15)); XSWriteLn(' |BC³');
+  XSWrite(' |BC³ |FD5|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDE|FS. ');
   If LFs>1 Then FunkyWrite(Pad(LS(101),15)) Else SWrite('[1;30m'+Pad(LS(101),15));
   XSWriteLn(' |BC³');
-  XSWrite(' |BC³ |FD9|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDI|FS. '); FunkyWrite(Pad(LS(18),14));
+  XSWrite(' |BC³ |FD6|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDF|FS. '); FunkyWrite(Pad(LS(18),14));
   XSWriteLn('  |BC³');
+  XSWriteLn(' |BC³ |FD7|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m'+Pad('',20)+'|BC³');
+  XSWriteLn(' |BC³ |FD8|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m'+Pad('',20)+'|BC³');
+  XSWriteLn(' |BC³ |FD9|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m'+Pad('',20)+'|BC³');
   XSWriteLn(' |BC³                                                                            ³');
   XSWrite(' |BC³   '); FunkyWrite(Pad(LS(19),72));
   XSWriteLn(' |BC³');
-  XSWriteLn(' |BC³  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ³');
+  XSWriteLn(' |BC³  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                     ³');
   XSWrite(' |BC³  |FDJ|FS. ');       FunkyWrite(Pad(LS(20),7)); XSWrite(' |FS[ş]     |FDN|FS. '); FunkyWrite(Pad(LS(21),7));
   XSWrite(' |FS[ş]      |FDR|FS. '); FunkyWrite(Pad(LS(21),7));
-  XSWriteLn(' |FS[ş]     |FDV|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[1],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[ş]     '+Pad('',13)+'|BC   ³');
   XSWrite(' |BC³  |FDK|FS. ');       FunkyWrite(Pad(LS(22),7)); XSWrite(' |FS[ş]     |FDO|FS. '); FunkyWrite(Pad(LS(23),7));
   XSWrite(' |FS[ş]      |FDS|FS. '); FunkyWrite(Pad(LS(23),7));
-  XSWriteLn(' |FS[ş]     |FDW|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[2],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[ş]     '+Pad('',13)+'|BC   ³');
   XSWrite(' |BC³  |FDL|FS. ');       FunkyWrite(Pad(LS(24),7)); XSWrite(' |FS[ş]     |FDP|FS. '); FunkyWrite(Pad(LS(25),7));
   XSWrite(' |FS[ş]      |FDT|FS. '); FunkyWrite(Pad(LS(25),7));
-  XSWriteLn(' |FS[ş]     |FDX|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[3],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[ş]     '+Pad('',13)+'|BC   ³');
   XSWrite(' |PC³  |FDM|FS. ');       FunkyWrite(Pad(LS(26),7)); XSWrite(' |FS[ş]     |FDQ|FS. '); FunkyWrite(Pad(LS(27),7));
   XSWrite(' |FS[ş]      |FDU|FS. '); FunkyWrite(Pad(LS(27),7));
-  XSWriteLn(' |FS[ş]     |FDY|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[4],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[ş]     '+Pad('',13)+'|BC   ³');
   XSWriteLn(' |HC³                                                                            |BC³');
   XSWriteLn(' |NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]);
@@ -768,38 +768,27 @@ Begin
     C:=UpCase(GetLow);
     Case C Of
     'A'     : Begin
-                User.UseTaglines:=Not User.UseTaglines;
-                SGotoXY(77,5);
-                SWrite(ANSICode[User.FC]+YN[User.UseTaglines]);
-              End;
-    'B'     : Begin
                 User.UseExpand:=Not User.UseExpand;
-                SGotoXY(77,6);
+                SGotoXY(77,5);
                 SWrite(ANSICode[User.FC]+YN[User.UseExpand]);
               End;
+    'B'     : Begin
+                User.UseSpellChk:=Not User.UseSpellChk;
+                SGotoXY(77,6);
+                SWrite(ANSICode[User.FC]+YN[Not User.UseSpellChk]);
+              End;
     'C'     : Begin
-                User.UseKeywords:=Not User.UseKeywords; SGotoXY(77,7); SWrite(ANSICode[User.FC]+YN[User.UseKeywords]);
-              End;
-    'D'     : Begin
-                User.UseSpellChk:=Not User.UseSpellChk; SGotoXY(77,8); SWrite(ANSICode[User.FC]+YN[Not User.UseSpellChk]);
-              End;
-    'E'     : Begin
-                User.AutoTagline:=Not User.AutoTagline;
-                SGotoXY(77,9);
-                SWrite(ANSICode[User.FC]+YN[User.AutoTagline]);
-              End;
-    'F'     : Begin
                 User.AutoSigs:=Not User.AutoSigs;
-                SGotoXY(77,10);
+                SGotoXY(77,7);
                 SWrite(ANSICode[User.FC]+YN[User.AutoSigs]);
               End;
-    'G'     : Begin
+    'D'     : Begin
                 DInc2(User.FieldColor);
                 User.ChgdColors:=True;
               End;
-    'H'     : Begin
+    'E'     : Begin
                 User.LangFile:='';
-                SWrite('[0m');
+                SWrite(#27'[0m');
                 SClrScr;
                 StatusBar;
                 SelectLanguage;
@@ -816,7 +805,7 @@ Begin
                 End;
                 Goto ShowOrigScreen;
               End;
-    'I'     : Begin
+    'F'     : Begin
                 SigSetup;
                 Goto ShowOrigScreen;
               End;
@@ -839,22 +828,6 @@ Begin
     'S'     : Begin DInc(User.IL); User.ChgdColors:=True; End;
     'T'     : Begin DInc(User.ID); User.ChgdColors:=True; End;
     'U'     : Begin DInc(User.IS); User.ChgdColors:=True; End;
-    'V'     : Begin
-                SGotoXY(66,17); SRead(User.TagKeyword[1],10,User.TagKeyword[1]);
-                SGotoXY(66,17); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[1],10));
-              End;
-    'W'     : Begin
-                SGotoXY(66,18); SRead(User.TagKeyword[2],10,User.TagKeyword[2]);
-                SGotoXY(66,18); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[2],10));
-              End;
-    'X'     : Begin
-                SGotoXY(66,19); SRead(User.TagKeyword[3],10,User.TagKeyword[3]);
-                SGotoXY(66,19); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[3],10));
-              End;
-    'Y'     : Begin
-                SGotoXY(66,20); SRead(User.TagKeyword[4],10,User.TagKeyword[4]);
-                SGotoXY(66,20); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[4],10));
-              End;
     '1'..'9': Begin
                 SGotoXY(7,4+(Ord(C)-Ord('0')));
                 SRead(User.Expand[(Ord(C)-Ord('0'))-1,1],25,User.Expand[(Ord(C)-Ord('0'))-1,1]);
