@@ -80,7 +80,7 @@ Function Expired: Boolean;
 Type
  Str20          = String[20];
  Str35          = String[35];
- Str81          = String[81];
+ Str81          = String[255];  { max line length - wraps at window width (was 81 for the fixed 80-col screen) }
  PhysType       = Array[1..200] of Str81;
  ACType         = Record A: Byte; C: Char; End;
  WinData        = Array[0..79,0..24] Of ACType;

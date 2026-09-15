@@ -1420,6 +1420,7 @@ Begin
   PageUpDnSiz := ScrLines;
   FootRow := ScreenRows;
   PromptRow := ScreenRows - 1;
+  WWrap := ScreenCols - 1;
   HookErrorHandler:=True;
   LimitExceeded:='[23;7H[0;1;31m '+LS(81)+' '+^G;
   ProhibitStatus:=True;
