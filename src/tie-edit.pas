@@ -380,7 +380,7 @@ Var
 Begin
   If Expired Then ConfirmAbort:=True;
   Plain_Footer(2);
-  SGotoXY(67-Length(LS(4)),23);
+  SGotoXY(67-Length(LS(4)),FootRow);
   FunkyWrite(' '+LS(4)+' (y/N) ');
   Repeat
     C:=UpCase(GetLow);
@@ -912,7 +912,7 @@ Begin
         If Not User.AutoSigs Then
         Begin
           Plain_Footer(2);
-          SGotoXY(65-Length(LS(33)),23); FunkyWrite(' '+LS(33)+' (Y/n) ');
+          SGotoXY(65-Length(LS(33)),FootRow); FunkyWrite(' '+LS(33)+' (Y/n) ');
           Repeat
             C:=UpCase(GetLow);
             If C=#13 Then C:='Y';
@@ -971,7 +971,7 @@ begin
   ShellCmd:=GetEnv('SHELL');
   If ShellCmd='' Then ShellCmd:='/bin/sh';
   Plain_Footer(1);
-  SGotoXY(74-Length(LS(76)),22);
+  SGotoXY(74-Length(LS(76)),PromptRow);
   FunkyWrite(LS(76));
   SaveScreen(1);
   Window(1,1,80,25);
@@ -1007,13 +1007,13 @@ Var
       Begin
         ForceMenu:=False;
         Plain_Footer(2);
-        SGotoXY(62-Length(LS(34)+LS(35)+LS(36)+LS(37)),22);
+        SGotoXY(62-Length(LS(34)+LS(35)+LS(36)+LS(37)),PromptRow);
         Pos1:=WhereX; XSWrite('|BC['); FunkyWrite(LS(34));
         Pos2:=WhereX+2; XSWrite('|BC] |BC['); FunkyWrite(LS(35));
         Pos3:=WhereX+2; XSWrite('|BC] |BC['); FunkyWrite(LS(36));
         Pos4:=WhereX+2; XSWrite('|BC] |BC['); FunkyWrite(LS(37));
         XSWrite('|BC]');
-        SGotoXY(49-Length(LS(80)),23);
+        SGotoXY(49-Length(LS(80)),FootRow);
         FunkyWrite(' '+LS(80)); XSWrite(' |BC(|PCS');
         XSWriteLn('|BC/|PCA|BC/|PCR|BC/|PCH|BC/|PCLeft|BC/|PCRight|BC)|FS: ');
       Repeat
