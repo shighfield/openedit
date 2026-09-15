@@ -1395,16 +1395,16 @@ Begin
   MsgTxtFile:='';
   For PCnt:=1 To ParamCount Do
   Begin
-    If (UCase(Copy(ParamStr(PCnt),1,2))='-T') Or (UCase(Copy(ParamStr(PCnt),1,2))='/T') Then
+    If (UCase(Copy(ParamStr(PCnt),1,2))='-T') Then
      MsgTxtFile:=Copy(ParamStr(PCnt),3,255)
     Else
-    If (UCase(Copy(ParamStr(PCnt),1,2))='-F') Or (UCase(Copy(ParamStr(PCnt),1,2))='/F') Then
+    If (UCase(Copy(ParamStr(PCnt),1,2))='-F') Then
     Begin
       Force:=True;
       ForceLines:=IntVal(Copy(ParamStr(PCnt),3,255));
     End
     Else
-    If (Copy(ParamStr(PCnt),1,1)<>'-') And (Copy(ParamStr(PCnt),1,1)<>'/') Then
+    If (Copy(ParamStr(PCnt),1,1)<>'-') Then
      MsgTxtFile:=ParamStr(PCnt);
   End;
 
