@@ -81,7 +81,7 @@ Type
  Str20          = String[20];
  Str35          = String[35];
  Str81          = String[81];
- PhysType       = Array[1..17] of Str81;
+ PhysType       = Array[1..200] of Str81;
  ACType         = Record A: Byte; C: Char; End;
  WinData        = Array[0..79,0..24] Of ACType;
  LangType       = Array[1..LangCnt] Of String[75];
@@ -92,6 +92,8 @@ Const
  TopScreen      : Word = 1;              { First screen line for text entry }
  ScrLines       : Word = 21;        { Number of screen lines for text entry }
  PageUpDnSiz    : Word = 21;   { Number of lines to scroll by during PgUp/Dn }
+ FootRow        : Word = 25;
+ PromptRow      : Word = 24;
  Max_Msg_Lines  : Word = InternalLineLim;
  Insert_Mode    : Boolean = True;
  Only2MinMsg    : Boolean = False;
@@ -1001,7 +1003,7 @@ Begin
  {Ask Spellchk? is stored inverted on User.UseSpellChk - False means "ask me"}
  If User.UseSpellChk Then Exit;
  Plain_Footer(2);
- SGotoXY(65-Length(LS(42)),23);
+ SGotoXY(65-Length(LS(42)),FootRow);
  FunkyWrite(' '+LS(42)+' (y/N) ');
  Repeat C:=UpCase(GetLow); If C=#13 Then C:='N'; Until C in ['Y','N',#27];
  If C=#27 Then
@@ -1017,7 +1019,7 @@ Begin
  InFile:=CfgPath+'tie-edit_spell.in';
  OutFile:=CfgPath+'tie-edit_spell.out';
 
- SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(44));
+ SGotoXY(1,FootRow); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(44));
 
  Assign(F,InFile); Rewrite(F);
  For Ct:=1 To LineCnt Do
@@ -1034,7 +1036,7 @@ Begin
  MisspelledCnt:=0;
  If (DosError<>0) Or (DosExitCode<>0) Then
   Begin
-   SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  ');
+   SGotoXY(1,FootRow); XSWrite(#27+'[0m'+#27+'[K  ');
    FunkyWrite('Spellcheck unavailable - hunspell not found');
    CDelay(1200);
    Display_Footer(2);
@@ -1111,14 +1113,14 @@ Begin
       Begin
        SGotoXY(PtrPos-Length(OrigWord)+1,CLine-TopLine+TopScreen);
        XSWrite('|IC'+OrigWord);
-       SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(46));
+       SGotoXY(1,FootRow); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(46));
        NewWord:=OrigWord;
        Case UpCase(GetLow) Of
           'C': Begin
-                SGotoXY(1,23);
+                SGotoXY(1,FootRow);
                 XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(47)+' ');
                 SRead(NewWord,Length(OrigWord)+5,OrigWord);
-                SGotoXY(1,23); SWrite(#27+'[0m'+#27+'[K');
+                SGotoXY(1,FootRow); SWrite(#27+'[0m'+#27+'[K');
                 CCol:=PtrPos-Length(OrigWord)+1;
                 OIM:=Insert_Mode;
                 Reposition;
@@ -1155,7 +1157,7 @@ Begin
 
  LemmeOut:
 
- SGotoXY(1,23); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(48));
+ SGotoXY(1,FootRow); XSWrite(#27+'[0m'+#27+'[K  '); FunkyWrite(LS(48));
  Repeat C:=GetLow; Until C in [#13,#27];
  If C=#27 Then
   Begin
@@ -1280,7 +1282,7 @@ End;
 
 Procedure StatTimeUpdate;
 Var X,Y,A: Byte;
-Begin
+Begin Exit;
  X:=WhereX; Y:=WhereY;
  A:=TextAttr;
  TextAttr:=$1F;
@@ -1291,7 +1293,7 @@ End;
 
 Procedure StatusBar;
 Var X,Y,A: Byte;
-Begin
+Begin Exit;
  X:=WhereX; Y:=WhereY;
  A:=TextAttr;
  GotoXY(1,25);
@@ -1324,7 +1326,7 @@ End;
 Procedure MinLinesNotMet;
 Begin
  Plain_Footer(2);
- SGotoXY(70-Length(LS(68)),23);
+ SGotoXY(70-Length(LS(68)),FootRow);
  FunkyWrite(' '+LS(68)+' '+Zero(ForceLines,3)+' '+LS(69)+' ');
  CDelay(1000);
  Display_Footer(2);
@@ -1334,7 +1336,7 @@ End;
 Procedure AbortDisabled;
 Begin
  Plain_Footer(2);
- SGotoXY(74-Length(LS(70)),23); FunkyWrite(' '+LS(70)+' ');
+ SGotoXY(74-Length(LS(70)),FootRow); FunkyWrite(' '+LS(70)+' ');
  CDelay(1000);
  Display_Footer(2);
  Reposition;
@@ -1458,7 +1460,7 @@ Begin
    If Copy(Cmd,1,2)='CT' Then
     Begin
      CurrTimeX:=IntVal(Copy(Cmd,4,2));
-     CurrTimeY:=IntVal(Copy(Cmd,7,2));
+     CurrTimeY:=FootRow;
     End;
    If Copy(Cmd,1,2)='UT' Then
     Begin
@@ -1518,7 +1520,7 @@ Begin
    PlainFooter[1]:=Default[1];
    PlainFooter[2]:=Default[2];
   End;
- Tmp:=22;
+ Tmp:=PromptRow;
  If PF_overridepos <> 0 Then
   Begin
    Tmp:=PF_overridepos;
@@ -1549,17 +1551,17 @@ Var
  Tmp: Byte;
 Begin
  If (B=1) And (Not OKPageNum) Then Exit;
- SGotoXY(1,22);
+ SGotoXY(1,PromptRow);
  Plain_Footer(B);
  If B in [1,3] Then
   Begin
    DisplayFooterTime;
-   SGotoXY(74,23);
+   SGotoXY(74,FootRow);
    XSFWrite('|PC[|NC@P@|PC]|BC');
   End;
  If B in [2,3] Then
   Begin
-   SGotoXY(38+20-Length(LS(5)+LS(6)+QuoteOrMenu),23);
+   SGotoXY(38+20-Length(LS(5)+LS(6)+QuoteOrMenu),FootRow);
    XSFWrite('@f@@quoteormenu@@/f@ |FS<|FCE|FLsc|FS> @f@@ls05@@/f@  |FS<^|FCZ|FS> @f@@ls06@@/f@ ');
   End;
 End;

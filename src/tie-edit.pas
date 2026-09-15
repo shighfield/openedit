@@ -763,7 +763,7 @@ Begin
     SGotoXY(56,19); SWrite(ANSICode[User.ID]+ANSICode[40+User.FieldColor]); SWrite('þ');
     SGotoXY(56,20); SWrite(ANSICode[User.IS]+ANSICode[40+User.FieldColor]); SWrite('þ');
     User.FZ:=User.PC;
-    SGotoXY(1,23);
+    SGotoXY(1,FootRow);
     SWrite('[0m');
     C:=UpCase(GetLow);
     Case C Of
@@ -1020,25 +1020,25 @@ Var
         InputFunky:=True;
         Case Hil Of
         1: Begin
-             SGotoXY(Pos1,22);
+             SGotoXY(Pos1,PromptRow);
              XSWrite('|IS[');
              FunkyWrite(LS(34));
              XSWrite('|IS]');
            End;
        2: Begin
-            SGotoXY(Pos2,22);
+            SGotoXY(Pos2,PromptRow);
             XSWrite('|IS[');
             FunkyWrite(LS(35));
             XSWrite('|IS]');
           End;
        3: Begin
-            SGotoXY(Pos3,22);
+            SGotoXY(Pos3,PromptRow);
             XSWrite('|IS[');
             FunkyWrite(LS(36));
             XSWrite('|IS]');
           End;
        4: Begin
-            SGotoXY(Pos4,22);
+            SGotoXY(Pos4,PromptRow);
             XSWrite('|IS[');
             FunkyWrite(LS(37));
             XSWrite('|IS]');
@@ -1046,10 +1046,10 @@ Var
           End;
           Key:=UpCase(Get_Key);
           Case Hil Of
-           1: Begin SGotoXY(Pos1,22); XSWrite('|BC['); FunkyWrite(LS(34)); XSWrite('|BC]'); End;
-           2: Begin SGotoXY(Pos2,22); XSWrite('|BC['); FunkyWrite(LS(35)); XSWrite('|BC]'); End;
-           3: Begin SGotoXY(Pos3,22); XSWrite('|BC['); FunkyWrite(LS(36)); XSWrite('|BC]'); End;
-           4: Begin SGotoXY(Pos4,22); XSWrite('|BC['); FunkyWrite(LS(37)); XSWrite('|BC]'); End;
+           1: Begin SGotoXY(Pos1,PromptRow); XSWrite('|BC['); FunkyWrite(LS(34)); XSWrite('|BC]'); End;
+           2: Begin SGotoXY(Pos2,PromptRow); XSWrite('|BC['); FunkyWrite(LS(35)); XSWrite('|BC]'); End;
+           3: Begin SGotoXY(Pos3,PromptRow); XSWrite('|BC['); FunkyWrite(LS(36)); XSWrite('|BC]'); End;
+           4: Begin SGotoXY(Pos4,PromptRow); XSWrite('|BC['); FunkyWrite(LS(37)); XSWrite('|BC]'); End;
           End;
      Case Key Of
        #00: Case Get_Key Of
@@ -1268,11 +1268,11 @@ Then
   End
   Else
   Begin
-    SGotoXY(8,22);
+    SGotoXY(8,PromptRow);
     FunkyWrite(' '+Pad(LS(38),19)+' ');
     Msg_Edit:=False;
     CDelay(1000);
-    SGotoXY(1,24);
+    SGotoXY(1,FootRow);
   End;
 End;
 
@@ -1415,6 +1415,11 @@ Begin
 
   ExitCode:=2;
   InitTurboCOMM;
+  ScrLines := ScreenRows - 2;
+  If ScrLines > 200 Then ScrLines := 200;
+  PageUpDnSiz := ScrLines;
+  FootRow := ScreenRows;
+  PromptRow := ScreenRows - 1;
   HookErrorHandler:=True;
   LimitExceeded:='[23;7H[0;1;31m '+LS(81)+' '+^G;
   ProhibitStatus:=True;
