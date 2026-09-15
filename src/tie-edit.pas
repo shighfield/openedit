@@ -974,7 +974,7 @@ begin
   SGotoXY(74-Length(LS(76)),PromptRow);
   FunkyWrite(LS(76));
   SaveScreen(1);
-  Window(1,1,80,25);
+  Window(1,1,ScreenCols,ScreenRows);
   TextAttr:=$07;
   ClrScr;
   sWriteLn(LS(77));
@@ -1432,7 +1432,7 @@ Begin
   TimeOutDelay:=Config^.TimeoutDelay;
 
  If MsgTxtFile='' Then MsgTxtFile:=SysPath+'MSGTMP.';
- Window(1,1,80,25);
+ Window(1,1,ScreenCols,ScreenRows);
  ClrScr;
 
   SysOpName:=RTrim(LTrim(Capitalize(Config^.RegName)));

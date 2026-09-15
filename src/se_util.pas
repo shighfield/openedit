@@ -1442,6 +1442,7 @@ Var
  Funky: Boolean;
  Out: String;
  T: String[50];
+ FillN: Integer;
 Begin
  Funky:=False;
  While Pos('@',S)>0 Do
@@ -1457,6 +1458,7 @@ Begin
    If Cmd='/F' Then Funky:=False;
    If Cmd='P' Then S:=PageNum+S;
    If Cmd='VER' Then S:=Ver+S;
+   If Cmd='FILL' Then For FillN := WhereX To ScreenCols-1 Do SWrite(#196);
    If Copy(Cmd,1,2)='CT' Then
     Begin
      CurrTimeX:=IntVal(Copy(Cmd,4,2));
@@ -1505,7 +1507,7 @@ Procedure Plain_Footer(B: Byte);
 Const
  Default: Array[1..2] Of String[140] = (
    '',
-   '|HCÀ|PCÄÄ|BCÄÄ @f@Tie-EDIT v@VER@@/f@ -[@f@@TIME@@/f@]-|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ|PCÄÄ|HCÄÄ|NCÙ@CT:23,23@');
+   '|HCÀ|PCÄÄ|BCÄÄ @f@Tie-EDIT v@VER@@/f@ -[@f@@TIME@@/f@]-|BC@FILL@|NCÙ@CT:23,23@');
  Default2: Array[1..2] Of String[140] = (
    '[0;34mÄÄÄÄÄÄÄ[1m[[37m@TIME@[34m][0;34m@TPÄ@Ä[1m[[37m@LEFT@ Mins[34m][0;34mÄÄÄÄÄÄÄÄÄÄÄÄ'+
    'ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ',
@@ -1556,7 +1558,7 @@ Begin
  If B in [1,3] Then
   Begin
    DisplayFooterTime;
-   SGotoXY(74,FootRow);
+   SGotoXY(ScreenCols-6,FootRow);
    XSFWrite('|PC[|NC@P@|PC]|BC');
   End;
  If B in [2,3] Then
