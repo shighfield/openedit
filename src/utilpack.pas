@@ -1236,59 +1236,6 @@ Begin
   If Display=True Then Restore_Screen;
 End;
 
-{ For ExecWin below }
-Procedure Int29Handler(AX,BX,CX,DX,SI,DI,DS,ES,BP: Word); Interrupt;
-Var Dummy: Byte; Begin Write(Chr(Lo(AX))); Asm Sti; End; End;
-
-
-Function ExecWin(ProgName,Params: String;
-                 LeftCol,TopLine,RightCol,BottomLine: Word): Word;
-Var A: Word;
-Begin
- GotoXY(LeftCol, TopLine);
- Write(Chr(201));
- For A:=1 To (RightCol-LeftCol)-1 Do Write(Chr(205));
- Write(Chr(187));
- For A:=1 To (BottomLine-TopLine)-1 Do
-  Begin
-   GotoXY(LeftCol,TopLine+A);
-   Write(Chr(186));
-   GotoXY(RightCol,TopLine+A);
-   Write(Chr(186));
-  End;
- GotoXY(LeftCol,BottomLine); Write(Chr(200));
- For A:=1 To (RightCol-LeftCol)-1 Do Write(Chr(205));
- Write(Chr(188));
- Window(LeftCol+1,TopLine+1,RightCol-1, BottomLine-1);
- ClrScr;
- GotoXY(1,1);
- GetIntVec($29,OldIntVect29);
- SetIntVec($29,@Int29Handler);
- {.$M 10000,0,0}
- SwapVectors; Exec(ProgName,Params); SwapVectors;
- ExecWin:=DOSExitCode;
- SetIntVec($29,OldIntVect29);
- Window(LeftCol,TopLine,RightCol,BottomLine); ClrScr; Window(1, 1, 80, 25);
-End;
-
-Function ExecWin2(ProgName,Params: String;
-                 LeftCol,TopLine,RightCol,BottomLine: Word): Word;
-Var A: Word;
-    OldAttr: Byte;
-Begin
- OldAttr:=TextAttr;
- Window(LeftCol,TopLine,RightCol, BottomLine);
- ClrScr;
- GotoXY(1,1);
- GetIntVec($29,OldIntVect29);
- SetIntVec($29,@Int29Handler);
- {.$M 10000,0,0}
- SwapVectors; Exec(ProgName,Params); SwapVectors;
- ExecWin2:=DOSExitCode;
- SetIntVec($29,OldIntVect29);
- TextAttr:=OldAttr;
- Window(LeftCol,TopLine,RightCol,BottomLine); ClrScr; Window(1, 1, 80, 25);
-End;
 
 Function CvtToReal(LngInt: LongInt): Real;
 Begin
