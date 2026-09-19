@@ -1429,15 +1429,16 @@ Begin
 
  { No filename on the command line: ask for one (was silently defaulting
    to the legacy BBS name MSGTMP.). Enter accepts a blank -> new unnamed. }
+ { No filename on the command line: ask for one (was silently defaulting
+   to the legacy BBS name MSGTMP.). A blank answer re-prompts. }
  If MsgTxtFile='' Then
- Begin
+ Repeat
    SClrScr;
    SGotoXY(1,1);
-   SWrite('Filename (Enter for a new unnamed file): ');
+   SWrite('Filename to edit: ');
    SRead(MsgTxtFile, 128, '');
    MsgTxtFile:=RTrim(LTrim(MsgTxtFile));
-   If MsgTxtFile='' Then MsgTxtFile:='noname.txt';
- End;
+ Until MsgTxtFile<>'';
  Window(1,1,ScreenCols,ScreenRows);
  ClrScr;
 
