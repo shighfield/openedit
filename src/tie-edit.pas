@@ -1427,7 +1427,17 @@ Begin
   If Config^.TimeOutDelay=0 Then TimeCheck:=False;
   TimeOutDelay:=Config^.TimeoutDelay;
 
- If MsgTxtFile='' Then MsgTxtFile:=SysPath+'MSGTMP.';
+ { No filename on the command line: ask for one (was silently defaulting
+   to the legacy BBS name MSGTMP.). Enter accepts a blank -> new unnamed. }
+ If MsgTxtFile='' Then
+ Begin
+   SClrScr;
+   SGotoXY(1,1);
+   SWrite('Filename (Enter for a new unnamed file): ');
+   SRead(MsgTxtFile, 128, '');
+   MsgTxtFile:=RTrim(LTrim(MsgTxtFile));
+   If MsgTxtFile='' Then MsgTxtFile:='noname.txt';
+ End;
  Window(1,1,ScreenCols,ScreenRows);
  ClrScr;
 
