@@ -571,6 +571,10 @@ Begin
     LFile[LFs]:=LFile[LFs]+FPad(S,18);
     FindNext(SR);
   End;
+  { No external .LNG files present -> the compiled-in English is the only
+    language; select it and skip the picker (which would call LS on an
+    unpopulated Lang^). }
+  If LFs=0 Then Begin LanguageFile:='ENGLISH'; Exit; End;
   If (User.LangFile<>'') And (FileExists(CfgPath+User.LangFile+'.LNG')) Then
   Begin
     LanguageFile:=User.LangFile;
@@ -1289,6 +1293,9 @@ Begin
   FileMode:=66;
   {$I-}Reset(F);{$I+}
   FileMode:=2;
+  { EXPAND.CTL is optional user config; a missing file is not an error
+    (without this guard, Eof on an unopened file raises EInOutError). }
+  If IOResult<>0 Then Exit;
   While Not Eof(F) Do
   Begin
     ReadLn(F,S); Delete(S,Pos(';',S),255); S:=RTrim(LTrim(S));
@@ -1358,11 +1365,11 @@ Begin
     End;
 
   If Config^.LanguageFile='' Then Config^.LanguageFile:='ENGLISH';
-  If Not FileExists(CfgPath+Config^.LanguageFile+'.LNG') Then
-  Begin
-    WriteLn('Cannot open language file '+Config^.LanguageFile+'.LNG');
-    Halt(2);
-  End;
+  { English is compiled in (english_lng.inc); a missing external language
+    file is no longer fatal - fall back to the built-in English strings. }
+  If (Config^.LanguageFile<>'ENGLISH') And
+     (Not FileExists(CfgPath+Config^.LanguageFile+'.LNG')) Then
+    Config^.LanguageFile:='ENGLISH';
   LanguageFile:=Config^.LanguageFile;
   WWrap:=Config^.WrapMargin;
   MsgTxtFile:='';

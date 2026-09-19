@@ -1360,6 +1360,10 @@ Begin
  If CLine<TopLine Then Scroll_Screen(-Config^.ScrollSiz) Else RepoNoEOL;
 End;
 
+{ English UI strings are compiled in so the editor runs without ENGLISH.LNG
+  beside the binary; other languages still load from external .LNG files. }
+{$I english_lng.inc}
+
 Function LS(Num: Word): String;
 Type XType = Array[1..83] Of Char;
 Var
@@ -1368,6 +1372,7 @@ Var
  S: String;
 Begin
  If MemLang Then Begin LS:=Lang^[Num]; Exit; End;
+ If UCase(LanguageFile)='ENGLISH' Then Begin LS:=EmbeddedLang[Num]; Exit; End;
  Assign(XF,CfgPath+LanguageFile+'.LNG');
  Reset(XF); Seek(XF,Num-1+1); Read(XF,X); Close(XF);
  Move(X[6],S[1],75); S[0]:=#75; Delete(S,Pos(#0,S),255); S:=RTrim(S);
@@ -1383,6 +1388,12 @@ Var
  Cnt: Word;
 Begin
  Cnt:=0;
+ If UCase(LanguageFile)='ENGLISH' Then
+ Begin
+  { English is compiled in (english_lng.inc); never touch the disk for it. }
+  For Cnt:=1 To LangCnt Do Lang^[Cnt]:=EmbeddedLang[Cnt];
+  Exit;
+ End;
  Assign(XF,CfgPath+LanguageFile+'.LNG');
  FileMode:=66;
  Reset(XF);
