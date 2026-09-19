@@ -1310,6 +1310,14 @@ Begin
   Close(F);
 End;
 
+Function TieAppName: AnsiString;
+{ Pin the app name so GetAppConfigDir yields ~/.config/tie-edit/ no matter
+  what the binary is renamed to. Must return AnsiString (not String, which
+  is ShortString under -Mtp) to match TGetAppNameEvent. }
+Begin
+  TieAppName := 'tie-edit';
+End;
+
 Var
   OKHeadFoot: Boolean;
 Begin
@@ -1333,6 +1341,7 @@ Begin
     on Unix, %APPDATA%\tie-edit\ on Windows) instead of beside the binary,
     so tie-edit can be installed to a read-only path and run from anywhere.
     The file being edited is still taken relative to the working dir. }
+  OnGetApplicationName:=TGetAppNameEvent(@TieAppName);
   CfgPath:=GetAppConfigDir(False);
   ForceDirectories(CfgPath);
   { tie-edit.cfg (a Turbo Pascal binary record written by the original DOS
