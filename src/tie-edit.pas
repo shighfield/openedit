@@ -78,6 +78,7 @@ Uses
   ScreenIO,
   TurboCOM,
   SE_Util,
+  SysUtils,
   Utilpack,
   Dos;
 
@@ -1328,7 +1329,12 @@ Begin
   Ver:=RTrim(Ver);
   New(Config);
  { -------------- Configuration block -------------- }
-  CfgPath:=RemoveWildCard(ParamStr(0));
+  { Config/state now live in the per-user config dir (~/.config/tie-edit/
+    on Unix, %APPDATA%\tie-edit\ on Windows) instead of beside the binary,
+    so tie-edit can be installed to a read-only path and run from anywhere.
+    The file being edited is still taken relative to the working dir. }
+  CfgPath:=GetAppConfigDir(False);
+  ForceDirectories(CfgPath);
   { tie-edit.cfg (a Turbo Pascal binary record written by the original DOS
     OESetup.EXE) is never read - its binary layout does not reliably
     match FPC's ConfigRec even before accounting for how much this
