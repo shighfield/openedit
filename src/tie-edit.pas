@@ -1,11 +1,11 @@
 {$DEFINE CompileExtra}
 
-Program OpenEDIT;
+Program TieEdit;
 {$M 40000,0,360000}
 {$I DEFINES.INC}
 
 (*
-        Open!EDIT by Shawn Highfield
+        Tie-EDIT by Shawn Highfield
         Last Modify date: April 11, 2011 / May 15 2013 (2 small changes)
 
 Todo:
@@ -56,7 +56,7 @@ this list of conditions and the following disclaimer.
 Redistributions in binary form must reproduce the above copyright notice,
 this list of conditions and the following disclaimer in the documentation
 and/or other materials provided with the distribution.
-Neither the name of the Open!Edit nor the names of its contributors may be
+Neither the name of the Tie-EDIT nor the names of its contributors may be
 used to endorse or promote products derived from this software without
 specific prior written permission.
 
@@ -75,70 +75,31 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 Uses
-  CRT,
+  ScreenIO,
   TurboCOM,
   SE_Util,
+  SysUtils,
   Utilpack,
-  Dos,
-  RCRC32,
-  DESUnit
-{$IFDEF CompileExtra}
-  ,SEdit_Reg,
-  SEUserEdit,
-  ExecSwap;
-{$ENDIF}
+  Dos;
 
 Label ReMsgEdit;
 
 Var
  Key            : LongInt;
-{$IFDEF CompileExtra}
- EStr           : Array[1..8,1..2] Of ^Str35;
+ EStr           : Array[1..4,1..2] Of ^Str35;
  ExtraExpand    : Array[1..256,1..2] Of ^Str20;
  ExtraExpands   : Word;
-{$ENDIF}
- CRC            : LongInt;
  PCnt           : Byte;
  LFs            : Byte;
 
-Procedure kBumpDecode(MSeg,MOfs,Size: Word);
-Var
-  TmpW: Word;
-  Adjust,
-  E,
-  K,
-  O: Byte;
+Function MaxAvail: LongInt;
+{ Turbo Pascal's heap intrinsic (largest free block) has no FPC equivalent -
+  FPC's heap grows from the OS on demand rather than living in a fixed DOS
+  segment. CurrHeapFree is the closest stand-in; the DOS-era "insufficient
+  heap" checks that read this are effectively unreachable on a modern
+  system, but are left in place rather than removed. }
 Begin
-  Mem[MSeg:MOfs+Size-1]:=Mem[MSeg:MOfs+Size-1]-192;
-  For TmpW:=1 To Size Do
-  Begin
-    E:=Mem[MSeg:MOfs+TmpW-1]; K:=Mem[Seg(Key):Ofs(Key)+TmpW Mod 4]; O:=E xor K;
-    Mem[MSeg:MOfs+TmpW-1]:=O;
-  End;
-  For TmpW:=Size DownTo 1 Do
-  Begin
-    If TmpW<>Size Then Mem[MSeg:MOfs+TmpW-1]:=CW(Mem[MSeg:MOfs+TmpW-1],-Mem[MSeg:MOfs+TmpW]);
-  End;
-End;
-
-Procedure kBumpEncode(MSeg,MOfs,Size: Word);
-Var
-  TmpW: Word;
-  Adjust,
-  O,
-  E,
-  K: Byte;
-Begin
-  For TmpW:=1 To Size Do
-  Begin
-    If TmpW<>Size Then Mem[MSeg:MOfs+TmpW-1]:=CW(Mem[MSeg:MOfs+TmpW-1],Mem[MSeg:MOfs+TmpW]);
-  End;
-  For TmpW:=1 To Size Do
-  Begin
-    O:=Mem[MSeg:MOfs+TmpW-1]; K:=Mem[Seg(Key):Ofs(Key)+TmpW Mod 4]; E:=O xor K;
-    Mem[MSeg:MOfs+TmpW-1]:=E;
-  End;
-  Mem[MSeg:MOfs+Size-1]:=Mem[MSeg:MOfs+Size-1]+192;
+ MaxAvail:=System.GetFPCHeapStatus.CurrHeapFree;
 End;
 
 Function Line_Boundry: Boolean;
@@ -166,7 +127,6 @@ End;
 
 Procedure Cursor_WordRight;
 Begin
-{$IFDEF CompileExtra}
   If Delimiter Then
   Begin
     Repeat
@@ -180,12 +140,10 @@ Begin
    Until Delimiter;
    Cursor_WordRight; { Then move to a word start (recursive) }
   End;
-{$ENDIF}
 End;
 
 Procedure Cursor_WordLeft;
 Begin
-{$IFDEF CompileExtra}
   If Delimiter Then
   Begin
     Repeat
@@ -207,12 +165,10 @@ Begin
     Until Delimiter;
     Cursor_WordLeft; { And then move a word left (recursive) }
   End;
-{$ENDIF}
 End;
 
 Procedure Reformat_Paragraph;     { Paragraph reformat, starting at current }
 Begin                      { line and Ending at any empty or indented line; }
-{$IFDEF CompileExtra}
   Remove_Trailing;                 { leaves Cursor after last line formatted }
   CCol:=CurLength;
   While CurChar<>' ' Do                     { For each line of the paragraph }
@@ -240,14 +196,12 @@ Begin                      { line and Ending at any empty or indented line; }
    Until CCol=0; { No more lines fit - time for next line, or EOParagraph }
    Inc(CLine); CCol:=1; Remove_Trailing;
   End;
-{$ENDIF}
 End;
 
 Procedure Msg_Reformat;                { Reformat paragraph, update display }
 Var
   Pline: Integer;
 Begin
-{$IFDEF CompileExtra}
   PLine := CLine; Reformat_Paragraph;
   While (CurLength=0) And (CLine<=LineCnt) Do Inc(CLine);
   While CLine-TopLine>Scrlines-2 do { Find top of screen for redisplay }
@@ -256,12 +210,10 @@ Begin
     Inc(TopLine,Config^.ScrollSiz); PLine:=TopLine;
   End;
   Refresh_screen;
-{$ENDIF}
 End;
 
 Procedure Delete_WordRight;
 Begin
-{$IFDEF CompileExtra}
   If CurChar=' ' Then { Skip blanks right }
   Repeat
     Delete_Char;
@@ -272,7 +224,6 @@ Begin
     Delete_Char;
     If (LastSlice+Slicing<=Timer) Then ReleaseSlice;
   Until Delimiter;
-{$ENDIF}
 End;
 
 Procedure Cursor_Tab;
@@ -335,46 +286,7 @@ Begin
   SWrite('[0m[1;30m'+GetChar+'[1;34;44m');
 End;
 
-Function GetQuoteLine(I: LongInt): String;
-Var
-  S: String;
-Begin
-  GetQuoteLine:='';
-  Assign(Qfile,SysPath+'OEDIT.QUO');
-  Reset(Qfile);
-  If I>FileSize(Qfile) Then
-  Begin
-    Close(Qfile);
-    Exit;
-  End;
-  Seek(Qfile,I-1);
-  Read(Qfile,Qtext);
-  Close(QFile);
-  S:=Ltrim(QText);
-  If Copy(S,1,15)=Config^.RepStr Then
-  QText:=' '+S
-  Else
-  Begin
-    QText:=' '+ToInitials+'> '+S;
-    If QText=' '+ToInitials+'> ' Then QText:='';
-  End;
-  If Config^.Censor Then QText:=Censor(QText);
-  GetQuoteLine:=Qtext;
-End;
-
-{$IFDEF CompileExtra}
 Procedure Expand;
-Const
-  ExpandUtils    = 2;
-  ExpandUtil     : Array[1..ExpandUtils,1..2] Of String[10] = (
-                  ('THANG',    'TinysHANG' ),
-                  ('OEDIT',    'Open!EDIT' )
-                                           );
-  ExpandWords    = 2;
-  ExpandWord     : Array[1..ExpandWords,1..2] Of String[35] = (
-                  ('@SMILEY@',             ':) =) :] =] :> :-) |-) =-) =-> };^)'),
-                  ('@TINYSBBS@',           'www.tinysbbs.com')
-                                                                   );
 Var
   Cnt,
   Tmp: Word;
@@ -417,21 +329,6 @@ Begin
     Exit;
    End;
 
-  For Cnt:=1 To ExpandWords Do
-  If KeyPhrase=ExpandWord[Cnt,1] Then
-  Begin
-    Back:=Length(KeyPhrase)+1;
-    If LastWasCR Then Dec(Back);
-    For Tmp:=1 To Back Do
-    Begin
-      Cursor_Left;
-      Delete_Char;
-    End;
-    For Tmp:=1 To Length(ExpandWord[Cnt,2]) Do Insert_Char(ExpandWord[Cnt,2][Tmp]);
-    If (Not LastWasCR) Then Insert_Char(LastChar);
-    Exit;
-   End;
-
   For Cnt:=0 To 9 Do
   If KeyPhrase=User.Expand[Cnt,1] Then
   Begin
@@ -462,22 +359,7 @@ Begin
     Exit;
    End;
 
-  For Cnt:=1 To ExpandUtils Do
-  If KeyPhrase=ExpandUtil[Cnt,1] Then
-  Begin
-    Back:=Length(KeyPhrase)+1;
-    If LastWasCR Then Dec(Back);
-    For Tmp:=1 To Back Do
-    Begin
-      Cursor_Left;
-      Delete_Char;
-    End;
-    For Tmp:=1 To Length(ExpandUtil[Cnt,2]) Do Insert_Char(ExpandUtil[Cnt,2][Tmp]);
-    If (Not LastWasCR) Then Insert_Char(LastChar);
-    Exit;
-   End;
-
-  For Cnt:=1 To 8 Do
+  For Cnt:=1 To 4 Do
   If KeyPhrase=EStr[Cnt,1]^ Then
   Begin
     Back:=Length(KeyPhrase)+1;
@@ -492,150 +374,6 @@ Begin
     Exit;
    End;
 End;
-{$ENDIF}
-
-Procedure QuoteWindow;
-Var
-  xSx: String;
-  LeftStr: String[80];
-  Key: Char;
-  Tmp: Byte;
-  OrigLines: Word;
-
-  Procedure UpdateWin;
-  Var
-    Tmp: Word;
-  Begin
-    For Tmp:=1 To Config^.QuoteWinSize Do
-    Begin
-      SGotoXY(1,23-Config^.QuoteWinSize+Tmp-1); SClrEol; FunkyWrite(' '+GetQuoteLine(QuoteLineNum+Tmp-1));
-    End;
-  End;
-
-Begin
-  If QuoteLineCnt=0 Then Exit;
-  OrigLines:=ScrLines;
-  ScrLines:=ScrLines-Config^.QuoteWinSize;
-  xSx:=LS(1);
-  PF_overridepos:=23-Config^.QuoteWinSize-1; Plain_Footer(1);
-  Plain_Footer(2);
-  SGotoXY(39-(Length(' '+xSx+' ') Div 2),23-Config^.QuoteWinSize-1);
-  FunkyWrite(' '+xSx+' ');
-  For Tmp:=23-Config^.QuoteWinSize To 22 Do
-  SWrite('['+StrVal(Tmp)+';1H[K');
-  SGotoXY(57-Length(LS(2)+LS(3)),23);
-  XSWrite(' |FS<|FCE|FLnter|FS> ');
-  FunkyWrite(LS(2));
-  XSWrite('  |FS<|FCE|FLsc|FS> ');
-  FunkyWrite(LS(3)+' ');
-  If QuoteHil<1 Then QuoteHil:=1;
-  If QuoteLineNum<1 Then QuoteLineNum:=1;
-  If QuoteLineNum>QuoteLineCnt Then QuoteLineNum:=QuoteLineCnt;
-  UpdateWin;
-  OKPageNum:=False;
-  Repeat
-    If QuoteHil<1 Then QuoteHil:=1;
-    If QuoteLineNum<1 Then QuoteLineNum:=1;
-    If QuoteLineNum>QuoteLineCnt Then QuoteLineNum:=QuoteLineCnt;
-    If (QuoteHil=1) And (QuoteLineNum=0) Then QuoteLineNum:=1;
-    If QuoteLineNum+QuoteHil-1>QuoteLineCnt Then QuoteLineNum:=(QuoteLineCnt-QuoteHil+1);
-    SGotoXY(1,23-Config^.QuoteWinSize+QuoteHil-1); {SClrEol;}
-    SWrite(ANSICode[User.NC]+' '+ANSICode[40+User.FieldColor]+GetQuoteLine(QuoteLineNum+QuoteHil-1)+'[K[0m');
-    SGotoXY(79,23-Config^.QuoteWinSize+QuoteHil-1); SClrEol;
-    Repeat
-      Key:=Get_Key;
-    Until Key in [^[,#0,'8','2','9','3','7','1',#13,^Q,^W,^E,^X,^R,^C];
-    SGotoXY(1,23-Config^.QuoteWinSize+QuoteHil-1); {SClrEol;}
-    FunkyWrite(' '+GetQuoteLine(QuoteLineNum+QuoteHil-1)); SWrite('[K');
-    If (Key=#0) Then
-    Begin
-      Key:=Get_Key;
-      Case Key Of
-      'H': Key := ^E;     {UpArrow}
-      'P': Key := ^X;     {DownArrow}
-      'I': Key := ^R;     {PgUp}
-      'Q': Key := ^C;     {PgDn}
-      'G': Key := ^L;     {Home}
-      'O': Key := ^P;     {End}
-      Else Key := #0;
-     End;
-   End;
-  If (Key=#27) Then
-  Begin
-    If Not (Keypressed or SKeypressed) Then KeyDelay(250);
-    If (Keypressed Or SKeypressed) Then
-    Begin
-      Key:=Get_Key;
-      If Key='[' Then Key:=Get_Key;
-      If Key='O' Then Key:=Get_Key;
-      Case Key Of
-        'A': Key:=^E;     {UpArrow}
-        'B': Key:=^X;     {DownArrow}
-        'r': Key:=^R;     {PgUp}
-        'q': Key:=^C;     {PgDn}
-        'H': Key:=^L;     {Home}
-        'K',              {End - PROCOMM+}
-        'R': Key:=^P;     {End - GT}
-        #27: Key:=^Q;
-       End;
-     End Else Key:=^Q;
-   End;
-  If Key=#13 Then
-   Begin
-     Insert_Line(GetQuoteLine(QuoteLineNum+QuoteHil-1));
-     refresh_Screen;
-     Key:='2';
-     Cursor_Down(True);
-   end;
-   If Key in [^E,'8'] Then
-   If Not ((QuoteLineNum=1) And (QuoteHil=1)) Then
-   Begin
-     Dec(QuoteHil);
-     If QuoteHil=0 Then
-     Begin
-       QuoteHil:=1;
-       Dec(QuoteLineNum);
-       UpdateWin;
-     End;
-   End;
-   If Key in [^X,'2'] Then
-   If Not ((QuoteHil+QuoteLineNum-1)=QuoteLineCnt) Then
-   Begin
-     Inc(QuoteHil);
-     If QuoteHil=Config^.QuoteWinSize+1 Then
-     Begin
-       QuoteHil:=Config^.QuoteWinSize;
-       Inc(QuoteLineNum);
-       UpdateWin;
-     End;
-   End;
-   If Key in [^R,'9'] Then
-   If QuoteLineNum>Config^.QuoteWinSize Then { Don't go TOO far up }
-   Begin
-     Dec(QuoteLineNum,Config^.QuoteWinSize);
-     UpdateWin;
-   End
-   Else
-     Key:='7';
-   If Key in [^C,'3'] Then
-   If QuoteLineNum+QuoteHil-1+Config^.QuoteWinSize<=QuoteLineCnt Then
-   Begin
-     Inc(QuoteLineNum,Config^.QuoteWinSize);
-     UpdateWin;
-   End Else
-   Key:='1';
-   If Key in [^L,'7'] Then Begin QuoteLineNum:=1; UpdateWin; End;
-   If Key in [^P,'1'] Then
-   Begin
-     While QuoteLineNum+Config^.QuoteWinSize<QuoteLineCnt Do Inc(QuoteLineNum,Config^.QuoteWinSize);
-     UpdateWin;
-   End;
-  Until (Key=^Q) Or (Key=^W);
-  ScrLines:=OrigLines;
-  OKPageNum:=True;
-  Unquote_Screen;
-  Reposition;
-End;
 
 Function ConfirmAbort: Boolean;
 Var
@@ -643,7 +381,7 @@ Var
 Begin
   If Expired Then ConfirmAbort:=True;
   Plain_Footer(2);
-  SGotoXY(67-Length(LS(4)),23);
+  SGotoXY(67-Length(LS(4)),FootRow);
   FunkyWrite(' '+LS(4)+' (y/N) ');
   Repeat
     C:=UpCase(GetLow);
@@ -653,7 +391,6 @@ Begin
   Display_Footer(2);
 End;
 
-{$IFDEF CompileExtra}
 Procedure SigSetup;
 Var
  Key,
@@ -662,7 +399,7 @@ Var
 Begin
   If User.SigPtr<>0 Then
   Begin
-    Assign(SigFile,CfgPath+'OEDIT.SIG');
+    Assign(SigFile,CfgPath+'TIE-EDIT.SIG');
     FileMode:=66; Reset(SigFile); FileMode:=2;
     Seek(SigFile,User.SigPtr-1);
     Read(SigFile,Sig);
@@ -753,7 +490,7 @@ Begin
       End;
       End;
       Until (Key=#27) Or (UpCase(Key)='Q');
-      Assign(SigFile,CfgPath+'OEDIT.SIG');
+      Assign(SigFile,CfgPath+'TIE-EDIT.SIG');
       FileMode:=66;
       {$I-}Reset(SigFile);{$I+}
       FileMode:=2;
@@ -835,6 +572,10 @@ Begin
     LFile[LFs]:=LFile[LFs]+FPad(S,18);
     FindNext(SR);
   End;
+  { No external .LNG files present -> the compiled-in English is the only
+    language; select it and skip the picker (which would call LS on an
+    unpopulated Lang^). }
+  If LFs=0 Then Begin LanguageFile:='ENGLISH'; Exit; End;
   If (User.LangFile<>'') And (FileExists(CfgPath+User.LangFile+'.LNG')) Then
   Begin
     LanguageFile:=User.LangFile;
@@ -845,7 +586,7 @@ Begin
     LanguageFile:=Copy(LFile[1],1,Pos('.',LFile[1])-1);
     Exit;
   End;
-  Center('|NC'+LS(99)+' Open!EDIT v'+Ver+'!',9);
+  Center('|NC'+LS(99)+' Tie-EDIT v'+Ver+'!',9);
   SGotoXY(25,10); XSWrite('|NCÚ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
   SGotoXY(25,11); XSWrite('|HC³|FZÛ²±°                       |FZ°|BC³');
   SGotoXY(25,12); XSWrite('|PC³|FZ²±°                       |FZ°±|BC³');
@@ -924,7 +665,7 @@ Begin
           LanguageFile:=Copy(LFile[Top+Hil],1,Pos('.',LFile[Top+Hil])-1);
           SClrScr; StatusBar;
           User.LangFile:=LanguageFile;
-          Assign(UserFile,CfgPath+'OEDITUSR.CFG');
+          Assign(UserFile,CfgPath+'TIE-EDITUSR.CFG');
           Reset(UserFile);
           Seek(UserFile,UIDX);
           Write(UserFile,User);
@@ -958,7 +699,6 @@ Begin
   SigSetup;
   SWrite('[0m[2J');
   StatusBar;
-  Display_Header;
   Display_Footer(3);
   Prepare_Screen; Reposition;
   FileMode:=66; Reset(UserFile); FileMode:=2; Seek(UserFile,UIDX); Write(UserFile,User); Close(UserFile);
@@ -972,40 +712,40 @@ Begin
   XSWriteLn('                    |PC³');
   XSWriteLn(' |BC³    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                    |BC³');
   XSWrite(' |BC³ |FD1|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDA|FS. '); FunkyWrite(Pad(LS(12),13)); XSWriteLn(' |FC'+YN[User.UseTaglines]+' |BC³');
+            '[0m |FDA|FS. '); FunkyWrite(Pad(LS(13),13)); XSWriteLn(' |FC'+YN[User.UseExpand]+' |BC³');
   XSWrite(' |BC³ |FD2|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDB|FS. '); FunkyWrite(Pad(LS(13),13)); XSWriteLn(' |FC'+YN[User.UseExpand]+' |BC³');
+            '[0m |FDB|FS. '); FunkyWrite(Pad(LS(15),13)); XSWriteLn(' |FC'+YN[Not User.UseSpellchk]+' |BC³');
   XSWrite(' |BC³ |FD3|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDC|FS. '); FunkyWrite(Pad(LS(14),13)); XSWriteLn(' |FC'+YN[User.UseKeywords]+' |BC³');
+            '[0m |FDC|FS. '); FunkyWrite(Pad(LS(17),13)); XSWriteLn(' |FC'+YN[User.AutoSigs]+' |BC³');
   XSWrite(' |BC³ |FD4|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDD|FS. '); FunkyWrite(Pad(LS(15),13)); XSWriteLn(' |FC'+YN[Not User.UseSpellchk]+' |BC³');
-  XSWrite(' |BC³ |FD5|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDE|FS. '); FunkyWrite(Pad(LS(16),13)); XSWriteLn(' |FC'+YN[User.AutoTagline]+' |BC³');
-  XSWrite(' |BC³ |FD6|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDF|FS. '); FunkyWrite(Pad(LS(17),13)); XSWriteLn(' |FC'+YN[User.AutoSigs]+' |BC³');
-  XSWrite(' |BC³ |FD7|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
-            '[0m |FDG|FS. '); FunkyWrite(Pad(LS(102),15)); XSWriteLn(' |BC³');
-  XSWrite(' |BC³ |FD8|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDH|FS. ');
+            '[0m |FDD|FS. '); FunkyWrite(Pad(LS(102),15)); XSWriteLn(' |BC³');
+  XSWrite(' |BC³ |FD5|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDE|FS. ');
   If LFs>1 Then FunkyWrite(Pad(LS(101),15)) Else SWrite('[1;30m'+Pad(LS(101),15));
   XSWriteLn(' |BC³');
-  XSWrite(' |BC³ |FD9|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDI|FS. '); FunkyWrite(Pad(LS(18),14));
+  XSWrite(' |BC³ |FD6|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+'[0m |FDF|FS. '); FunkyWrite(Pad(LS(18),14));
   XSWriteLn('  |BC³');
+  XSWriteLn(' |BC³ |FD7|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m'+Pad('',20)+'|BC³');
+  XSWriteLn(' |BC³ |FD8|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m'+Pad('',20)+'|BC³');
+  XSWriteLn(' |BC³ |FD9|FS. |IC'+Pad('',25)+'[0m  |IC'+Pad('',25)+
+            '[0m'+Pad('',20)+'|BC³');
   XSWriteLn(' |BC³                                                                            ³');
   XSWrite(' |BC³   '); FunkyWrite(Pad(LS(19),72));
   XSWriteLn(' |BC³');
-  XSWriteLn(' |BC³  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ  ³');
+  XSWriteLn(' |BC³  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ      ÄÄÄÄÄÄÄÄÄÄÄÄÄÄ                     ³');
   XSWrite(' |BC³  |FDJ|FS. ');       FunkyWrite(Pad(LS(20),7)); XSWrite(' |FS[þ]     |FDN|FS. '); FunkyWrite(Pad(LS(21),7));
   XSWrite(' |FS[þ]      |FDR|FS. '); FunkyWrite(Pad(LS(21),7));
-  XSWriteLn(' |FS[þ]     |FDV|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[1],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[þ]     '+Pad('',13)+'|BC   ³');
   XSWrite(' |BC³  |FDK|FS. ');       FunkyWrite(Pad(LS(22),7)); XSWrite(' |FS[þ]     |FDO|FS. '); FunkyWrite(Pad(LS(23),7));
   XSWrite(' |FS[þ]      |FDS|FS. '); FunkyWrite(Pad(LS(23),7));
-  XSWriteLn(' |FS[þ]     |FDW|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[2],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[þ]     '+Pad('',13)+'|BC   ³');
   XSWrite(' |BC³  |FDL|FS. ');       FunkyWrite(Pad(LS(24),7)); XSWrite(' |FS[þ]     |FDP|FS. '); FunkyWrite(Pad(LS(25),7));
   XSWrite(' |FS[þ]      |FDT|FS. '); FunkyWrite(Pad(LS(25),7));
-  XSWriteLn(' |FS[þ]     |FDX|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[3],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[þ]     '+Pad('',13)+'|BC   ³');
   XSWrite(' |PC³  |FDM|FS. ');       FunkyWrite(Pad(LS(26),7)); XSWrite(' |FS[þ]     |FDQ|FS. '); FunkyWrite(Pad(LS(27),7));
   XSWrite(' |FS[þ]      |FDU|FS. '); FunkyWrite(Pad(LS(27),7));
-  XSWriteLn(' |FS[þ]     |FDY|FS. |NC'+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[4],10)+'[0m|BC   ³');
+  XSWriteLn(' |FS[þ]     '+Pad('',13)+'|BC   ³');
   XSWriteLn(' |HC³                                                                            |BC³');
   XSWriteLn(' |NCÀ|HCÄÄ|PCÄÄ|BCÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
   SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]);
@@ -1028,43 +768,32 @@ Begin
     SGotoXY(56,19); SWrite(ANSICode[User.ID]+ANSICode[40+User.FieldColor]); SWrite('þ');
     SGotoXY(56,20); SWrite(ANSICode[User.IS]+ANSICode[40+User.FieldColor]); SWrite('þ');
     User.FZ:=User.PC;
-    SGotoXY(1,23);
+    SGotoXY(1,FootRow);
     SWrite('[0m');
     C:=UpCase(GetLow);
     Case C Of
     'A'     : Begin
-                User.UseTaglines:=Not User.UseTaglines;
-                SGotoXY(77,5);
-                SWrite(ANSICode[User.FC]+YN[User.UseTaglines]);
-              End;
-    'B'     : Begin
                 User.UseExpand:=Not User.UseExpand;
-                SGotoXY(77,6);
+                SGotoXY(77,5);
                 SWrite(ANSICode[User.FC]+YN[User.UseExpand]);
               End;
+    'B'     : Begin
+                User.UseSpellChk:=Not User.UseSpellChk;
+                SGotoXY(77,6);
+                SWrite(ANSICode[User.FC]+YN[Not User.UseSpellChk]);
+              End;
     'C'     : Begin
-                User.UseKeywords:=Not User.UseKeywords; SGotoXY(77,7); SWrite(ANSICode[User.FC]+YN[User.UseKeywords]);
-              End;
-    'D'     : Begin
-                User.UseSpellChk:=Not User.UseSpellChk; SGotoXY(77,8); SWrite(ANSICode[User.FC]+YN[Not User.UseSpellChk]);
-              End;
-    'E'     : Begin
-                User.AutoTagline:=Not User.AutoTagline;
-                SGotoXY(77,9);
-                SWrite(ANSICode[User.FC]+YN[User.AutoTagline]);
-              End;
-    'F'     : Begin
                 User.AutoSigs:=Not User.AutoSigs;
-                SGotoXY(77,10);
+                SGotoXY(77,7);
                 SWrite(ANSICode[User.FC]+YN[User.AutoSigs]);
               End;
-    'G'     : Begin
+    'D'     : Begin
                 DInc2(User.FieldColor);
                 User.ChgdColors:=True;
               End;
-    'H'     : Begin
+    'E'     : Begin
                 User.LangFile:='';
-                SWrite('[0m');
+                SWrite(#27'[0m');
                 SClrScr;
                 StatusBar;
                 SelectLanguage;
@@ -1081,7 +810,7 @@ Begin
                 End;
                 Goto ShowOrigScreen;
               End;
-    'I'     : Begin
+    'F'     : Begin
                 SigSetup;
                 Goto ShowOrigScreen;
               End;
@@ -1104,22 +833,6 @@ Begin
     'S'     : Begin DInc(User.IL); User.ChgdColors:=True; End;
     'T'     : Begin DInc(User.ID); User.ChgdColors:=True; End;
     'U'     : Begin DInc(User.IS); User.ChgdColors:=True; End;
-    'V'     : Begin
-                SGotoXY(66,17); SRead(User.TagKeyword[1],10,User.TagKeyword[1]);
-                SGotoXY(66,17); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[1],10));
-              End;
-    'W'     : Begin
-                SGotoXY(66,18); SRead(User.TagKeyword[2],10,User.TagKeyword[2]);
-                SGotoXY(66,18); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[2],10));
-              End;
-    'X'     : Begin
-                SGotoXY(66,19); SRead(User.TagKeyword[3],10,User.TagKeyword[3]);
-                SGotoXY(66,19); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[3],10));
-              End;
-    'Y'     : Begin
-                SGotoXY(66,20); SRead(User.TagKeyword[4],10,User.TagKeyword[4]);
-                SGotoXY(66,20); SWrite(ANSICode[User.NC]+ANSICode[40+User.FieldColor]+Pad(User.TagKeyword[4],10));
-              End;
     '1'..'9': Begin
                 SGotoXY(7,4+(Ord(C)-Ord('0')));
                 SRead(User.Expand[(Ord(C)-Ord('0'))-1,1],25,User.Expand[(Ord(C)-Ord('0'))-1,1]);
@@ -1148,7 +861,6 @@ Begin
   IS:=ANSICode[User.IS]+ANSICode[40+User.FieldColor];
   SWrite('[0m[2J');
   StatusBar;
-  Display_Header;
   Display_Footer(3);
   Prepare_Screen;
   Reposition;
@@ -1159,77 +871,15 @@ Begin
   Write(UserFile,User);
   Close(UserFile);
 End;
-{$ENDIF}
 
-Function CheckQuoteRatio: Boolean;
+Function AppendSignature: Boolean;
 Var
-  Quotes,NonQuotes,Tmp: LongInt;
-  QuotePct: Real;
-  S: String[80];
   C: Char;
 Begin
-  CheckQuoteRatio:=True;
-  Quotes:=0; NonQuotes:=0;
-  For Tmp:=1 To LineCnt Do
-  Begin
-    If (Pos('>',MText[Tmp]^) in [1..5]) Then
-    Inc(Quotes)
-  Else
-    If MText[Tmp]^<>'' Then Inc(NonQuotes);
-  End;
-  If (Quotes+NonQuotes=0) Then
-  Begin
-    Plain_Footer(2);
-    SGotoXY(71-Length(LS(28)),23);
-    FunkyWrite(' '+LS(28)+' ');
-    CheckQuoteRatio:=False;
-    CDelay(1000);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-    If (Keypressed Or SKeypressed) Then GetLow;
-    Display_Footer(3);
-    Reposition;
-   Exit;
-  End;
-  QuotePct:=Quotes*100/(Quotes+NonQuotes);
-  S:=LeadingZero(Round(Int(QuotePct)))+'.'+StrVal(Round(Frac(QuotePct))*10)+'%';
-  If (QuotePct>Config^.MaxQuotePct) And (Config^.MaxQuotePct>1) Then
-  Begin
-    Plain_Footer(3);
-    SGotoXY(64-Length(LS(29)+LS(30)),22);
-    SWrite(' ');
-    FunkyWrite(LS(29)+' '+S+' '+LS(30)); SWrite(' ');
-    If Config^.ForceLessQuote Then
-    Begin
-      SGotoXY(71-Length(LS(31)),23);
-      FunkyWrite(' '+LS(31)+' ');
-      CheckQuoteRatio:=False;
-      CDelay(1000);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If Not ((Keypressed) Or (SKeypressed)) Then CDelay(500);
-      If (Keypressed Or SKeypressed) Then GetLow;
-     End
-     Else
-     Begin
-       SGotoXY(65-Length(LS(32)),23);
-       FunkyWrite(' '+LS(32)+' (Y/n) ');
-       Repeat C:=UpCase(GetLow);
-         If C in [#13,#27] Then C:='Y';
-       Until C in ['Y','N'];
-      CheckQuoteRatio:=Not (C='Y');
-     End;
-   Display_Footer(3);
-   Reposition;
-  End
-  Else
-  Begin
+  AppendSignature:=True;
    If User.SigPtr<>0 Then
     Begin
-      Assign(SigFile,CfgPath+'OEDIT.SIG');
+      Assign(SigFile,CfgPath+'TIE-EDIT.SIG');
       FileMode:=66; Reset(SigFile); FileMode:=2;
       Seek(SigFile,User.SigPtr-1);
       Read(SigFile,Sig);
@@ -1240,7 +890,7 @@ Begin
         If Not User.AutoSigs Then
         Begin
           Plain_Footer(2);
-          SGotoXY(65-Length(LS(33)),23); FunkyWrite(' '+LS(33)+' (Y/n) ');
+          SGotoXY(65-Length(LS(33)),FootRow); FunkyWrite(' '+LS(33)+' (Y/n) ');
           Repeat
             C:=UpCase(GetLow);
             If C=#13 Then C:='Y';
@@ -1248,7 +898,7 @@ Begin
           Display_Footer(2);
           If C=#27 Then
           Begin
-            CheckQuoteRatio:=False;
+            AppendSignature:=False;
             Reposition;
             Exit;
           End;
@@ -1270,7 +920,6 @@ Begin
       End;
     End;
   End;
-End;
 
 Procedure Insert_Str(S: String);
 Var
@@ -1287,303 +936,32 @@ Begin
   For Tmp:=1 To Length(S) Do Insert_Char(S[Tmp]);
 End;
 
-{$IFDEF CompileExtra}
-Procedure DoImport(FN: String);
-Var
-  F: Text;
-  S: String[80];
-  LineNo: Word;
-  OrigLines: Word;
-Begin
-  If FN='' Then Exit;
-  Cursor_NewLine;
-  Assign(F,FN);
-  FileMode:=66; {$I-} Reset(F); {$I+} FileMode:=2;
-  If IOResult<>0 Then
-  Begin
-    Insert_Str('[Open!EDIT: File not found]');
-    Exit;
-  End;
-  Count_Lines;
-  LineNo:=0;
-  SGotoXY(7,22);
-  FunkyWrite(' (0000) ');
-  OrigLines:=LineCnt;
-  While Not Eof(F) Do
-  Begin
-    ReadLn(F,S); If S[0]>Chr(WWrap) Then S[0]:=Chr(WWrap);
-    While Pos(#27,S)>0 Do
-      Delete(S,Pos(#27,S),1);
-      Insert_Line(S);
-      Inc(CLine);
-      Inc(LineNo);
-    If LineNo Mod 15 = 0 Then
-    Begin
-      SGotoXY(9,22); FunkyWrite(Zero(LineNo,4));
-    End;
-    If LineCnt>=Max_Msg_Lines-5 Then
-    Begin
-      Insert_Str('[Open!EDIT: Too many lines, truncating]');
-      CLine:=1; CCol:=1; TopLine:=1;
-      Scroll_Screen(0);
-      Close(F);
-      Exit;
-    End;
-  End;
- Close(F);
- Plain_Footer(1);
- Redisplay;
-End;
-
-Procedure ImportFile;
-Var
-  FN: String[80];
-Begin
-  Box(60,2,True);
-  SGotoXY(40-30-1+2-1,12-1);
-  SWrite(PC); SWrite(' '+LS(71)+' ');
-  SGotoXY(40-30-1+2-1,12-1+1);
-  SWrite(NC); SWrite(LS(72));
-  SGotoXY(40-30-1+2+60-18+16-Length(LS(73))-1,12-1+3);
-  SWrite(PC);
-  SWrite(' '+LS(73)+' ');
-  SGotoXY(40-30-1+2-1,12-1+2);
-  SWrite(IL); SRead(FN,60,'');
-  SWrite('[0m');
-  SGotoXY(1,11);
-  SClrEol;
-  SGotoXY(1,12);
-  SClrEol;
-  SGotoXY(1,13);
-  SClrEol;
-  SGotoXY(1,14);
-  SClrEol;
-  SGotoXY(1,15);
-  SClrEol;
-  Scroll_Screen(0);
-  DoImport(FN);
-End;
-
-Procedure DoExport(FN: String);
-Var
-  F: Text;
-  S: String[80];
-  LineNo: Word;
-Begin
-  If FN='' Then Exit;
-  Assign(F,FN);
-  ReWrite(F);
-  For LineNo:=1 To LineCnt Do
-   WriteLn(F,MText[LineNo]^);
-  Close(F);
-End;
-
-Procedure ExportFile;
-Var
-  FN: String[80];
-Begin
-  Box(60,2,True);
-  SGotoXY(40-30-1+2-1,12-1);
-  SWrite(PC);
-  SWrite(' '+LS(74)+' ');
-  SGotoXY(40-30-1+2-1,12-1+1);
-  SWrite(NC); SWrite(LS(75));
-  SGotoXY(40-30-1+2+60-18+16-Length(LS(73))-1,12-1+3);
-  SWrite(PC);
-  SWrite(LS(73));
-  SGotoXY(40-30-1+2-1,12-1+2);
-  SWrite(IL);
-  SRead(FN,60,'');
-  SWrite('[0m');
-  SGotoXY(1,11);
-  SClrEol;
-  SGotoXY(1,12);
-  SClrEol;
-  SGotoXY(1,13);
-  SClrEol;
-  SGotoXY(1,14);
-  SClrEol;
-  SGotoXY(1,15);
-  SClrEol;
-  Scroll_Screen(0);
-  DoExport(FN);
-End;
-
 Procedure Drop2DOS;
+{ Was ExecSwap: swap the resident program out of DOS conventional memory
+  (EMS/XMS/disk), exec COMSPEC, swap back in on return. That whole problem
+  is DOS-specific - Linux processes each get their own address space, so
+  no swap step is needed. Uses.Dos.Exec is fork+exec under the hood on
+  this target; SwapVectors (DOS interrupt-vector handoff for TSRs) is a
+  no-op here and was dropped rather than kept as misleading cruft. }
+Var
+  ShellCmd: String;
 begin
-  UseEmsIfAvailable := True;
-  if not InitExecSwap(HeapPtr, '~SESWAP.$$$') then
-    WriteLn('Unable to allocate swap space')
-  else
-  begin
-    Plain_Footer(1);
-    SGotoXY(74-Length(LS(76)),22);
-    FunkyWrite(LS(76));
-    SaveScreen(1);
-    Window(1,1,80,25);
-    TextAttr:=$07;
-    ClrScr;
-    sWriteLn(LS(77));
-    SwapVectors;
-    ExecWithSwap(GetEnv('COMSPEC'), '');
-    ShutdownExecSwap;
-    SwapVectors;
-    RestoreScreen(1);
-    Display_Footer(1);
-    Reposition;
-  end;
+  ShellCmd:=GetEnv('SHELL');
+  If ShellCmd='' Then ShellCmd:='/bin/sh';
+  Plain_Footer(1);
+  SGotoXY(74-Length(LS(76)),PromptRow);
+  FunkyWrite(LS(76));
+  SaveScreen(1);
+  Window(1,1,ScreenCols,ScreenRows);
+  TextAttr:=$07;
+  ClrScr;
+  sWriteLn(LS(77));
+  Exec(ShellCmd, '');
+  If DosError<>0 Then WriteLn('Unable to run shell (DosError ',DosError,')');
+  RestoreScreen(1);
+  Display_Footer(1);
+  Reposition;
 End;
-
-Procedure ProcessStars(Var P: String);
-Var
-  DropMsgData: Boolean;
-  MTmp: Word;
-  FN,
-  N: String;
-  I: Byte;
-  FromFirst,FromLast,
-  ToFirst,ToLast,
-  St: String;
-  PretendSomethingsThere: Boolean;
-Begin
-  If Pos(' ',FromName)>0 Then FromFirst:=Copy(FromName,1,Pos(' ',FromName)-1) Else FromFirst:=FromName;
-  If Pos(' ',FromName)>0 Then FromLast:=Copy(FromName,Pos(' ',FromName)+1,255) Else FromLast:='';
-  If Pos(' ',ToName)>0 Then ToFirst:=Copy(ToName,1,Pos(' ',ToName)-1) Else ToFirst:=ToName;
-  If Pos(' ',ToName)>0 Then ToLast:=Copy(ToName,Pos(' ',ToName)+1,255) Else ToLast:='';
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:=#32;
-  While Pos('*',P)>0 Do
-  Begin
-    PretendSomethingsThere:=False;
-    I:=Pos('*',P);
-    St:='';
-  Case UpCase(P[I+1]) Of
-     'B': Begin St:=StrVal(BaudRate); PretendSomethingsThere:=True; End;
-     'F': Begin St:=NoPipe(FromFirst); PretendSomethingsThere:=True; End;
-     'I': Begin St:=NoPipe(FromLast); PretendSomethingsThere:=True; End;
-     'N': Begin St:=StrVal(NodeNum); PretendSomethingsThere:=True; End;
-     'P': Begin St:=StrVal(ComPort); PretendSomethingsThere:=True; End;
-     'S': Begin St:=NoPipe(Subject); PretendSomethingsThere:=True; End;
-     'T': Begin St:=NoPipe(ToFirst); PretendSomethingsThere:=True; End;
-     'O': Begin St:=NoPipe(ToLast); PretendSomethingsThere:=True; End;
-  End;
-  If (St<>'') Or (PretendSomethingsThere) Then
-  Begin
-    Delete(P,I,2);
-    Insert(St,P,I);
-  End
-  Else
-  Begin
-     P[I]:=#255;
-  End;
-  End;
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:='*';
-End;
-
-Procedure RunProg(P: String);
-Var
-  DropMsgData: Boolean;
-  MTmp: Word;
-  FN,
-  N: String;
-  I: Byte;
-  St: String;
-  F: Text;
-  Ex: Boolean;
-  ExportBefore: String;
-  ImportAfter: Boolean;
-Begin
-  ExportBefore:='';
-  ImportAfter:=False;
-  DropMsgData:=False;
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:=#32;
-  ProcessStars(P);
-  While Pos('*',P)>0 Do
-  Begin
-    I:=Pos('*',P);
-    St:='';
-    Ex:=False;
-    Case UpCase(P[I+1]) Of
-      '$': Begin
-             DropMsgData:=True;
-             Assign(F,'MSGDATA.TXT');
-             ReWrite(F);
-             For MTmp:=1 To LineCnt Do
-             WriteLn(F,MText[MTmp]^);
-             Close(F);
-             Delete(P,I,2);
-             Ex:=True;
-           End;
-       'X': Begin
-              Delete(P,I,2);
-              FN:='';
-              While P[I]<>' ' Do
-              Begin
-                FN:=FN+P[I];
-                Delete(P,I,1);
-              End;
-              Assign(F,FN);
-              ReWrite(F);
-              For MTmp:=1 To LineCnt Do
-              WriteLn(F,MText[MTmp]^);
-              Close(F);
-              Ex:=True;
-            End;
-     'Y': ImportAfter:=True;
-     'C': St:=GetEnv('COMSPEC');
-    End;
-    If St<>'' Then
-    Begin
-      Delete(P,I,2);
-      Insert(St,P,I);
-    End
-    Else
-    Begin
-      If Not Ex Then P[I]:=#255;
-    End;
-  End;
-  While Pos(#255,P)>0 Do P[Pos(#255,P)]:='*';
-  P:=P+' ';
-  N:=Copy(P,1,Pos(' ',P)-1);
-  Delete(P,1,Pos(' ',P));
-  If (DropMsgData) Or (ImportAfter And (ExportBefore<>'')) Then
-  Begin
-    If DropMsgData Then ExportBefore:='MSGDATA.TXT';
-    LineCnt:=1;
-    For MTmp:=1 To Max_Msg_Lines-1 Do MText[MTmp]^:='';
-    Assign(F,ExportBefore);
-    FileMode:=66; {$I-} Reset(F); {$I+} FileMode:=2;
-    If IOResult<>0 Then Exit;
-    Repeat
-      ReadLn(F,MText[LineCnt]^);
-      Inc(LineCnt);
-    Until Eof(F);
-    Close(F);
-   If DropMsgData Then Erase(F);
-  End;
-End;
-
-Procedure RunMacro(Num: Byte);
-Var
-  F: Text;
-  S: String;
-Begin
-  Case Config^.AltF1To10[Num].CmdType Of
-    0: RunProg(Config^.AltF1to10[Num].CmdData);
-    1: Begin
-         S:=Config^.AltF1to10[Num].CmdData;
-         ProcessStars(S);
-       While Pos('|',S)>0 Do
-       Begin
-         Insert_Str_No_Newline(Copy(S,1,Pos('|',S)-1));
-         Delete(S,1,Pos('|',S));
-         Cursor_Newline;
-       End;
-       Insert_Str_No_Newline(S);
-       End;
-   2: DoImport(Config^.AltF1to10[Num].CmdData);
-  End;
-End;
-{$ENDIF}
 
 Function Msg_Edit: Boolean;
 Var
@@ -1591,11 +969,8 @@ Var
   I: Integer;
   SaveMsg,
   AbortMsg: Boolean;
-  ImportMsg,
-  ExportMsg: Boolean;
   A: Byte;
 
-{$IFDEF CompileExtra}
   Procedure DoMenu;
   Var
     Hil: Byte;
@@ -1610,38 +985,38 @@ Var
       Begin
         ForceMenu:=False;
         Plain_Footer(2);
-        SGotoXY(62-Length(LS(34)+LS(35)+LS(36)+LS(37)),22);
+        SGotoXY(62-Length(LS(34)+LS(35)+LS(36)+LS(37)),PromptRow);
         Pos1:=WhereX; XSWrite('|BC['); FunkyWrite(LS(34));
         Pos2:=WhereX+2; XSWrite('|BC] |BC['); FunkyWrite(LS(35));
         Pos3:=WhereX+2; XSWrite('|BC] |BC['); FunkyWrite(LS(36));
         Pos4:=WhereX+2; XSWrite('|BC] |BC['); FunkyWrite(LS(37));
         XSWrite('|BC]');
-        SGotoXY(49-Length(LS(80)),23);
+        SGotoXY(49-Length(LS(80)),FootRow);
         FunkyWrite(' '+LS(80)); XSWrite(' |BC(|PCS');
         XSWriteLn('|BC/|PCA|BC/|PCR|BC/|PCH|BC/|PCLeft|BC/|PCRight|BC)|FS: ');
       Repeat
         InputFunky:=True;
         Case Hil Of
         1: Begin
-             SGotoXY(Pos1,22);
+             SGotoXY(Pos1,PromptRow);
              XSWrite('|IS[');
              FunkyWrite(LS(34));
              XSWrite('|IS]');
            End;
        2: Begin
-            SGotoXY(Pos2,22);
+            SGotoXY(Pos2,PromptRow);
             XSWrite('|IS[');
             FunkyWrite(LS(35));
             XSWrite('|IS]');
           End;
        3: Begin
-            SGotoXY(Pos3,22);
+            SGotoXY(Pos3,PromptRow);
             XSWrite('|IS[');
             FunkyWrite(LS(36));
             XSWrite('|IS]');
           End;
        4: Begin
-            SGotoXY(Pos4,22);
+            SGotoXY(Pos4,PromptRow);
             XSWrite('|IS[');
             FunkyWrite(LS(37));
             XSWrite('|IS]');
@@ -1649,10 +1024,10 @@ Var
           End;
           Key:=UpCase(Get_Key);
           Case Hil Of
-           1: Begin SGotoXY(Pos1,22); XSWrite('|BC['); FunkyWrite(LS(34)); XSWrite('|BC]'); End;
-           2: Begin SGotoXY(Pos2,22); XSWrite('|BC['); FunkyWrite(LS(35)); XSWrite('|BC]'); End;
-           3: Begin SGotoXY(Pos3,22); XSWrite('|BC['); FunkyWrite(LS(36)); XSWrite('|BC]'); End;
-           4: Begin SGotoXY(Pos4,22); XSWrite('|BC['); FunkyWrite(LS(37)); XSWrite('|BC]'); End;
+           1: Begin SGotoXY(Pos1,PromptRow); XSWrite('|BC['); FunkyWrite(LS(34)); XSWrite('|BC]'); End;
+           2: Begin SGotoXY(Pos2,PromptRow); XSWrite('|BC['); FunkyWrite(LS(35)); XSWrite('|BC]'); End;
+           3: Begin SGotoXY(Pos3,PromptRow); XSWrite('|BC['); FunkyWrite(LS(36)); XSWrite('|BC]'); End;
+           4: Begin SGotoXY(Pos4,PromptRow); XSWrite('|BC['); FunkyWrite(LS(37)); XSWrite('|BC]'); End;
           End;
      Case Key Of
        #00: Case Get_Key Of
@@ -1679,17 +1054,11 @@ Var
               2: Key:='A';
               3: Key:='R';
               4: Key:='H';
-              5: Key:='I';
-              6: Key:='E';
              End;
       End;
-    Until Key in ['A','S','R','Q','I','E'];
+    Until Key in ['A','S','R'];
     If Key='A' Then AbortMsg:=True;
     If Key='S' Then SaveMsg:=True;
-    If Key='I' Then ImportMsg:=True;
-    If Key='E' Then ExportMsg:=True;
-    If Key='R' Then Key:=#0;
-    If Key='Q' Then QuoteWindow;
     If Key<>'S' Then
      Begin
       Display_Footer(3);
@@ -1701,40 +1070,16 @@ Var
     SaveMsg:=True;
    End;
   End;
-{$ELSE}
-  Procedure DoMenu; Begin End;
-{$ENDIF}
-  Procedure CleanUp;
-  Var
-    I: Byte;
-  Begin
-    SGotoXY(1,7);
-    For I:=1 to ScrLines Do                   { Physical lines are now invalid }
-    Begin
-      PhyLine^[I]:='';
-      SWriteLn('');
-      SClrEol;
-    End;
-    Scroll_Screen(0);                                       { Causes redisplay }
-    Display_Footer(3);
-    Reposition;
-  End;
 
 Var
   OIM: Boolean;
 Begin
-  Display_Header;
   Display_Footer(3);
   StatusBar;
-  SaveMsg:=False; AbortMsg:=False; ImportMsg:=False; ExportMsg:=False;
+  SaveMsg:=False; AbortMsg:=False;
   If Not ReEditing Then
   Begin
     CLine:=LineCnt; CCol:=CurLength+1;
-    If Replying Then
-    Begin
-      CLine:=1;
-      CCol:=1;
-    End;
     TopLine := 1; While (CLine-TopLine)>(Config^.ScrollSiz+3) Do Inc(TopLine,Config^.ScrollSiz);
   End;
   Prepare_Screen;
@@ -1752,26 +1097,10 @@ Begin
              StatusBar;
              Continue;
            End;
-{$IFDEF CompileExtra}
-      '<': If (LocalKeypress) And (Not Expired) Then Begin ExportFile; Continue; End;
-      '=': If (LocalKeypress) And (Not Expired) Then Begin ImportFile; Cleanup; Continue; End;
-      '>': If (LocalKeypress) And (Not Expired) Then Begin ForceExit; Continue; End;
-{$ENDIF}
       '?': If (LocalKeypress) And (Not Expired) Then
            Begin
              Sound(500); Delay(20); Sound(1000); Delay(20); Sound(500); Delay(20); NoSound;
              Remote_Screen(^G);
-             Continue;
-           End;
-      '@': If (LocalKeypress) And (Not Expired) Then Begin HangUpUser; Continue; End;
-      'A': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft+(5*60); Continue; End;
-      'B': If (LocalKeypress) And (Not Expired) Then Begin TimeLeft:=TimeLeft-(5*60); Continue; End;
-{$IFDEF CompileExtra}
-      'C': If (LocalKeypress) And (Not Expired) Then
-           Begin
-             SGotoXY(8,22); FunkyWrite(' '+LS(103)+' ');
-             EditUser;
-             Display_Footer(1);
              Continue;
            End;
       'D': If (LocalKeypress) And (Not Expired) Then
@@ -1779,12 +1108,6 @@ Begin
              Drop2DOS;
              Continue;
            End;
-      'h'..'q': If (LocalKeypress) And (Not Expired) Then
-                Begin
-                  RunMacro(Ord(Key)-Ord('h')+1);
-                  Continue;
-                End;
-{$ENDIF}
       'G': Key:=^L; { Home }
       'H': Key:=^E; { UpArrow }
       'I': Key:=^R; { PgUp }
@@ -1824,6 +1147,7 @@ Begin
       'r': Key:=^R;  { PgUp }
       'q': Key:=^C;  { PgDn }
       'n': Key:=^V;  { Ins }
+      'P': Begin Inc(StatBar); StatusBar; Continue; End; { F1, ESC O P }
       #00: key:=#27; { Timeout - escape key }
       #27: Begin key:=^Z; ForceMenu:=True; End;
      End;
@@ -1840,12 +1164,12 @@ Begin
     ^H: Begin Cursor_Left; If Insert_Mode Then Delete_Char; End;
     ^I: Cursor_Tab;
     ^J: Join_Lines;
-    ^K: {$IFDEF CompileExtra} If (Not Expired) Then UserConfig {$ENDIF} ;
+    ^K: If (Not Expired) Then UserConfig;
     ^L: Cursor_BegLine;
     ^M: Begin
          OIM:=Insert_Mode; Insert_Mode:=True;
          LastWasCR:=True;
-         {$IFDEF CompileExtra} If (Not Expired) THen Expand; {$ENDIF}
+         If (Not Expired) THen Expand;
          Insert_Mode:=OIM;
          Cursor_NewLine;
         End;
@@ -1855,12 +1179,10 @@ Begin
         End;
     ^O: Redisplay;
     ^P: Cursor_EndLine;
-    ^Q: QuoteWindow;
     ^R: Page_Up;
     ^S: Cursor_Left;
     ^T: Delete_Wordright;
     ^V: Begin Insert_Mode:=Not Insert_Mode; Display_Footer(1); Reposition; End;
-    ^W: QuoteWindow;
     ^X: Cursor_Down(False);
     ^Y: Msg_Delete_Line;
     ^Z: DoMenu;
@@ -1877,37 +1199,20 @@ Begin
                LastWasCR:=False;
               End;
           End;
-   #32.. #255: Begin
+   #32..#126,#128..#255: Begin
                  Insert_Char(Key); { All other characters are self-inserting }
                  LastWasCR:=False;
-                 {$IFDEF CompileExtra}
                  If Not (Key in ['0'..'9','A'..'Z','a'..'z']) Then Expand;
-                 {$ENDIF}
                End;
    End;
-If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','Q','C','I','E']) And (CCol=3)) And (Not Expired)
+If ((MText[CLine]^[1]='/') And (UpCase(MText[CLine]^[2]) in ['A','S','C']) And (CCol=3)) And (Not Expired)
 Then
    Begin
     Case UpCase(MText[CLine]^[2]) Of { 'S' or 'A' + 1 }
-      'Q': Begin
-             Msg_Delete_Line;
-             QuoteWindow;
-           End;
       'C': Begin
              Msg_Delete_Line;
              UserConfig;
             End;
-      'I': If TurboCOM.Security>=Config^.ImportSecurity Then
-           Begin
-             ImportFile;
-             Cleanup;
-             Msg_Delete_Line;
-           End;
-      'E': If TurboCOM.Security>=Config^.ExportSecurity Then
-           begin
-             ExportFile;
-             Msg_Delete_Line;
-           end;
       'A': Begin
              If ConfirmAbort Then
              AbortMsg:=True
@@ -1931,7 +1236,7 @@ Then
       SaveMsg:=False;
     End
     Else
-    SaveMsg:=(CheckQuoteRatio And SpellCheck);
+    SaveMsg:=(AppendSignature And SpellCheck);
     End;
     If (AbortMsg) And (Force) Then Begin AbortDisabled; AbortMsg:=False; End;
   Until (SaveMsg) Or (AbortMsg);
@@ -1941,11 +1246,11 @@ Then
   End
   Else
   Begin
-    SGotoXY(8,22);
+    SGotoXY(8,PromptRow);
     FunkyWrite(' '+Pad(LS(38),19)+' ');
     Msg_Edit:=False;
     CDelay(1000);
-    SGotoXY(1,24);
+    SGotoXY(1,FootRow);
   End;
 End;
 
@@ -1953,30 +1258,28 @@ End;
 Var
   n: Integer;
   EE: Word;
+  TmpF: File;
 Begin
   If ErrorAddr=Nil Then
   Begin
-    If FileExists(CfgPath+'MATCHES.$%$') Then Begin Assign(QFile,CfgPath+'MATCHES.$%$'); Erase(QFile); End;
-    If FileExists(SysPath+'OEDIT.QUO') Then Begin Assign(QFile,SysPath+'OEDIT.QUO'); Erase(QFile); End;
-    If FileExists(CfgPath+'$OEDITMP.$~$') Then Begin Assign(QFile,CfgPath+'$OEDITMP.$~$'); Erase(QFile); End;
+    If FileExists(CfgPath+'MATCHES.$%$') Then Begin Assign(TmpF,CfgPath+'MATCHES.$%$'); Erase(TmpF); End;
+    If FileExists(CfgPath+'$TIE-EDITMP.$~$') Then Begin Assign(TmpF,CfgPath+'$TIE-EDITMP.$~$'); Erase(TmpF); End;
   End;
   For n:=1 to Max_Msg_Lines Do
   Dispose(MText[n]);
   Dispose(PhyLine);
   Dispose(Config);
 
-{$IFDEF CompileExtra}
   For EE:=1 To ExtraExpands Do
   Begin
     Dispose(ExtraExpand[EE,1]);
     Dispose(ExtraExpand[EE,2]);
   End;
-  For EE:=1 To 8 Do
+  For EE:=1 To 4 Do
   Begin
     Dispose(EStr[EE,1]);
     Dispose(EStr[EE,2]);
   End;
-{$ENDIF}
   If MemLang Then Dispose(Lang); MemLang:=False;
   ExitProc:=ExitSave;
 End;
@@ -1986,12 +1289,14 @@ Var
   F: Text;
   S: String[100];
 Begin
-{$IFDEF CompileExtra}
   ExtraExpands:=0;
   Assign(F,CfgPath+'EXPAND.CTL');
   FileMode:=66;
   {$I-}Reset(F);{$I+}
   FileMode:=2;
+  { EXPAND.CTL is optional user config; a missing file is not an error
+    (without this guard, Eof on an unopened file raises EInOutError). }
+  If IOResult<>0 Then Exit;
   While Not Eof(F) Do
   Begin
     ReadLn(F,S); Delete(S,Pos(';',S),255); S:=RTrim(LTrim(S));
@@ -2003,12 +1308,18 @@ Begin
     New(ExtraExpand[ExtraExpands,2]); ExtraExpand[ExtraExpands,2]^:=S;
    End;
   Close(F);
- {$ENDIF}
+End;
+
+Function TieAppName: AnsiString;
+{ Pin the app name so GetAppConfigDir yields ~/.config/tie-edit/ no matter
+  what the binary is renamed to. Must return AnsiString (not String, which
+  is ShortString under -Mtp) to match TGetAppNameEvent. }
+Begin
+  TieAppName := 'tie-edit';
 End;
 
 Var
   OKHeadFoot: Boolean;
-  Subval: BYte;
 Begin
   OKHeadFoot:=True;
   Danger:=0;
@@ -2023,153 +1334,92 @@ Begin
     WriteLn;
     Halt(2);
   End;
-  Ver[0]:=#5;
+  Ver:=RTrim(Ver);
   New(Config);
  { -------------- Configuration block -------------- }
- { * Check for a OEDIT environment variable          }
-  CfgPath:=GetEnv('OEDIT');
-  If CfgPath[Length(CfgPath)]<>'\' Then CfgPath:=CfgPath+'\';
-  CfgPath:=RemoveWildCard(ParamStr(0));
-  Assign(ConfigFile,CfgPath+'OEDIT.CFG');
-  FileMode:=66;
-  {$I-}Reset(ConfigFile);{$I+}
-  FileMode:=2;
-  { * Check in current directory                      }
-  If IOResult<>0 Then
+  { Config/state now live in the per-user config dir (~/.config/tie-edit/
+    on Unix, %APPDATA%\tie-edit\ on Windows) instead of beside the binary,
+    so tie-edit can be installed to a read-only path and run from anywhere.
+    The file being edited is still taken relative to the working dir. }
+  OnGetApplicationName:=TGetAppNameEvent(@TieAppName);
+  CfgPath:=GetAppConfigDir(False);
+  ForceDirectories(CfgPath);
+  { tie-edit.cfg (a Turbo Pascal binary record written by the original DOS
+    OESetup.EXE) is never read - its binary layout does not reliably
+    match FPC's ConfigRec even before accounting for how much this
+    struct keeps shrinking as the BBS-feature-removal pass proceeds, and
+    the shipped file is just OESetup's stock installer defaults, not
+    anything user-customized. Config^ is always built from the same
+    factory defaults legacy/sesetup4.pas writes for a brand-new install. }
+  FillChar(Config^,SizeOf(Config^),0);
+  With Config^ Do
   Begin
-    CfgPath:='';
-    Assign(ConfigFile,CfgPath+'OEDIT.CFG');
-    FileMode:=66;
-    {$I-}Reset(ConfigFile);{$I+}
-    FileMode:=2;
-  End;
- { * Check in execution path                         }
-  If IOResult<>0 Then
-  Begin
-    CfgPath:=RemoveWildCard(ParamStr(0));
-    Assign(ConfigFile,CfgPath+'OEDIT.CFG');
-    FileMode:=66;
-    {$I-}Reset(ConfigFile);{$I+}
-    FileMode:=2;
-  End;
-  { * Can't find the damned thing                     }
-  If IOResult<>0 Then
-  Begin
-   {$IFDEF CompileExtra}
-   TextAttr:=$01;
-   WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-   WriteLn('³'+Pad('',72)+'³');
-   Write('³  ');
-   TextAttr:=$0B;
-   Write(Pad('Open!EDIT v'+Ver,70));
-   TextAttr:=$01; WriteLn('³');
-   Write('³  ');
-   TextAttr:=$0B;
-   Write(Pad('Config file error',70));
-   TextAttr:=$01;
-   WriteLn('³');
-   WriteLn('³'+Pad('',72)+'³');
-   TextAttr:=$01;
-   Write('³   ');
-   TextAttr:=$09;
-   Write('þ ');
-   TextAttr:=$0F; Write('Open!EDIT cannot locate ' + Pad('OEDIT.CFG',43));
-   TextAttr:=$01;
-   WriteLn('³');
-   Write('³   ');
-   TextAttr:=$09;
-   Write('þ ');
-   TextAttr:=$0F;
-   Write('Please run OESetup.EXE to create this configuration file');
-   TextAttr:=$01;
-   WriteLn('           ³');
-   WriteLn('³'+Pad('',72)+'³');
-   WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
-   Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-   WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-   WriteLn('ÀÄÄÄÄÄÄÄÙ');
-   {$ENDIF}
-   Halt(2);
-   End;
-  Read(ConfigFile,Config^);
-  (*ConfigDecrypt;*)
-  Close(ConfigFile);
+      CfgHeader:='Tie-EDIT v'+Ver+' Configuration File';
+      NC:=$0F; HC:=$0B; BC:=$01; PC:=$09; FZ:=9;
+      FC:=$0F; FL:=$07; FS:=$09; FD:=$0B;
+      IC:=$0B; ID:=$0B; IL:=$0F; IS:=$09;
+      FieldColor:=$01;
+      TabStop:=8;
+      DataUEC:=0;
+      RegName:='';
+      AbsMaxMsgLines:=4000;
+      DOSSwap:=0;
+      SpellCheck:=2;
+      DictionaryPath:='';
+      ScrollSiz:=8;
+      UseExpand:=True;
+      DateFormat:=0;
+      TimeFormat:=0;
+      RepStr:=' * In a message';
+      AutoSave:=True;
+      LanguageFile:='ENGLISH';
+      OKSigHiBit:=False;
+      WrapMargin:=78;
+      StartDate:=Julian(Copy(UnpackedDT(CurrentDT),1,8));
+      CfgVer:=Ver;
+    End;
 
   If Config^.LanguageFile='' Then Config^.LanguageFile:='ENGLISH';
-  If Not FileExists(CfgPath+Config^.LanguageFile+'.LNG') Then
-  Begin
-    WriteLn('Cannot open language file '+Config^.LanguageFile+'.LNG');
-    Halt(2);
-  End;
+  { English is compiled in (english_lng.inc); a missing external language
+    file is no longer fatal - fall back to the built-in English strings. }
+  If (Config^.LanguageFile<>'ENGLISH') And
+     (Not FileExists(CfgPath+Config^.LanguageFile+'.LNG')) Then
+    Config^.LanguageFile:='ENGLISH';
   LanguageFile:=Config^.LanguageFile;
   WWrap:=Config^.WrapMargin;
   MsgTxtFile:='';
   For PCnt:=1 To ParamCount Do
   Begin
-    If (UCase(Copy(ParamStr(PCnt),1,2))='-T') Or (UCase(Copy(ParamStr(PCnt),1,2))='/T') Then
-    MsgTxtFile:=Copy(ParamStr(PCnt),3,255);
-    If (UCase(Copy(ParamStr(PCnt),1,2))='-M') Or (UCase(Copy(ParamStr(PCnt),1,2))='/M') Then
+    If (UCase(Copy(ParamStr(PCnt),1,2))='-T') Then
+     MsgTxtFile:=Copy(ParamStr(PCnt),3,255)
+    Else
+    If (UCase(Copy(ParamStr(PCnt),1,2))='-F') Then
     Begin
-      MailReader:=True;
-      MsgTxtFile:=Copy(ParamStr(PCnt),3,255);
-    End;
-   If (UCase(Copy(ParamStr(PCnt),1,2))='-F') Or (UCase(Copy(ParamStr(PCnt),1,2))='/F') Then
-   Begin
-     Force:=True;
-     ForceLines:=IntVal(Copy(ParamStr(PCnt),3,255));
-    End;
+      Force:=True;
+      ForceLines:=IntVal(Copy(ParamStr(PCnt),3,255));
+    End
+    Else
+    If (Copy(ParamStr(PCnt),1,1)<>'-') Then
+     MsgTxtFile:=ParamStr(PCnt);
   End;
 
-  If Config^.QuoteWinSize<2 Then Config^.QuoteWinSize:=5;
   SingleLineStat:=True;
   Detailed:=True;
-  HelpScrPrgName:='Open!EDIT';
+  HelpScrPrgName:='Tie-EDIT';
   LastAutoSave:=Timer;
-  If MailReader Then
-  Begin
-    Assign(MsgTmp,CfgPath+'LOCAL.DEF');
-    FileMode:=66; {$I-} Reset(MsgTmp); {$I+} FileMode:=2;
-  If IOResult<>0 THen
-  Begin
-     WriteLn('Please run OESetup and configure local mode defaults.');
-     Halt(2);
-  End;
-  ReadLn(MsgTmp,BBSName);
-  ReadLn(MsgTmp,SysOpName);
-  SysOpFirst:=Copy(SysOpName,1,Pos(' ',SysOpName)-1);
-  SysOpLast:=Copy(SysOpName,Pos(' ',SysOpName)+1,255);
-  ReadLn(MsgTmp,UserName);
-  UserFirst:=Copy(UserName,1,Pos(' ',UserName)-1);
-  UserLast:=Copy(UserName,Pos(' ',UserName)+1,255);
-  ReadLn(MsgTmp,UserLocation);
-  ReadLn(MsgTmp,TurboCOM.Security);
-  ReadLn(MsgTmp,Tmp);
-  If Tmp[1] In ['1','3'] Then ANSI:=True Else ANSI:=False; ReadLn(MsgTmp,Tmp); Close(MsgTmp);
-  Assign(MsgTmp,'DORINFO1.DEF');
-  ReWrite(MsgTmp);
-  WriteLn(MsgTmp,BBSName);
-  WriteLn(MsgTmp,SysOpFirst);
-  WriteLn(MsgTmp,SysOpLast);
-  WriteLn(MsgTmp,'COM0');
-  WriteLn(MsgTmp,'0 BAUD,N,8,1');
-  WriteLn(MsgTmp,'1');
-  WriteLn(MsgTmp,UserFirst);
-  WriteLn(MsgTmp,UserLast);
-  WriteLn(MsgTmp,UserLocation);
-  If ANSI Then WriteLn(MsgTmp,'1') Else WriteLn(MsgTmp,'2');
-  WriteLn(MsgTmp,TurboCOM.Security);
-  WriteLn(MsgTmp,Tmp);
-  Close(MsgTmp);
-  End;
 
   ExitCode:=2;
   InitTurboCOMM;
- {$IFDEF CompileExtra}
+  ScrLines := ScreenRows - 2;
+  If ScrLines > 200 Then ScrLines := 200;
+  PageUpDnSiz := ScrLines;
+  FootRow := ScreenRows;
+  PromptRow := ScreenRows - 1;
+  WWrap := ScreenCols - 1;
   HookErrorHandler:=True;
- {$ENDIF}
   LimitExceeded:='[23;7H[0;1;31m '+LS(81)+' '+^G;
   ProhibitStatus:=True;
-  ProgName:='Open!EDIT v'+Ver;
+  ProgName:='Tie-EDIT v'+Ver;
   UpdateStatus(True);
   ForceMenu:=False;
   LocalANSIKeys:=True;
@@ -2177,92 +1427,33 @@ Begin
   If Config^.TimeOutDelay=0 Then TimeCheck:=False;
   TimeOutDelay:=Config^.TimeoutDelay;
 
- If MsgTxtFile='' Then MsgTxtFile:=SysPath+'MSGTMP.';
- Window(1,1,80,25);
+ { No filename on the command line: ask for one (was silently defaulting
+   to the legacy BBS name MSGTMP.). Enter accepts a blank -> new unnamed. }
+ { No filename on the command line: ask for one (was silently defaulting
+   to the legacy BBS name MSGTMP.). A blank answer re-prompts. }
+ If MsgTxtFile='' Then
+ Repeat
+   SClrScr;
+   SGotoXY(1,1);
+   SWrite('Filename to edit: ');
+   SRead(MsgTxtFile, 128, '');
+   MsgTxtFile:=RTrim(LTrim(MsgTxtFile));
+ Until MsgTxtFile<>'';
+ Window(1,1,ScreenCols,ScreenRows);
  ClrScr;
-{$IFDEF CompileExtra}
- Case Config^.BBSProg Of
-   bbs_CC: LoadCCInfo;
-   bbs_RA: LoadRAInfo;
-   bbs_QK: LoadQKInfo;
-{   bbs_EZ: LoadEZInfo;}
-  End;
-{$ENDIF}
 
-{$IFDEF CompileExtra}
- If FileExists(CfgPath+'OEDIT.REG') Then
-   DecryptKey:=Decode(UCase(Config^.RegName),Config^.DataUEC,CfgPath+'OEDIT.REG')
-  Else
-  Begin
-    DecryptKey:=StrUnreg;
-  End;
-{$ELSE}
-   DecryptKey:=SysOpName;
-{$ENDIF}
-  DecryptKey:=Capitalize(DecryptKey);
   SysOpName:=RTrim(LTrim(Capitalize(Config^.RegName)));
   If SysOpName='' Then SysOpName:='[unknown]';
+  DecryptKey:=SysOpName;
   If SysPath='' Then GetDir(0,SysPath);
   If SysPath[Length(SysPath)]<>'\' Then SysPath:=SysPath+'\';
-  Case Config^.BBSProg Of
-    bbs_CC: MSGINF:='MSGINF.';
-    bbs_RA: MSGINF:='MSGINF.';
-    bbs_EZ: MSGINF:='MSGINF.';
-    bbs_QK: MSGINF:='MSG.INF';
-  else    MSGINF:='MSGINF.';
-  End;
-  If (Not FileExists(SysPath+MSGINF)) And (Not MailReader) Then
-  Begin
-    If LocalTest THen
-    Begin
-      Assign(F,SysPath+MSGINF);
-      ReWrite(F);
-    Case Config^.BBSprog Of
-       bbs_QK: Begin
-                 WriteLn(F,UserName);
-                 WriteLn(F,UserName);
-                 WriteLn(F,'Open!EDIT local test mode');
-                 WriteLn(F,'Open!EDIT Test Area');
-                 WriteLn(F,'Private');
-               End;
-       Else    Begin
-                 WriteLn(F,UserName);
-                 WriteLn(F,UserName);
-                 WriteLn(F,'Open!EDIT local test mode');
-                 WriteLn(F,'1');
-                 WriteLn(F,'Open!EDIT Test Area');
-                 WriteLn(F,'Y');
-               End;
-      End;
-     Close(F);
-    End
-    Else
-    Begin
-     {$IFDEF CompileExtra}
-      TextAttr:=$01;
-      WriteLn('ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿');
-      WriteLn('³'+Pad('',72)+'³');
-      Write('³  '); TextAttr:=$0B; Write(Pad('Open!EDIT v'+Ver,70)); TextAttr:=$01; WriteLn('³');
-      Write('³  '); TextAttr:=$0B; Write(Pad('Datafile error',70)); TextAttr:=$01; WriteLn('³');
-      WriteLn('³'+Pad('',72)+'³');
-      TextAttr:=$01;
-      Write('³   '); TextAttr:=$09; Write('þ '); TextAttr:=$0F; Write('Open!EDIT cannot locate the datafile '+
-      Pad(SysPath+MSGINF,30));
-      TextAttr:=$01; WriteLn('³');
-      Write('³   '); TextAttr:=$09; Write('þ '); TextAttr:=$0F;
-      Write('Please use the -P<path_to_bbs> parameter to fix this problem');
-      TextAttr:=$01; WriteLn('       ³');
-      Write('³     '); TextAttr:=$0F; Write(Pad('i.e. OEDIT -PC:\BBS',67)); TextAttr:=$01; WriteLn('³');
-      WriteLn('³'+Pad('',72)+'³');
-      WriteLn('³ÄÄÄÄÄÄÄ                                                                 ³');
-      Write('³ '); TextAttr:=$09; Write('STS97'); TextAttr:=$01;
-      WriteLn(' ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ');
-      WriteLn('ÀÄÄÄÄÄÄÄÙ');
-     {$ENDIF}
-      Halt(2);
-    End;
-  End;
-{$IFDEF CompileExtra}
+
+  UserName:=GetEnv('USER');
+  If UserName='' Then UserName:=GetEnv('LOGNAME');
+  If UserName='' Then UserName:='[unknown]';
+  UserName:=Capitalize(UserName);
+  UserLast:=UserName;
+  UserFirst:='';
   NC:=ANSICode[Config^.NC];
   HC:=ANSICode[Config^.HC];
   BC:=ANSICode[Config^.BC];
@@ -2276,7 +1467,6 @@ Begin
   ID:=ANSICode[Config^.ID]+ANSICode[40+Config^.FieldColor];
   IL:=ANSICode[Config^.IL]+ANSICode[40+Config^.FieldColor];
   IS:=ANSICode[Config^.IS]+ANSICode[40+Config^.FieldColor];
-{$ENDIF}
   YN[False]:='|IC N|ILo  [0m';
   YN[True ]:='|IC Y|ILes [0m';
   LoadUser;
@@ -2297,105 +1487,24 @@ Begin
   LoadExtraExpands;
   SClrScr;
   StatusBar;
-{$IFDEF CompileExtra}
   SelectLanguage;
-{$ENDIF}
-  If MailReader Then
-  Begin
-    AreaName:='Offline Mail Reader';
-    FromName:=Capitalize(UserFirst+' '+UserLast);
-    ToName:='Recipient';
-    MNum:=0;
-    Subject:='Open!EDIT Offline Mail';
-    Replying:=True;
-   End
-   Else
-   Begin
-    AreaName:='';
-    FromName:=Capitalize(UserFirst+' '+UserLast); ToName:='';
-    MNum:=0; Subject:=''; Replying:=False;
-    Assign(F,SysPath+MSGINF);
-    FileMode:=66; Reset(F); FileMode:=2;
-    Case Config^.BBSProg Of
-    bbs_QK: Begin
-              MNum:=0;
-              ReadLn(F,FromName); FromName:=Capitalize(FromName);
-              ReadLn(F,ToName);   ToInitials:=Initials(ToName); ToName:=Capitalize(ToName);
-              ReadLn(F,Subject);
-              ReadLn(F,AreaName);
-            {$IFDEF CompileExtra}
-              MsgAreaPos:=GetAreaFPos(AreaName);
-            {$ELSE}
-              MsgAreaPos:=0;
-            {$ENDIF}
-              ReadLn(F,Tmp);
-              PrivMsg:=(UCase(Tmp[2])='R');
-            End;
-     Else    Begin
-               ReadLn(F,FromName); FromName:=Capitalize(FromName);
-               ReadLn(F,ToName);   ToInitials:=Initials(ToName); ToName:=Capitalize(ToName);
-               ReadLn(F,Subject);
-               ReadLn(F,MNum);
-               ReadLn(F,AreaName);
-             {$IFDEF CompileExtra}
-               MsgAreaPos:=GetAreaFPos(AreaName);
-            {$ELSE}
-               MsgAreaPos:=0;
-            {$ENDIF}
-               ReadLn(F,Tmp);
-               PrivMsg:=(Tmp[1]='Y');
-             End;
-    End;
-   Close(f);
-  End;
-  Str(MNum,MsgNum);
-   If (MsgAreaPOS<>-1) then
-   begin
-     Config^.UseTaglines:=Config^.OKTagArea[MsgAreaPos];
-     Config^.UseExpand:=Config^.OKExpandArea[MsgAreaPos];
-     Config^.UseKeywords:=Config^.OKKeywordArea[MsgAreaPos];
-     Config^.Censor:=Config^.OKCensorArea[MsgAreaPos];
-     Config^.UseSigs:=Config^.OKSigArea[MsgAreaPos];
-     Config^.UseFilter:=Config^.FilterArea[MsgAreaPos];
-   End;
-{$IFDEF CompileExtra}
-  For MNum:=1 To 8 Do
+  For MNum:=1 To 4 Do
   Begin
     New(EStr[MNum,1]);
     New(EStr[MNum,2]);
   End;
   EStr[1,1]^:='@DATE@';  EStr[1,2]^:=Copy(UnpackedDT(CurrentDT),1,8);
   EStr[2,1]^:='@TIME@';  EStr[2,2]^:=Copy(UnpackedDT(CurrentDT),10,8);
-  EStr[3,1]^:='@SYSOP@'; EStr[3,2]^:=SysOpName;
-  EStr[4,1]^:='@BBS@';   EStr[4,2]^:=BBSName;
-  EStr[5,1]^:='@TO@';    EStr[5,2]^:=ToName;
-  EStr[6,1]^:='@RE@';    EStr[6,2]^:=Subject;
-  EStr[7,1]^:='@VER@';   EStr[7,2]^:=Ver;
-  EStr[8,1]^:='@FROM@';  EStr[8,2]^:=UserName;
-{$ENDIF}
-{---Shawn: Taglines starting here}
-  If (Pos('\',Config^.TagFileName)=0) And (Config^.UseTaglines) Then
-  Begin
-    If (Config^.TagFileName='') Then
-    TagError
-    Else
-    Begin
-      Tmp:=FExpand(ParamStr(0));
-      While Tmp[Length(Tmp)]<>'\' Do Delete(Tmp,Length(Tmp),1);
-      Config^.TagFileName:=Tmp+Config^.TagFileName;
-    End;
-    If Not FileExists(Config^.TagFileName) Then TagError;
-  End;
-  CheckUserOK;
+  EStr[3,1]^:='@VER@';   EStr[3,2]^:=Ver;
+  EStr[4,1]^:='@FROM@';  EStr[4,2]^:=UserName;
   New(PhyLine);
   Max_Msg_Lines:=((MaxAvail div 3)*2) div SizeOf(Str81);
   If Max_Msg_Lines>Config^.AbsMaxMsgLines Then Max_Msg_Lines:=Config^.AbsMaxMsgLines; Dec(Max_Msg_Lines);
   If Max_Msg_Lines>InternalLineLim Then Max_Msg_Lines:=InternalLineLim;
-{$IFDEF CompileExtra}
   If Config^.AbsMaxMsgLines<50 Then
   Begin
     ClrScr;
-    WriteLn('Insufficient number of available message text lines to load Open!EDIT');
+    WriteLn('Insufficient number of available message text lines to load Tie-EDIT');
     WriteLn;
     WriteLn('Minimum required lines : 50 lines');
     WriteLn('Lines allocated        : ',Config^.AbsMaxMsgLines,' lines');
@@ -2429,7 +1538,6 @@ Begin
     End;
     Halt(2);
   End;
-{$ENDIF}
   For N:=1 To Max_Msg_Lines Do
   Begin
     New(MText[n]);
@@ -2446,91 +1554,46 @@ Begin
     LoadS;
   End;
   N:=0;
-  QuoteLineNum:=0;
-  QuoteLineCnt:=0;
-  QuoteHil:=0;
   If FileExists(MsgTxtFile) Then
   Begin
-    FixChainsaw;
-    Replying:=True;
-    LoadQuoteData;
+    Assign(MsgTmp,MsgTxtFile);
+    Reset(MsgTmp);
+    LineCnt:=0;
+    While (Not Eof(MsgTmp)) And (LineCnt<Max_Msg_Lines-1) Do
+     Begin
+      Inc(LineCnt);
+      ReadLn(MsgTmp,MText[LineCnt]^);
+     End;
+    Close(MsgTmp);
   End;
   Config^.TabStop:=8;
-  CheckHeaderSize;
-  If (SysOpName=SysopName) Then
-  Begin
-    If Replying Then
-    Begin
-      If Config^.ForceCtlW Then
-      QuoteOrMenu:=' <^W> '+LS(82)+' '
-    Else
-    QuoteOrMenu:=' <^Q> '+LS(82)+' ';
-End
-   Else
-    QuoteOrMenu:=' <^K> '+LS(83)+' '
-  End
-  Else
-  Begin
-  If Replying Then
-  Begin
-    If Config^.ForceCtlW Then
-    QuoteOrMenu:=' <^W> '+LS(82)+' '
-  Else
-    QuoteOrMenu:=' <^Q> '+LS(82)+' ';
-  End
-  Else
-   QuoteOrMenu:=' <^U> '+LS(84)+' '
- End;
+  QuoteOrMenu:=' <^K> '+LS(83)+' ';
   ReEditing:=False;
   ReMsgEdit:
   Count_Lines;
   If Not Msg_Edit Then
    Begin
-     FancyClear;
      Assign(F,SysPath+'AUTOSAVE.SE!');
      {$I-}Erase(F);{$I+}
      If IOResult<>0 Then ;
-     WriteLn('Message aborted');
+     DoneScreen; Write(#27'[999;1H'); WriteLn('File not saved');
      Halt(1);
    End;
   Count_Lines;
   Randomize;
-  If Config^.Censor Then For A:=1 To LineCnt Do MText[a]^:=Censor(MText[a]^);
-  If Config^.UseFilter Then FilterText;
   ReEditing:=False;
   Inc(LineCnt); MText[LineCnt]^:='';
-  {$IFDEF CompileExtra}
-  WasTag:=TagLine;
-  {$ELSE}
-  WasTag:=True;
-  {$ENDIF}
   If ReEditing Then Goto ReMsgEdit;
-  If (Config^.TearLine=2) Then
-  Begin
-    Inc(LineCnt);
-    MText[LineCnt]^:='-*- Open!EDIT v' +Ver;
-    MText[LineCnt]^:=MText[LineCnt]^+'+';
-  End;
  If LineCnt<>0 Then
  Begin
    Count_Lines;
    Assign(F,MsgTxtFile);
    ReWrite(F);
-
-   If (Config^.TearLine=2) Then SubVal:=1 Else SubVal:=0;
-   If WasTag Then Inc(SubVal);
-   For A:=1 To LineCnt-SubVal Do WriteLn(F,MText[A]^);
-
-   For A:=LineCnt-SubVal+1 To LineCnt Do WriteLn(F,MText[A]^);
-   If Config^.BBSProg=bbs_RA Then
-   Begin
-     WriteLn(F,StrVal(Round(Config^.DataUEC*263/120)));
-   End;
+   For A:=1 To LineCnt Do WriteLn(F,MText[A]^);
    Close(F);
   End;
   CDelay(1000); {1000}
-  FancyClear;
-  WriteLn('Message saved');
+  DoneScreen; Write(#27'[999;1H'); WriteLn('File saved');
   Assign(F,SysPath+'AUTOSAVE.SE!');
   {$I-}Erase(F);{$I+}
   If IOResult<>0 Then ;
