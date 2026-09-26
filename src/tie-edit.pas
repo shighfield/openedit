@@ -1150,6 +1150,7 @@ Begin
       '5': Begin If Keypressed Then Key:=Get_Key; Key:=^R; End;  { PgUp ESC[5~ }
       '6': Begin If Keypressed Then Key:=Get_Key; Key:=^C; End;  { PgDn ESC[6~ }
       'H': Key:=^L;  { Home }
+      'F',           { End - xterm }
       'K',           { End - PROCOMM+ }
       'R': Key:=^P;  { End - GT }
       'r': Key:=^R;  { PgUp }
