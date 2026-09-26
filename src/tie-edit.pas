@@ -1141,6 +1141,14 @@ Begin
       'B': Key:=^X;  { DownArrow }
       'C': Key:=^D;  { RightArrow }
       'D': Key:=^S;  { LeftArrow }
+      { CSI numeric-tilde keys (ESC[<n>~) on modern terminals; consume the
+        trailing '~' before mapping. }
+      '1': Begin If Keypressed Then Key:=Get_Key; Key:=^L; End;  { Home ESC[1~ }
+      '2': Begin If Keypressed Then Key:=Get_Key; Key:=^V; End;  { Ins  ESC[2~ }
+      '3': Begin If Keypressed Then Key:=Get_Key; Key:=^G; End;  { Del  ESC[3~ }
+      '4': Begin If Keypressed Then Key:=Get_Key; Key:=^P; End;  { End  ESC[4~ }
+      '5': Begin If Keypressed Then Key:=Get_Key; Key:=^R; End;  { PgUp ESC[5~ }
+      '6': Begin If Keypressed Then Key:=Get_Key; Key:=^C; End;  { PgDn ESC[6~ }
       'H': Key:=^L;  { Home }
       'K',           { End - PROCOMM+ }
       'R': Key:=^P;  { End - GT }
@@ -1160,8 +1168,8 @@ Begin
     ^D: Cursor_Right;
     ^E: Cursor_Up;
     ^F: Cursor_WordRight;
-    ^G,#$7F: Delete_Char;
-    ^H: Begin Cursor_Left; If Insert_Mode Then Delete_Char; End;
+    ^G: Delete_Char;
+    ^H,#$7F: Begin Cursor_Left; If Insert_Mode Then Delete_Char; End;
     ^I: Cursor_Tab;
     ^J: Join_Lines;
     ^K: If (Not Expired) Then UserConfig;
